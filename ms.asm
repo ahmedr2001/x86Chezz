@@ -14,11 +14,16 @@ main proc
      ;mov ah,1
 ;     int 21h        
 ;     
+
+     mov ah,5
+     mov al,1
+     int 10h
             
      ;set cursor position       
      mov ah,2
      mov dh,4  ;row
      mov dl,25
+     mov bh,1
      int 10h
      
      ;display string
@@ -31,6 +36,7 @@ main proc
      mov ah,2
      mov dh,6  ;row
      mov dl,25
+     mov bh,1
      int 10h
 
      ;display string     
@@ -45,6 +51,7 @@ main proc
      mov ah,2
      mov dh,8  ;row
      mov dl,25
+     mov bh,1
      int 10h
      ;display string     
      mov ah,9
