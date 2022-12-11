@@ -3,8 +3,8 @@ include mymacros.inc
 .model small
 .stack 64
 .data
-messageF1 db 'You F1', '$'
-messageF2 db 'You pressed F2', '$'
+messageF2 db ' - You pressed F2', '$'
+messageF1 db ' - You F1', '$'
 .code
 main proc far
     mov ax, @DATA

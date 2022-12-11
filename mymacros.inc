@@ -8,6 +8,16 @@ moveCursor MACRO position
 ENDM moveCursor
 ;----------------------------------
 
+;--------------------------------------
+; Macro to print string
+; Takes message as parameter
+printString MACRO message
+    mov ah, 9
+    mov dx, offset messageF1
+    int 21h
+ENDM printString 
+;--------------------------------------   
+
 ;----------------------------------
 ; Macro to print given char given number of times
 ; with given colors
@@ -26,7 +36,7 @@ ENDM printCharColorTimes
 ; Macro to draw notification bar
 ; Takes nothing so far
 notificationBar MACRO messageF1, messageF2
-    moveCursor 1600h        ; move the cursor to row 22 column 0
+    moveCursor 1700h        ; move the cursor to row 22 column 0
     
     printCharColorTimes '-', 80, 0fh  ; Print '-' with white foreground black background 80 times (whole screen width)
     
@@ -47,30 +57,20 @@ CHECK:
 
 PRINTMESSAGEF1:
     moveCursor 1800h
+    printCharColorTimes ' ', 80, 0fh
+    moveCursor 1800h
     mov ah, 9
     mov dx, offset messageF1
     int 21h
-    moveCursor 1800h 
-    mov ax, 0601h
-    mov bh, 07h
-    mov cx, 0000h
-    mov dx, 184fh
-    int 10h
-    moveCursor 1800h 
     jmp CHECK
 
 PRINTMESSAGEF2:
     moveCursor 1800h
+    printCharColorTimes ' ', 80, 0fh
+    moveCursor 1800h
     mov ah, 9
     mov dx, offset messageF2
-    int 21h 
-    moveCursor 1800h 
-    mov ax, 0601h
-    mov bh, 07h
-    mov cx, 0000h
-    mov dx, 184fh
-    int 10h
-    moveCursor 1800h
+    int 21h
     jmp CHECK
 ENDM notificationBar
 ;-----------------------------------
