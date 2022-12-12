@@ -1,0 +1,1 @@
+; extrn ism:byte
