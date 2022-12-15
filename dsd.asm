@@ -217,6 +217,14 @@ endm mainScreen
 .stack 64
 .data
 
+grid                                    db      12,13,14,15,16,14,13,12
+                                        db      11,11,11,11,11,11,11,11
+                                        db      00,00,00,00,00,00,00,00
+                                        db      00,00,00,00,00,00,00,00
+                                        db      00,00,00,00,00,00,00,00
+                                        db      00,00,00,00,00,00,00,00
+                                        db      01,01,01,01,01,01,01,01
+                                        db      02,03,04,05,06,04,03,02
 
 whiteCell                                          db    0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
                                         db    0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
