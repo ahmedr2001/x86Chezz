@@ -178,9 +178,161 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
     ; CALL ReadData
 	
     drawImage ism, boardWidth, boardHeight, 160-boardWidth/2, 0
-    drawImageOnBoard image1, image1Width, image1Height, 4, 4
-    eraseImage 4, 4, greyCell, whiteCell
-	
+    ; drawImageOnBoard image1, image1Width, image1Height, 4, 4
+    ; eraseImage 4, 4, greyCell, whiteCell
+
+
+     mov al,0
+
+    ;loop to draw every type of the pieces
+     drawpiecess:
+     cmp al,6
+     je finishpieces
+
+     cmp al,0
+     je drawrocks
+
+     cmp al,1
+     je drawknights
+
+     cmp al,2
+     je drawbishops
+
+     cmp al,3
+     je drawkings
+
+     cmp al,4
+     je drawqueens
+
+     cmp al,5
+     je drawpawns
+
+    
+
+    drawrocks:
+    push ax
+    drawImageOnBoard white_rock,20 , 20,7,7
+    drawImageOnBoard white_rock,20 , 20,0,7
+    drawImageOnBoard black_rock,20 , 20,0,0
+    drawImageOnBoard black_rock,20 , 20,7,0
+    pop ax
+    inc al
+    jmp drawpiecess
+
+    drawknights:
+    push ax
+    drawImageOnBoard white_knight,20 , 20,6,7
+    drawImageOnBoard white_knight,20 , 20,1,7
+    drawImageOnBoard black_knight,20 , 20,1,0
+    drawImageOnBoard black_knight,20 , 20,6,0
+    pop ax
+    inc al
+    jmp drawpiecess
+
+
+    drawbishops:
+    push ax
+    drawImageOnBoard white_bishop,20 , 20,5,7
+    drawImageOnBoard white_bishop,20 , 20,2,7
+    drawImageOnBoard black_bishop,20 , 20,2,0
+    drawImageOnBoard black_bishop,20 , 20,5,0
+    pop ax
+    inc al
+    jmp drawpiecess
+
+
+    drawkings:
+    push ax
+    drawImageOnBoard white_king,20 , 20,3,7
+    drawImageOnBoard black_king,20 , 20,3,0
+    pop ax
+    inc al
+    jmp drawpiecess
+
+    drawqueens:
+    push ax
+    drawImageOnBoard white_queen,20 , 20,4,7
+    drawImageOnBoard black_queen,20 , 20,4,0
+    pop ax
+    inc al
+    jmp drawpiecess
+
+    drawpawns:
+    ; mov ah,0
+    ; drawwhitepawns:
+    ; cmp ah,8
+    ; je step2
+
+    ; finishpieces1:
+
+    ; push ax
+
+;;;;;;;;;;;; Can We call the macro with ah or al?;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;; when you have answer for this uncomment drawpawn loop code;;;;;;;;;;;;;;;;;
+
+
+
+
+
+
+
+    ; drawImageOnBoard white_pawn ,20,20,ah,6
+    ; drawImageOnBoard white_pawn ,20,20,ah,6
+    ; drawImageOnBoard white_pawn ,20,20,ah,6
+    ; drawImageOnBoard white_pawn ,20,20,ah,6
+    ; drawImageOnBoard white_pawn ,20,20,ah,6
+    ; drawImageOnBoard white_pawn ,20,20,ah,6
+    ; drawImageOnBoard white_pawn ,20,20,ah,6
+    ; drawImageOnBoard white_pawn ,20,20,ah,6
+
+
+    drawImageOnBoard white_pawn ,20,20,0,6
+    drawImageOnBoard white_pawn ,20,20,1,6
+    drawImageOnBoard white_pawn ,20,20,2,6
+    drawImageOnBoard white_pawn ,20,20,3,6
+    drawImageOnBoard white_pawn ,20,20,4,6
+    drawImageOnBoard white_pawn ,20,20,5,6
+    drawImageOnBoard white_pawn ,20,20,6,6
+    drawImageOnBoard white_pawn ,20,20,7,6
+
+    ; pop ax
+    ; inc ah
+    ; jmp drawwhitepawns
+
+    ; step2:
+    ;  mov ah,0
+
+    ; drawblackpawns:
+    ;  cmp ah,8
+    ;  je finishpieces
+    ;  push ax
+
+    ; drawImageOnBoard black_pawn,20,20,ah,1
+    ; drawImageOnBoard black_pawn ,20,20,ah,1
+    ; drawImageOnBoard black_pawn ,20,20,ah,1
+    ; drawImageOnBoard black_pawn ,20,20,ah,1
+    ; drawImageOnBoard black_pawn ,20,20,ah,1
+    ; drawImageOnBoard black_pawn ,20,20,ah,1
+    ; drawImageOnBoard black_pawn ,20,20,ah,1
+    ; drawImageOnBoard black_pawn ,20,20,ah,1
+
+
+    drawImageOnBoard black_pawn ,20,20,0,1
+    drawImageOnBoard black_pawn ,20,20,1,1
+    drawImageOnBoard black_pawn ,20,20,2,1
+    drawImageOnBoard black_pawn ,20,20,3,1
+    drawImageOnBoard black_pawn ,20,20,4,1
+    drawImageOnBoard black_pawn ,20,20,5,1
+    drawImageOnBoard black_pawn ,20,20,6,1
+    drawImageOnBoard black_pawn ,20,20,7,1
+    ; pop ax
+
+    ; inc ah
+    ; jmp drawblackpawns
+    ; 
+
+    
+    finishpieces:
     ; Press any key to exit
     MOV AH , 0
     INT 16h
@@ -516,7 +668,6 @@ ism                                    db    0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
 
 
 
-
     hello db "Hello, $"
     exclamation db "!$"
     enterName db 'Please enter your name:','$'
@@ -540,11 +691,15 @@ main proc far
     mov ds,ax     
 
     usernameScreen enterName, pressEnter
-;Go to Main screen
+    ;Go to Main screen
     ;TODO: go to main screen    
 
       
-     mainScreen hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell
+    mainScreen hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell
+
+
+   
+
 
         mov ah,04ch
         int 21h
