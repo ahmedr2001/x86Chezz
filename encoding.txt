@@ -2,8 +2,8 @@ white_pawn      1
 white_rook      2
 white_knight    3
 white_bishop    4
-white_queen      5
-white_king     6
+white_queen     5
+white_king      6
 
 black_pawn      11
 black_rook      12
