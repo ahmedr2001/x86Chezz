@@ -23,9 +23,12 @@ LOCAL eraseGrey, eraseWhite, rt
 rt:
 ENDM eraseImage
 
+;-----------------------------------------------------------------------
+; to draw image on board using row and column
 drawImageOnBoard MACRO image, imageWidth, imageHeight, row, column
     drawImage image, imageWidth, imageHeight, 80+row*20, column*20
 ENDM drawImageOnBoard
+;----------------------------------------------------------------------
 
 drawImage MACRO image, imageWidth, imageHeight, x, y
 LOCAL drawLoop
