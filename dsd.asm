@@ -23,6 +23,46 @@ LOCAL eraseGrey, eraseWhite, rt
 rt:
 ENDM eraseImage
 
+;;;;;;;;;;;;;;;;;;;;;;
+drawSquareOnCell MACRO color, row, column
+LOCAL drawHorizontalLines
+LOCAL drawVerticalLines
+MOV CX,80+column*20
+mov dx,row*20
+
+;initialize color and draw pixel command
+MOV AH,0ch
+mov al,color
+
+
+mov bx,cx
+add bx,20
+drawHorizontalLines:
+cmp cx,bx
+je fhl
+int 10h
+add dx,20
+int 10h
+sub dx,20   
+inc cx
+jmp drawHorizontalLines
+
+fhl:
+mov bx,dx
+add bx,20
+drawVerticalLines:
+int 10h 
+sub cx,20
+int 10h
+add cx,20  
+inc dx
+cmp dx,bx
+jne drawVerticalLines
+
+ENDM drawSquareOnCell
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 ;-----------------------------------------------------------------------
 ; to draw image on board using row and column
 drawImageOnBoard MACRO image, imageWidth, imageHeight, row, column
@@ -107,7 +147,7 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
 ;     int 21h        
 ;     
      
-
+enterms:
      mov ah,5
      mov al,0
      int 10h
@@ -188,8 +228,8 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
     ; eraseImage 4, 4, greyCell, whiteCell
 
 
+;;;;;;;initializing pieces on board
      mov al,0
-
     ;loop to draw every type of the pieces
      drawpiecess:
      cmp al,6
@@ -213,7 +253,6 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
      cmp al,5
      je drawpawns
 
-    
 
     drawrocks:
     push ax
@@ -339,9 +378,98 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
 
     
     finishpieces:
+;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
+
+
+
+;gm
+checkkeygm:
+mov ah,1
+int 16h
+jnz w
+jz checkkeygm
+
+w:
+cmp al,77h
+jnz s
+
+;navigate up
+
+mov keypressed,al
+
+jmp consumebuffergm
+
+s:
+cmp al,73h
+jnz a
+
+;navigate down
+
+mov keypressed,al
+
+jmp consumebuffergm
+
+
+a:
+cmp al,61h
+jnz d 
+
+;navigate laft
+
+mov keypressed,al
+
+jmp consumebuffergm
+
+d:
+cmp al,64h
+jnz q
+
+;navigate right
+
+mov keypressed,al
+
+jmp consumebuffergm
+
+q:
+cmp al,71h
+jnz exitgame
+
+;select
+
+mov keypressed,al
+
+jmp consumebuffergm
+
+exitgame:
+cmp al,1bh
+jnz consumebuffergm
+
+;exitgame
+
+mov keypressed,al
+;consume buffet then go to main screen
+
+mov ah,0
+int 16h
+
+ mov ax, 0003h
+     int 10h
+
+jmp enterms
+
+
+jmp consumebuffergm
+
+consumebuffergm:
+mov ah,0
+int 16h
+jmp checkkeygm
+
+
+
     ; Press any key to exit
-    MOV AH , 0
-    INT 16h
+    ; MOV AH , 0
+    ; INT 16h
     
     ; call CloseFile
     
@@ -351,6 +479,7 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
 
      ;to consume the buffer
      jmp consumebufferms
+
 
 
      escape:
@@ -376,6 +505,7 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
      mov ah,0
      int 16h
      jmp checkkey
+
 endm mainScreen     
 ; include resZahran.inc
 .model small
