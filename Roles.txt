@@ -1,0 +1,14 @@
+navigation through pieces
+navigate through available moves           1   Samir
+
+highlight available moves
+ - queen
+ - rook                                    1   Taher
+ - bishop
+
+ - pawn
+ - king                                    1   Ismail
+ - knight
+
+move piece and cooldown
+kill opponent piece + determine if game won 1  Abdelatty
