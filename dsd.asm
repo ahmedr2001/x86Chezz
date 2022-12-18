@@ -2,8 +2,7 @@
 ;Defining username screen
 ;---------------------------
 include mymacros.inc
-include availMovesMacros.inc
-
+include availMovsMacros.inc
 
 eraseImage MACRO row, column, greyCell, whiteCell
 LOCAL eraseGrey, eraseWhite, rt
