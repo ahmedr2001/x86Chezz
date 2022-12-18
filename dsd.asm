@@ -27,9 +27,20 @@ ENDM eraseImage
 ;;;;;;;;;;;;;;;;;;;;;;
 drawSquareOnCell MACRO color, row, column
 LOCAL drawHorizontalLines
-LOCAL drawVerticalLines
-MOV CX,80+column*20
-mov dx,row*20
+LOCAL drawVerticalLines,fhl
+mov al,20
+mov bl,row
+imul bl
+mov dx,ax
+
+mov al,20
+mov bl,column
+imul bl
+add ax,80
+mov cx,ax
+
+; MOV CX,80+column*20
+; mov dx,row*20
 
 ;initialize color and draw pixel command
 MOV AH,0ch
@@ -381,6 +392,10 @@ enterms:
     finishpieces:
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
+;;use color 07h to erase highlight
+
+;;highlight current cell
+drawSquareOnCell 0eh,currRow,currColumn
 
 ;gm
 checkkeygm:
@@ -394,6 +409,14 @@ cmp al,77h
 jnz s
 
 ;navigate up
+cmp currRow,0
+je skipnavu
+
+drawSquareOnCell 07h,currRow,currColumn
+dec currRow
+drawSquareOnCell 0eh,currRow,currColumn
+skipnavu:
+
 
 mov keypressed,al
 
@@ -407,6 +430,15 @@ jnz a
 
 mov keypressed,al
 
+cmp currRow,7
+je skipnavd
+
+drawSquareOnCell 07h,currRow,currColumn
+inc currRow
+drawSquareOnCell 0eh,currRow,currColumn
+skipnavd:
+
+
 jmp consumebuffergm
 
 
@@ -418,6 +450,15 @@ jnz d
 
 mov keypressed,al
 
+
+cmp currColumn,0
+je skipnavl
+
+drawSquareOnCell 07h,currRow,currColumn
+dec currColumn
+drawSquareOnCell 0eh,currRow,currColumn
+skipnavl:
+
 jmp consumebuffergm
 
 d:
@@ -428,6 +469,15 @@ jnz q
 
 mov keypressed,al
 
+
+cmp currColumn,7
+je skipnavr
+
+drawSquareOnCell 07h,currRow,currColumn
+inc currColumn
+drawSquareOnCell 0eh,currRow,currColumn
+skipnavr:
+
 jmp consumebuffergm
 
 q:
@@ -435,6 +485,14 @@ cmp al,71h
 jnz exitgame
 
 ;select
+
+mov cl,currColumn
+mov selectedCol,cl
+mov cl,currRow
+mov selectedRow,cl
+drawSquareOnCell 04h,currRow,currColumn
+;;;;;check available moves and draw them
+
 
 mov keypressed,al
 
@@ -809,7 +867,11 @@ endm mainScreen
                  db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
 
 
+    currRow      db 7
+    currColumn   db 0
 
+    selectedRow  db ?
+    selectedCol  db ? 
 
 
 
