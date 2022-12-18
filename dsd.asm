@@ -3,6 +3,7 @@
 ;---------------------------
 include mymacros.inc
 
+
 eraseImage MACRO row, column, greyCell, whiteCell
 LOCAL eraseGrey, eraseWhite, rt
     mov al, row
@@ -74,7 +75,7 @@ drawImage MACRO image, imageWidth, imageHeight, x, y
 LOCAL drawLoop
 LOCAL nodraw
         LEA BX , image ; BL contains index at the current drawn pixel
-	
+
     MOV CX,x
     MOV DX,y
     MOV AH,0ch
@@ -381,7 +382,6 @@ enterms:
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
 
-
 ;gm
 checkkeygm:
 mov ah,1
@@ -521,6 +521,17 @@ endm mainScreen
                  db  00,00,00,00,00,00,00,00
                  db  01,01,01,01,01,01,01,01
                  db  02,03,04,05,06,04,03,02
+
+    availMoves   db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;1
+                 db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;2
+                 db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;3
+                 db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;4
+                 db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;5
+                 db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;6
+                 db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;7
+                 db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;8
+
+
 
     whiteCell    db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
                  db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
