@@ -1,2 +1,2 @@
 1- I think there is an error in mainScreen if i pressed a key different from 1,2,esc
-2- backspace works in main screen and makes errors
+2- backspace works in name screen and makes errors
