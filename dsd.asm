@@ -397,7 +397,7 @@ usernameScreen MACRO entername, pressEnter
     call waitEnter
 endm usernameScreen
 
-mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid
+mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown
     
       
      mov ax, 0003h
@@ -644,7 +644,16 @@ enterms:
 
 ;;highlight current cell
 drawSquareOnCell 0eh,currRow,currColumn
-movePiece 1, 6, 0, 5, 0, grid
+movePiece 1, 6, 0, 5, 0, grid, cooldown
+mov cx, 0fh
+mov dx, 4240h
+mov ah, 86h
+int 15h
+mov ah, 86h
+int 15h
+mov ah, 86h
+int 15h
+movePiece 1, 5, 0, 6, 0, grid, cooldown
 HighlightAvailableForKing 5, 4
 HighlightAvailableForKnight 1,4
 HighlightAvailableForPawnTwo 1,7
@@ -820,17 +829,41 @@ jmp checkkeygm
 endm mainScreen  
 
 ;------------------------------------------------------------
-movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid
+movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown
+    local noMove
     pusha
+    mov ah,00h
+    int 1ah
+    lea di, cooldown
+    mov ax, [di+fromRow*8+fromColumn]
+    sub dx, ax
+    cmp dx, 60
+    jl noMove
+
     eraseImage fromColumn, fromRow, greyCell, whiteCell
     lea si, grid
     mov [si+fromRow*8+fromColumn], 0
     eraseImage toColumn, toRow, greyCell, whiteCell
     drawEncodingOnBoard code, toColumn, toRow
+    ; mov ah, [si+toRow*8+toColumn]
+    ; cmp ah, 6
+    ; jz endgame
+    ; cmp ah, 16
+    ; jz endgame
     mov [si+toRow*8+toColumn], code
+    mov ah,00h
+    int 1ah
+    mov [di+toRow*8+toColumn], dx
+
+    noMove:
     popa
 ENDM movePiece
 ;--------------------------------------------------------------
+
+;--------------------------------------------------------------
+CkeckIfKingKilled MACRO row, column, grid
+
+ENDM CheckIfKingKilled   
 
 ; include resZahran.inc
 .model small
@@ -846,6 +879,15 @@ ENDM movePiece
                  db  00,00,00,00,00,00,00,00
                  db  01,01,01,01,01,01,01,01
                  db  02,03,04,05,06,04,03,02
+   
+    cooldown     dw  0000,0000,0000,0000,0000,0000,0000,0000
+                 dw  0000,0000,0000,0000,0000,0000,0000,0000
+                 dw  0000,0000,0000,0000,0000,0000,0000,0000
+                 dw  0000,0000,0000,0000,0000,0000,0000,0000
+                 dw  0000,0000,0000,0000,0000,0000,0000,0000
+                 dw  0000,0000,0000,0000,0000,0000,0000,0000
+                 dw  0000,0000,0000,0000,0000,0000,0000,0000
+                 dw  0000,0000,0000,0000,0000,0000,0000,0000
 
     availMoves   db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;1
                  db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;2
@@ -1171,7 +1213,7 @@ main proc far
     ;TODO: go to main screen
 
       
-                  mainScreen     hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell, grid
+                  mainScreen     hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown
 
 
    
