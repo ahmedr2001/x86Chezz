@@ -4,6 +4,170 @@
 include mymacros.inc
 include setMovs.inc
 
+HighlightAvailableForKing macro row,col
+local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft
+
+;highlight 3 above it 
+mov ah, row
+mov al, col
+cmp ah, 1
+jl noAbove
+    drawSquareOnCell 0Dh, row-1,col
+    cmp al,1
+    jl noAboveLeft
+        drawSquareOnCell 0Dh, row-1,col-1
+    noAboveLeft:
+    cmp al,6
+    jg noAboveRight
+        drawSquareOnCell 0Dh, row-1,col+1
+    noAboveRight:
+noAbove:
+
+;highlight 3 below it
+cmp ah,6
+jg noBelow
+    drawSquareOnCell 0Dh, row+1,col
+    cmp al,1
+    jl noBelowLeft
+        drawSquareOnCell 0Dh, row+1,col-1
+    noBelowLeft:
+    cmp al,6
+    jg noBelowRight
+        drawSquareOnCell 0Dh, row+1,col+1
+    noBelowRight:
+noBelow:
+
+;highlight right
+cmp al,6
+jg noRight
+    drawSquareOnCell 0Dh, row,col+1
+noRight:
+
+;highlight left
+cmp al,1
+jl noLeft
+    drawSquareOnCell 0Dh, row,col-1
+noLeft:
+
+endm HighlightAvailableForKing
+;=========================================================
+HighlightAvailableForKnight macro row,col
+mov ah,row
+mov al,col
+;highlight above
+cmp ah,2
+jl noAbove
+
+cmp al,1
+jl noLeftAbove
+    drawSquareOnCell 0Dh, row-2,col-1
+noLeftAbove:
+
+cmp al,6
+jg noRightAbove
+    drawSquareOnCell 0Dh, row-2,col+1
+noRightAbove:
+
+noAbove:
+;highlight below
+cmp ah,5
+jg nobelow
+
+cmp al,1
+jl noLeftbelow
+    drawSquareOnCell 0Dh, row+2,col-1
+noLeftbelow:
+
+cmp al,6
+jg noRightbelow
+    drawSquareOnCell 0Dh, row+2,col+1
+noRightbelow:
+
+nobelow:
+;highlight right
+cmp al,5
+jg noright
+
+cmp ah,1
+jl noUpright
+    drawSquareOnCell 0Dh, row-1,col+2
+noUpright:
+
+cmp ah,6
+jg noDownright
+    drawSquareOnCell 0Dh, row+1,col+2
+noDownright:
+
+noright:
+;highlight left
+cmp al,2
+jl noLeft
+
+cmp ah,1
+jl noUpLeft
+    drawSquareOnCell 0Dh, row-1,col-2
+noUpLeft:
+
+cmp ah,6
+jg noDownLeft
+    drawSquareOnCell 0Dh, row+1,col-2
+noDownLeft:
+
+noLeft:
+endm HighlightAvailableForKnight
+
+;===============================================================
+;Pawn Available ;for One computer
+
+HighlightAvailableForPawnOne macro row,col
+local notFirstStepP1, endOfBoardP1, done
+;if first step (one or two)
+mov ah,row
+mov al,col
+cmp ah,6 
+JNE notFirstStepP1
+    drawSquareOnCell 0Dh, row-1,col
+    drawSquareOnCell 0Dh, row-2,col
+
+    cmp ah,6
+    je done
+notFirstStepP1:
+
+;else
+cmp ah,0
+je endOfBoardP1
+    drawSquareOnCell 0Dh, row-1,col
+endOfBoardP1:
+
+done:
+
+;second player
+endm HighlightAvailableForPawnOne
+;======================================================
+HighlightAvailableForPawnTwo macro row,col
+local notFirstStepP2, endOfBoardP2, done
+;if first step (one or two)
+mov ah,row
+mov al,col
+cmp ah,1 
+JNE notFirstStepP2
+    drawSquareOnCell 0Dh, row+1,col
+    drawSquareOnCell 0Dh, row+2,col
+
+    cmp ah,1
+    je done
+notFirstStepP2:
+
+;else
+cmp ah,7
+je endOfBoardP2
+    drawSquareOnCell 0Dh, row+1,col
+endOfBoardP2:
+
+done:
+
+endm HighlightAvailableForPawnTwo
+;======================================================
 eraseImage MACRO row, column, greyCell, whiteCell
 LOCAL eraseGrey, eraseWhite, rt
     mov al, row
@@ -28,6 +192,7 @@ ENDM eraseImage
 drawSquareOnCell MACRO color, row, column
 LOCAL drawHorizontalLines
 LOCAL drawVerticalLines,fhl
+pusha
 mov al,20
 mov bl,row
 imul bl
@@ -70,6 +235,7 @@ add cx,20
 inc dx
 cmp dx,bx
 jne drawVerticalLines
+popa
 
 ENDM drawSquareOnCell
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -81,6 +247,88 @@ drawImageOnBoard MACRO image, imageWidth, imageHeight, row, column
     drawImage image, imageWidth, imageHeight, 80+row*20, column*20
 ENDM drawImageOnBoard
 ;----------------------------------------------------------------------
+
+;--------------------------------------------------------------------------
+drawEncodingOnBoard MACRO code, row, column
+    LOCAL cmp2, cmp3, cmp4, cmp5, cmp6, cmp11, cmp12, cmp13, cmp14, cmp15, cmp16, rt
+    pusha
+
+    mov ah, code
+
+    cmp ah, 1
+    jnz cmp2
+    drawImageOnBoard white_pawn, 20, 20, row, column
+    jmp rt
+
+    cmp2:
+    cmp ah, 2
+    jnz cmp3
+    drawImageOnBoard white_rock, 20, 20, row, column
+    jmp rt
+
+    cmp3:
+    cmp ah, 3
+    jnz cmp4
+    drawImageOnBoard white_knight, 20, 20, row, column
+    jmp rt
+
+    cmp4:
+    cmp ah, 4
+    jnz cmp5
+    drawImageOnBoard white_bishop, 20, 20, row, column
+    jmp rt
+
+    cmp5:
+    cmp ah, 5
+    jnz cmp6
+    drawImageOnBoard white_queen, 20, 20, row, column
+    jmp rt
+
+    cmp6:
+    cmp ah, 6
+    jnz cmp11
+    drawImageOnBoard white_king, 20, 20, row, column
+    jmp rt
+
+    cmp11:
+    cmp ah, 11
+    jnz cmp12
+    drawImageOnBoard black_pawn, 20, 20, row, column
+    jmp rt
+
+    cmp12:
+    cmp ah, 12
+    jnz cmp13
+    drawImageOnBoard black_rock, 20, 20, row, column
+    jmp rt
+
+    cmp13:
+    cmp ah, 13
+    jnz cmp14
+    drawImageOnBoard black_knight, 20, 20, row, column
+    jmp rt
+
+    cmp14:
+    cmp ah, 14
+    jnz cmp15
+    drawImageOnBoard black_bishop, 20, 20, row, column
+    jmp rt
+
+    cmp15:
+    cmp ah, 15
+    jnz cmp16
+    drawImageOnBoard black_queen, 20, 20, row, column
+    jmp rt
+
+    cmp16:
+    cmp ah, 16
+    jnz rt
+    drawImageOnBoard black_king, 20, 20, row, column
+    
+    rt:
+    popa
+ENDM drawEncodingOnBoard  
+;----------------------------------------------------------------------------  
 
 drawImage MACRO image, imageWidth, imageHeight, x, y
 LOCAL drawLoop
@@ -149,7 +397,7 @@ usernameScreen MACRO entername, pressEnter
     call waitEnter
 endm usernameScreen
 
-mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell
+mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid
     
       
      mov ax, 0003h
@@ -396,6 +644,10 @@ enterms:
 
 ;;highlight current cell
 drawSquareOnCell 0eh,currRow,currColumn
+movePiece 1, 6, 0, 5, 0, grid
+HighlightAvailableForKing 5, 4
+HighlightAvailableForKnight 1,4
+HighlightAvailableForPawnTwo 1,7
 
 ;gm
 checkkeygm:
@@ -491,6 +743,7 @@ mov selectedCol,cl
 mov cl,currRow
 mov selectedRow,cl
 drawSquareOnCell 04h,currRow,currColumn
+
 ;;;;;check available moves and draw them
 
 
@@ -564,7 +817,21 @@ jmp checkkeygm
      int 16h
      jmp checkkey
 
-endm mainScreen     
+endm mainScreen  
+
+;------------------------------------------------------------
+movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid
+    pusha
+    eraseImage fromColumn, fromRow, greyCell, whiteCell
+    lea si, grid
+    mov [si+fromRow*8+fromColumn], 0
+    eraseImage toColumn, toRow, greyCell, whiteCell
+    drawEncodingOnBoard code, toColumn, toRow
+    mov [si+toRow*8+toColumn], code
+    popa
+ENDM movePiece
+;--------------------------------------------------------------
+
 ; include resZahran.inc
 .model small
 .386
@@ -904,7 +1171,7 @@ main proc far
     ;TODO: go to main screen
 
       
-                  mainScreen     hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell
+                  mainScreen     hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell, grid
 
 
    
