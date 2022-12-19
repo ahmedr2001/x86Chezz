@@ -653,7 +653,7 @@ mov ah, 86h
 int 15h
 mov ah, 86h
 int 15h
-movePiece 1, 5, 0, 6, 0, grid, cooldown
+movePiece 1, 5, 0, 0, 4, grid, cooldown
 HighlightAvailableForKing 5, 4
 HighlightAvailableForKnight 1,4
 HighlightAvailableForPawnTwo 1,7
@@ -837,7 +837,7 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown
     lea di, cooldown
     mov ax, [di+fromRow*8+fromColumn]
     sub dx, ax
-    cmp dx, 60
+    cmp dx, 10
     jl noMove
 
     eraseImage fromColumn, fromRow, greyCell, whiteCell
@@ -847,9 +847,9 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown
     drawEncodingOnBoard code, toColumn, toRow
     ; mov ah, [si+toRow*8+toColumn]
     ; cmp ah, 6
-    ; jz endgame
+    ; jz exitgame
     ; cmp ah, 16
-    ; jz endgame
+    ; jz exitgame
     mov [si+toRow*8+toColumn], code
     mov ah,00h
     int 1ah
