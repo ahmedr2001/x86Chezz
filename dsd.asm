@@ -925,7 +925,7 @@ mov cl,currRow
 mov selectedRow,cl
 drawSquareOnCell 04h,currRow,currColumn
 
-;;;;;check available moves and draw them
+;;;;;check available moves for the piece and draw them
 
 mov ah,0
 int 16h
