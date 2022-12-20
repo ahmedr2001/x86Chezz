@@ -537,7 +537,7 @@ jnz exitgame
 
 ;first remove highlight from selected cell then move the piece at seleted cell to curr cell if available
 ;and remove the highlight of available moves
-;then jump to checkkeygm
+;then jump to consumebuffergm
 
 
 ; mov keypressed,al
