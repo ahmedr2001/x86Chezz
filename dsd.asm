@@ -551,8 +551,9 @@ jnz consumebuffer
 ;exitgame
 
 ; mov keypressed,al
-;consume buffer
 
+
+; consume buffer
 mov ah,0
 int 16h
 
