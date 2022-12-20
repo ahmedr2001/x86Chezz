@@ -213,25 +213,25 @@ mov al,color
 
 
 mov bx,cx
-add bx,20
+add bx,19
 drawHorizontalLines:
 cmp cx,bx
 je fhl
 int 10h
-add dx,20
+add dx,19
 int 10h
-sub dx,20   
+sub dx,19 
 inc cx
 jmp drawHorizontalLines
 
 fhl:
 mov bx,dx
-add bx,20
+add bx,19
 drawVerticalLines:
 int 10h 
-sub cx,20
+sub cx,19
 int 10h
-add cx,20  
+add cx,19
 inc dx
 cmp dx,bx
 jne drawVerticalLines
@@ -396,6 +396,178 @@ usernameScreen MACRO entername, pressEnter
     ;Wait for enter key
     call waitEnter
 endm usernameScreen
+
+
+
+checkSelected macro row,column
+local skip
+push CX
+mov isSelectedCell,0
+
+mov cl,row
+cmp cl,selectedRow
+jnz skip
+mov cl,selectedCol
+cmp cl,column
+jnz skip
+mov isSelectedCell,1
+
+skip:
+pop CX
+endm checkSelected
+
+eraseHighlight macro 
+local removeh,end
+;need to add check if available move
+checkSelected currRow,currColumn
+cmp isSelectedCell,0
+jz removeh
+drawSquareOnCell 04h,currRow,currColumn
+jmp end
+
+
+removeh:
+drawSquareOnCell 07h,currRow,currColumn
+
+end:
+endm eraseHighlight
+
+navigateAfterSelect macro 
+LOCAL checkkey,up,down,left,right,consumebuffer,q,skipnavd,skipnavu,skip,skipErase,skipnavl,skipnavr,escape
+;first you should know which piece is at selected cell then call highlight available moves then navigate
+
+checkkey:
+mov ah,1
+int 16h
+jnz up
+jz checkkey
+
+up:
+cmp ah,48h
+jnz down
+
+;navigate up
+cmp currRow,0
+je skipnavu
+
+
+eraseHighlight
+
+dec currRow
+
+drawSquareOnCell 0eh,currRow,currColumn
+skipnavu:
+
+
+; mov keypressed,ah
+
+jmp consumebuffer
+
+down:
+cmp ah,50h
+jnz left
+
+;navigate down
+
+mov keypressed,ah
+
+cmp currRow,7
+je skipnavd
+
+
+eraseHighlight
+
+
+inc currRow
+drawSquareOnCell 0eh,currRow,currColumn
+skipnavd:
+
+
+jmp consumebuffer
+
+
+left:
+cmp ah,4bh
+jnz right
+
+;navigate left
+
+mov keypressed,al
+
+
+cmp currColumn,0
+je skipnavl
+
+eraseHighlight
+
+
+dec currColumn
+drawSquareOnCell 0eh,currRow,currColumn
+skipnavl:
+
+jmp consumebuffer
+
+right:
+cmp ah,4dh
+jnz q
+
+;navigate right
+
+; mov keypressed,al
+
+
+cmp currColumn,7
+je skipnavr
+
+eraseHighlight
+
+
+inc currColumn
+drawSquareOnCell 0eh,currRow,currColumn
+skipnavr:
+
+jmp consumebuffer
+
+q:
+cmp al,71h
+jnz exitgame
+
+;select
+
+
+;first remove highlight from selected cell then move the piece at seleted cell to curr cell if available
+;and remove the highlight of available moves
+;then jump to checkkeygm
+
+
+; mov keypressed,al
+
+jmp consumebuffer
+
+escape:
+cmp al,1bh
+jnz consumebuffer
+
+;exitgame
+
+; mov keypressed,al
+;consume buffer
+
+mov ah,0
+int 16h
+
+
+jmp checkkeygm
+
+
+
+consumebuffer:
+mov ah,0
+int 16h
+jmp checkkey
+
+
+endm navigateAfterSelect
 
 mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown
     
@@ -644,19 +816,19 @@ enterms:
 
 ;;highlight current cell
 drawSquareOnCell 0eh,currRow,currColumn
-movePiece 1, 6, 0, 5, 0, grid, cooldown
-mov cx, 0fh
-mov dx, 4240h
-mov ah, 86h
-int 15h
-mov ah, 86h
-int 15h
-mov ah, 86h
-int 15h
-movePiece 1, 5, 0, 0, 4, grid, cooldown
-HighlightAvailableForKing 5, 4
-HighlightAvailableForKnight 1,4
-HighlightAvailableForPawnTwo 1,7
+; movePiece 1, 6, 0, 5, 0, grid, cooldown
+; mov cx, 0fh
+; mov dx, 4240h
+; mov ah, 86h
+; int 15h
+; mov ah, 86h
+; int 15h
+; mov ah, 86h
+; int 15h
+; movePiece 1, 5, 0, 0, 4, grid, cooldown
+; HighlightAvailableForKing 5, 4
+; HighlightAvailableForKnight 1,4
+; HighlightAvailableForPawnTwo 1,7
 
 ;gm
 checkkeygm:
@@ -754,6 +926,10 @@ mov selectedRow,cl
 drawSquareOnCell 04h,currRow,currColumn
 
 ;;;;;check available moves and draw them
+
+mov ah,0
+int 16h
+navigateAfterSelect
 
 
 mov keypressed,al
@@ -1182,7 +1358,7 @@ ENDM CheckIfKingKilled
     selectedRow  db ?
     selectedCol  db ? 
 
-
+    isSelectedCell db ?
 
 
 
