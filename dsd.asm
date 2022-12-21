@@ -397,6 +397,38 @@ usernameScreen MACRO entername, pressEnter
     call waitEnter
 endm usernameScreen
 
+checkEmptyCell MACRO 
+local notempty
+
+mov bl,8
+mov al,currRow
+imul bl
+add al,currColumn
+
+mov bx,ax
+
+; mov bl,currColumn
+; mov bh,0
+; mov si,bx
+
+; mov bl,currRow
+
+mov cl,grid[bx]
+
+
+ 
+mov isEmptyCell,0
+
+cmp cl,0
+jnz notempty
+mov isEmptyCell,1
+
+
+
+
+notempty:
+
+ENDM checkEmptyCell
 
 
 checkSelected macro row,column
@@ -818,19 +850,19 @@ enterms:
 
 ;;highlight current cell
 drawSquareOnCell 0eh,currRow,currColumn
-movePiece 1, 6, 0, 5, 0, grid, cooldown, winMessageP1, winMessageP2
-mov cx, 0fh
-mov dx, 4240h
-mov ah, 86h
-int 15h
-mov ah, 86h
-int 15h
-mov ah, 86h
-int 15h
-movePiece 1, 5, 0, 0, 4, grid, cooldown, winMessageP1, winMessageP2
-HighlightAvailableForKing 5, 4
-HighlightAvailableForKnight 1,4
-HighlightAvailableForPawnTwo 1,7
+; movePiece 1, 6, 0, 5, 0, grid, cooldown, winMessageP1, winMessageP2
+; mov cx, 0fh
+; mov dx, 4240h
+; mov ah, 86h
+; int 15h
+; mov ah, 86h
+; int 15h
+; mov ah, 86h
+; int 15h
+; movePiece 1, 5, 0, 0, 4, grid, cooldown, winMessageP1, winMessageP2
+; HighlightAvailableForKing 5, 4
+; HighlightAvailableForKnight 1,4
+; HighlightAvailableForPawnTwo 1,7
 
 ;gm
 checkkeygm:
@@ -920,6 +952,10 @@ cmp al,71h
 jnz exitgame
 
 ;select
+checkEmptyCell
+
+cmp isEmptyCell,0
+jne preventSelection
 
 mov cl,currColumn
 mov selectedCol,cl
@@ -935,6 +971,9 @@ navigateAfterSelect
 
 
 mov keypressed,al
+
+preventSelection:
+
 
 jmp consumebuffergm
 
@@ -1391,6 +1430,7 @@ ENDM movePiece
     selectedCol  db ? 
 
     isSelectedCell db ?
+    isEmptyCell    db ?
 
 
 
