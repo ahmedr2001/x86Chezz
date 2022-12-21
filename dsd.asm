@@ -407,28 +407,80 @@ add al,currColumn
 
 mov bx,ax
 
-; mov bl,currColumn
-; mov bh,0
-; mov si,bx
-
-; mov bl,currRow
-
 mov cl,grid[bx]
 
-
- 
 mov isEmptyCell,0
 
 cmp cl,0
 jnz notempty
 mov isEmptyCell,1
 
-
-
-
 notempty:
 
 ENDM checkEmptyCell
+
+getAvailForSelectedPiece MACRO
+
+mov bl,8
+mov al,currRow
+imul bl
+add al,currColumn
+mov bx,ax
+
+mov cl,grid[bx]
+
+;test
+;  mov ax, 0003h
+;      int 10h
+
+; mov ah,0ah
+; mov al,cl
+; add al,'0'
+; int 10h
+
+;check rock
+cmp cl,2
+jne blackrock
+; rookMoves availMoves,grid,currRow,currColumn
+blackrock:
+cmp cl,12
+jne whitebishop
+; rookMoves availMoves,grid,currRow,currColumn
+whitebishop:
+cmp cl,4
+jne blackbishop
+; bishopMoves availMoves,grid,currRow,currColumn
+blackbishop:
+cmp cl,14
+jne whitequeen
+; bishopMoves availMoves,grid,currRow,currColumn
+whitequeen:
+cmp cl,5
+jne blackqueen
+; queenMoves availMoves,grid,currRow,currColumn
+blackqueen:
+cmp cl,15
+jne whitepawn
+; queenMoves availMoves,grid,currRow,currColumn
+whitepawn:
+cmp cl,1
+jne blackpawn
+; HighlightAvailableForPawnOne currRow,currColumn
+blackpawn:
+cmp cl,11
+jne king1
+; HighlightAvailableForPawnTwo currRow,currColumn
+king1:
+cmp cl,6 
+jne king2
+; HighlightAvailableForKing currRow,currColumn
+king2:
+cmp cl,16
+jne whiteknight
+; HighlightAvailableForKing currRow,currColumn
+whiteknight:
+;;;;;;;;;;con
+ENDM getAvailForSelectedPiece
 
 
 checkSelected macro row,column
@@ -963,6 +1015,8 @@ mov cl,currRow
 mov selectedRow,cl
 drawSquareOnCell 04h,currRow,currColumn
 
+getAvailForSelectedPiece
+
 ;;;;;check available moves for the piece and draw them
 
 mov ah,0
@@ -1431,6 +1485,8 @@ ENDM movePiece
 
     isSelectedCell db ?
     isEmptyCell    db ?
+
+    selectedPiece  db ? 
 
 
 
