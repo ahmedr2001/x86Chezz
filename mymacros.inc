@@ -1,10 +1,12 @@
 ;--------------------------------
 ; Macro to move cursor to certain position
 ; Takes position as parameter
-moveCursor MACRO position    
+moveCursor MACRO position
+    pusha    
     mov ah, 2
     mov dx, position
     int 10h             ; use interrupt 10/2, dx contains position
+    popa
 ENDM moveCursor
 ;----------------------------------
 

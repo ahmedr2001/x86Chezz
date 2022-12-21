@@ -397,7 +397,7 @@ usernameScreen MACRO entername, pressEnter
     call waitEnter
 endm usernameScreen
 
-mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown
+mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2
     
       
      mov ax, 0003h
@@ -644,7 +644,7 @@ enterms:
 
 ;;highlight current cell
 drawSquareOnCell 0eh,currRow,currColumn
-movePiece 1, 6, 0, 5, 0, grid, cooldown
+movePiece 1, 6, 0, 5, 0, grid, cooldown, winMessageP1, winMessageP2
 mov cx, 0fh
 mov dx, 4240h
 mov ah, 86h
@@ -653,7 +653,7 @@ mov ah, 86h
 int 15h
 mov ah, 86h
 int 15h
-movePiece 1, 5, 0, 0, 4, grid, cooldown
+movePiece 1, 5, 0, 0, 4, grid, cooldown, winMessageP1, winMessageP2
 HighlightAvailableForKing 5, 4
 HighlightAvailableForKnight 1,4
 HighlightAvailableForPawnTwo 1,7
@@ -769,6 +769,8 @@ jnz consumebuffergm
 mov keypressed,al
 ;consume buffet then go to main screen
 
+; gameWon:
+
 mov ah,0
 int 16h
 
@@ -829,47 +831,75 @@ jmp checkkeygm
 endm mainScreen  
 
 ;------------------------------------------------------------
-movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown
-    local noMove
+movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winMessageP1, winMessageP2
+    local noMove, gameWon1, gameWon2
     pusha
     mov ah,00h
     int 1ah
-    lea di, cooldown
-    mov ax, [di+fromRow*8+fromColumn]
-    sub dx, ax
-    cmp dx, 10
-    jl noMove
+    ; lea di, cooldown
+    ; mov ax, [di+fromRow*8+fromColumn]
+    ; sub dx, ax
+    ; cmp dx, 50
+    ; jl noMove
 
     eraseImage fromColumn, fromRow, greyCell, whiteCell
     lea si, grid
     mov [si+fromRow*8+fromColumn], 0
     eraseImage toColumn, toRow, greyCell, whiteCell
     drawEncodingOnBoard code, toColumn, toRow
-    ; mov ah, [si+toRow*8+toColumn]
-    ; cmp ah, 6
-    ; jz exitgame
-    ; cmp ah, 16
-    ; jz exitgame
+    mov ah, [si+toRow*8+toColumn]
+    cmp ah, 6
+    jz gameWon2
+    cmp ah, 16
+    jz gameWon1
     mov [si+toRow*8+toColumn], code
     mov ah,00h
     int 1ah
     mov [di+toRow*8+toColumn], dx
+    jmp noMove
+gameWon1:
+    moveCursor 1800h
+    mov dx, offset winMessageP1
+    mov ah, 09h
+    int 21h
+    mov cx, 0fh
+    mov dx, 4240h
+    mov ah, 86h
+    int 15h
+    mov ah,0
+int 16h
 
-    noMove:
+ mov ax, 0003h
+     int 10h
+    jmp enterms
+    jmp noMove
+gameWon2:
+    mov dx, offset winMessageP2
+    mov ah, 09
+    int 21h
+    mov cx, 0fh
+    mov dx, 4240h
+    mov ah, 86h
+    int 15h
+    mov ah,0
+int 16h
+
+ mov ax, 0003h
+     int 10h
+    jmp enterms
+noMove:
     popa
 ENDM movePiece
-;--------------------------------------------------------------
-
-;--------------------------------------------------------------
-CkeckIfKingKilled MACRO row, column, grid
-
-ENDM CheckIfKingKilled   
+;-------------------------------------------------------------- 
 
 ; include resZahran.inc
 .model small
 .386
 .stack 64
 .data
+
+    winMessageP1 db  "Game ended! Player 1 wins!$"
+    winMessageP2 db  "Game ended! Player 2 wins!$"
 
     grid         db  12,13,14,15,16,14,13,12
                  db  11,11,11,11,11,11,11,11
@@ -1213,7 +1243,7 @@ main proc far
     ;TODO: go to main screen
 
       
-                  mainScreen     hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown
+                  mainScreen     hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2
 
 
    
