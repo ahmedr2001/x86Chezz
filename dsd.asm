@@ -443,7 +443,7 @@ jnz up
 jz checkkey
 
 up:
-cmp ah,48h
+cmp al,77h
 jnz down
 
 ;navigate up
@@ -464,7 +464,7 @@ skipnavu:
 jmp consumebuffer
 
 down:
-cmp ah,50h
+cmp al,73h
 jnz left
 
 ;navigate down
@@ -487,7 +487,7 @@ jmp consumebuffer
 
 
 left:
-cmp ah,4bh
+cmp al,61h
 jnz right
 
 ;navigate left
@@ -508,7 +508,7 @@ skipnavl:
 jmp consumebuffer
 
 right:
-cmp ah,4dh
+cmp al,64h
 jnz q
 
 ;navigate right
@@ -530,7 +530,7 @@ jmp consumebuffer
 
 q:
 cmp al,71h
-jnz exitgame
+jnz escape
 
 ;select
 
@@ -552,6 +552,7 @@ jnz consumebuffer
 
 ; mov keypressed,al
 
+drawSquareOnCell 07,selectedRow,selectedCol
 
 ; consume buffer
 mov ah,0
