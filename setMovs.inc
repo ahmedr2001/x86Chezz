@@ -69,6 +69,31 @@ checkRight: ;right columns
         inc si ;go to right boxes
         jmp checkRight
         lastRight:
+        ; ;check same team?
+        ; ;get away piece code
+        ;     mov dl,grid[bx] 
+        ;     push bx 
+        ;         ;get attacker piece code
+        ;         ;reset bx
+        ;         mov bl,column
+        ;         mov bh,0
+        ;         mov si,bx ;store column number in si
+        ;         mov bl,row ;store row number in bl
+
+        ;         mov cl,8
+        ;         mov al,row
+        ;         imul cl 
+        ;         mov bx,ax ;bx = bl(row number)*8
+        ;         add bx,si ;bx = bl(row number)*8 +si(column number)
+        ;     mov dh,grid[bx]
+        ;     pop bx
+        ;     ;is same Color?
+        ;         ; mov dl,02
+        ;         and dl,10
+        ;         ; mov dh,03
+        ;         and dh,10
+        ;     xor dl,dh
+        ;     jz preLeft
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
