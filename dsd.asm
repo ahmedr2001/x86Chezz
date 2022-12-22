@@ -709,7 +709,7 @@ enterms:
      mov dx,offset mes3
      int 21h     
              
-            
+    notificationBar hello, exclamation, name1, messageTemp
             
      ;checks if kay pressed and check which key       
      checkkey:
