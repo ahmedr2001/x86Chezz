@@ -4,6 +4,26 @@
 include mymacros.inc
 include setMovs.inc
 
+eraseImage MACRO row, column, greyCell, whiteCell
+LOCAL eraseGrey, eraseWhite, rt
+    mov al, row
+    mov ah, column
+    add ah, al
+    and ah, 1
+    JZ eraseWhite
+    JNZ eraseGrey
+
+    eraseGrey:
+    drawImageOnBoard greyCell, 20, 20, row, column
+    jmp rt
+
+    eraseWhite: 
+    drawImageOnBoard whiteCell, 20, 20, row, column
+    jmp rt
+
+rt:
+ENDM eraseImage
+
 HighlightAvailableForKing macro row,col
 local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
 
@@ -365,7 +385,22 @@ ENDM drawSquareOnCell
 ;-----------------------------------------------------------------------
 ; to draw image on board using row and column
 drawImageOnBoard MACRO image, imageWidth, imageHeight, row, column
-    drawImage image, imageWidth, imageHeight, 80+row*20, column*20
+    pusha
+    mov ah,0
+    mov al, row
+    mov bl, 20
+    imul bl
+    add ax, 80
+    mov bx, ax
+    mov x, bx
+    mov ah,0
+    mov al, column
+    mov bl, 20
+    imul bl
+    mov cx, ax
+    mov y, cx
+    drawImage image, imageWidth, imageHeight, x, y
+    popa
 ENDM drawImageOnBoard
 ;----------------------------------------------------------------------
 
@@ -454,14 +489,15 @@ ENDM drawEncodingOnBoard
 drawImage MACRO image, imageWidth, imageHeight, x, y
 LOCAL drawLoop
 LOCAL nodraw
+pusha
         LEA BX , image ; BL contains index at the current drawn pixel
-
     MOV CX,x
     MOV DX,y
     MOV AH,0ch
 	
 ; Drawing loop
     drawLoop:
+        mov ah, 0ch
         MOV AL,[BX]
         cmp AL,0ffh
         je nodraw
@@ -469,15 +505,19 @@ LOCAL nodraw
         ; je nodraw
         INT 10h 
         nodraw:
+        mov ax, x
+        add ax, imageWidth
         INC CX
         INC BX
-        CMP CX,imageWidth+x
+        CMP CX,ax
     JNE drawLoop 
-        
+        mov ax, y
+        add ax, imageHeight
         MOV CX , x
         INC DX
-        CMP DX , imageHeight+y
+        CMP DX , ax
     JNE drawLoop
+    popa
 ENDM drawImage
 
 usernameScreen MACRO entername, pressEnter
@@ -590,7 +630,7 @@ jne blackpawn
 blackpawn:
 cmp cl,11
 jne king1
-; HighlightAvailableForPawnTwo currRow,currColumn
+movePiece 1, currRow, currColumn, currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
 king1:
 cmp cl,6 
 jne king2
@@ -953,7 +993,7 @@ enterms:
 
 ;;;;;;;;;;;; Can We call the macro with ah or al?;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;; when you have answer for this uncomment drawpawn loop code;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;; YES WE CAN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -1023,16 +1063,16 @@ enterms:
 
 ;;highlight current cell
 drawSquareOnCell 0eh,currRow,currColumn
-; movePiece 1, 6, 0, 5, 0, grid, cooldown, winMessageP1, winMessageP2
-; mov cx, 0fh
-; mov dx, 4240h
-; mov ah, 86h
-; int 15h
-; mov ah, 86h
-; int 15h
-; mov ah, 86h
-; int 15h
-; movePiece 1, 5, 0, 0, 4, grid, cooldown, winMessageP1, winMessageP2
+movePiece 1, currRow, currColumn, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov cx, 0fh
+mov dx, 4240h
+mov ah, 86h
+int 15h
+mov ah, 86h
+int 15h
+mov ah, 86h
+int 15h
+movePiece 1, currColumn, currRow, currRow, currColumn, grid, cooldown, winMessageP1, winMessageP2
 ; HighlightAvailableForKing 5, 4
 ; HighlightAvailableForKnight 1,4
 ; HighlightAvailableForPawnTwo 1,7
@@ -1228,26 +1268,49 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winM
     pusha
     mov ah,00h
     int 1ah
+    mov ah, 0
+    mov al, fromRow
+    mov bl, 8
+    imul bl
+    add al, fromColumn
+    mov bx, ax
     ; lea di, cooldown
-    ; mov ax, [di+fromRow*8+fromColumn]
-    ; sub dx, ax
-    ; cmp dx, 50
-    ; jl noMove
+    mov ax, cooldown[bx]
+    sub dx, ax
+    cmp dx, 50
+    jl noMove
 
     eraseImage fromColumn, fromRow, greyCell, whiteCell
-    lea si, grid
-    mov [si+fromRow*8+fromColumn], 0
+    ; lea si, grid
+    mov al, fromRow
+    mov bl, 8
+    imul bl
+    add al, fromColumn
+    mov bx, ax
+    mov grid[bx], 0
     eraseImage toColumn, toRow, greyCell, whiteCell
     drawEncodingOnBoard code, toColumn, toRow
-    mov ah, [si+toRow*8+toColumn]
+    ; lea si, grid
+    mov al, toRow
+    mov bl, 8
+    imul bl
+    add al, toColumn
+    mov bx, ax
+    mov ah, grid[bx]
     cmp ah, 6
     jz gameWon2
     cmp ah, 16
     jz gameWon1
-    mov [si+toRow*8+toColumn], code
+    mov grid[bx], code
     mov ah,00h
     int 1ah
-    mov [di+toRow*8+toColumn], dx
+    ; lea di, cooldown
+    mov al, toRow
+    mov bl, 8
+    imul bl
+    add al, toColumn
+    mov bx, ax
+    mov cooldown[bx], dx
     jmp noMove
 gameWon1:
     moveCursor 1800h
@@ -1292,6 +1355,9 @@ ENDM movePiece
 
     winMessageP1   db  "Game ended! Player 1 wins!$"
     winMessageP2   db  "Game ended! Player 2 wins!$"
+
+    x              dw   ?
+    y              dw   ?
 
     grid           db  12,13,14,15,16,14,13,12
                    db  11,11,11,11,11,11,11,11
