@@ -15,14 +15,15 @@ rookMoves MACRO availMoves ,grid, row, column
 checkRight: ;right columns
         cmp si,08h
         jz checkLeft
-        mov al,grid[bx][si]
+        mov al,grid[8 * bx + si]
         cmp al,00
         jnz lastRight
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
+        drawSquareOnCell 0eh,bx,si
         inc si ;go to right boxes
         jmp checkRight
         lastRight:
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
 
 ;reset indexes
     mov bx,row
@@ -32,14 +33,14 @@ checkRight: ;right columns
     checkLeft: ;left columns
         cmp si,0ffh
         jz checkTop
-        mov al,grid[bx][si]
+        mov al,grid[8* bx + si]
         cmp al,00
         jnz lastLeft
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
         dec si ;go to left boxes
         jmp checkLeft
         lastLeft:
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
 
 ;reset indexes
     mov bx,row
@@ -49,14 +50,14 @@ checkRight: ;right columns
     checkTop:
         cmp bx,08h
         jz checkBottom
-        mov al,grid[bx][si]
+        mov al,grid[8* bx + si]
         cmp al,00
         jnz lastTop
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
         inc bx ;go to top boxes
         jmp checkTop
         lastTop:
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
 
 ;reset indexes
     mov bx,row
@@ -66,14 +67,14 @@ checkRight: ;right columns
     checkBottom:
         cmp bx,0ffh
         jz leave
-        mov al,grid[bx][si]
+        mov al,grid[8* bx + si]
         cmp al,00
         jnz lastBottom
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
         dec bx ;go to bottom boxes
         jmp checkBottom
         lastBottom:
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
 
     leave:
 
@@ -95,15 +96,15 @@ bishopMoves MACRO availMoves ,grid, row, column
         jz checkTL
         cmp si,08h
         jz checkTL
-        mov al,grid[bx][si]
+        mov al,grid[8* bx + si]
         cmp al,00
         jnz,lastBR
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
         inc bx
         inc si
         jmp checkBR
         lastBR:
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
 
 ;reset indexes
     mov bx,row
@@ -116,15 +117,15 @@ bishopMoves MACRO availMoves ,grid, row, column
         jz checkTR
         cmp si,0ffh
         jz checkTR
-        mov ax,grid[bx][si]
+        mov ax,grid[8* bx + si]
         cmp ax,00
         jnz,lastTL
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
         dec bx
         dec si
         jmp checkTL
         lastTL:
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
 
 ;reset indexes
     mov bx,row
@@ -137,15 +138,15 @@ bishopMoves MACRO availMoves ,grid, row, column
         jz checkBL
         cmp si,08h
         jz checkBL
-        mov ax,grid[bx][si]
+        mov ax,grid[8* bx + si]
         cmp ax,00
         jnz,lastTR
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
         dec bx
         inc si
         jmp checkTR
         lastTR:
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
 
 ;reset indexes
     mov bx,row
@@ -158,15 +159,15 @@ bishopMoves MACRO availMoves ,grid, row, column
         jz leave
         cmp si,0ffh
         jz leave
-        mov ax,grid[bx][si]
+        mov ax,grid[8* bx + si]
         cmp ax,00
         jnz,lastBL
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
         inc bx
         dec si
         jmp checkBL
         lastBL:
-        mov availMoves[bx][si],0ffh
+        mov availMoves[8* bx + si],0ffh
 
     leave:                
     
