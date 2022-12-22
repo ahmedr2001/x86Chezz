@@ -630,7 +630,8 @@ jne blackpawn
 blackpawn:
 cmp cl,11
 jne king1
-movePiece 1, currRow, currColumn, currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
+; HighlightAvailableForPawnTwo currRow,currColumn
+; movePiece 1, currRow, currColumn, currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
 king1:
 cmp cl,6 
 jne king2
@@ -640,6 +641,14 @@ cmp cl,16
 jne whiteknight
 ; HighlightAvailableForKing currRow,currColumn
 whiteknight:
+cmp cl,3
+jne blackknight
+; HighlightAvailableForKnight currRow,currColumn
+blackknight:
+cmp cl,13
+jne rt
+; HighlightAvailableForKnight currRow,currColumn
+rt:
 ;;;;;;;;;;con
 ENDM getAvailForSelectedPiece
 
@@ -1063,16 +1072,16 @@ enterms:
 
 ;;highlight current cell
 drawSquareOnCell 0eh,currRow,currColumn
-movePiece 1, currRow, currColumn, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
-mov cx, 0fh
-mov dx, 4240h
-mov ah, 86h
-int 15h
-mov ah, 86h
-int 15h
-mov ah, 86h
-int 15h
-movePiece 1, currColumn, currRow, currRow, currColumn, grid, cooldown, winMessageP1, winMessageP2
+; movePiece 1, currRow, currColumn, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+; mov cx, 0fh
+; mov dx, 4240h
+; mov ah, 86h
+; int 15h
+; mov ah, 86h
+; int 15h
+; mov ah, 86h
+; int 15h
+; movePiece 1, currColumn, currRow, currRow, currColumn, grid, cooldown, winMessageP1, winMessageP2
 ; HighlightAvailableForKing 5, 4
 ; HighlightAvailableForKnight 1,4
 ; HighlightAvailableForPawnTwo 1,7
