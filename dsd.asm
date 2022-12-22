@@ -1070,11 +1070,11 @@ enterms:
 ; CORNERS
 ; rookMoves availMoves,0,0 ;Works
 ; rookMoves availMoves,0,7 ;Works
-; rookMoves availMoves,7,0 ;Error
-; rookMoves availMoves,7,7 ;Error
+; rookMoves availMoves,7,0 ;Error -> solved
+; rookMoves availMoves,7,7 ;Error -> solved
 ; Lines
 ; rookMoves availMoves,0,4 ;Works
-; rookMoves availMoves,7,4 ;Error
+; rookMoves availMoves,7,4 ;Error -> solved
 ; rookMoves availMoves,4,0 ;Works
 ; rookMoves availMoves,4,7 ;Works
 
