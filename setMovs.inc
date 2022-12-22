@@ -27,7 +27,7 @@ endm callDrawSquare
 
 
 rookMoves MACRO availMoves ,grid, row, column
-    LOCAL checkRight, lastRight, checkLeft,lastLeft,checkTop,lastTop,checkBottom,lastBottom,leave
+    LOCAL checkRight, lastRight, checkLeft,lastLeft,checkTop,lastTop,checkBottom,lastBottom,leave,precheckleft,prechecktop
 
 
 ;------------------------- TESTING
@@ -46,7 +46,7 @@ drawSquareOnCell 03h,row,column
     inc si
 checkRight: ;right columns
         cmp si,08h
-        jz checkLeft
+        jz precheckleft
             mov cl,8
             mov al,row
             imul cl 
@@ -68,70 +68,77 @@ checkRight: ;right columns
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
+precheckleft:
+;reset indexes
+mov bl,column
+mov bh,0
+mov si,bx  ;si has column
+
+    mov bl,row
+
+    dec si
+
+
+    checkLeft: ;left columns
+        cmp si,0ffffh
+        jz prechecktop
+        mov cl,8
+mov al,row
+imul cl
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
+        cmp al,00
+        jnz lastLeft
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+        dec si ;go to left boxes
+        jmp checkLeft
+        lastLeft:
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+
+
+prechecktop:
 ;reset indexes
 mov bl,column
 mov bh,0
 mov si,bx
     mov bl,row
 
-    dec si
-    checkLeft: ;left columns
-;         cmp si,0ffh
-;         jz checkTop
-;         mov cl,8
-; mov al,bl
-; imul cl
-; mov bx,ax
-; add bx,si
-;         mov al,grid[bx]
-;         cmp al,00
-;         jnz lastLeft
-;         mov availMoves[bx],0ffh
-;         callDrawSquare bx
+    dec bx
+    checkTop:
+        cmp bx,0ffffh
+        jz checkBottom
+        mov cl,8
+mov al,bl
+imul cl
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
+        cmp al,00
+        jnz lastTop
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+        mov bl,row
 
-;         dec si ;go to left boxes
-;         jmp checkLeft
-;         lastLeft:
-;         mov availMoves[bx],0ffh
-;         callDrawSquare bx
+        dec bx ;go to top boxes
+        
 
-
-; ;reset indexes
-; mov bl,column
-; mov bh,0
-; mov si,bx
-;     mov bl,row
-
-;     inc bx
-;     checkTop:
-;         cmp bx,08h
-;         jz checkBottom
-;         mov cl,8
-; mov al,bl
-; imul cl
-; mov bx,ax
-; add bx,si
-;         mov al,grid[bx]
-;         cmp al,00
-;         jnz lastTop
-;         mov availMoves[bx],0ffh
-;         callDrawSquare bx
-
-;         inc bx ;go to top boxes
-;         jmp checkTop
-;         lastTop:
-;         mov availMoves[bx],0ffh
-;         callDrawSquare bx
+        jmp checkTop
+        lastTop:
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
 
 
 ;reset indexes
-; mov bl,column
-; mov bh,0
-; mov si,bx
-;     mov bl,row
+mov bl,column
+mov bh,0
+mov si,bx
+    mov bl,row
 
-;     dec bx
-;     checkBottom:
+    dec bx
+    checkBottom:
 ;         cmp bx,0ffh
 ;         jz leave
 ;         mov cl,8
