@@ -1067,7 +1067,10 @@ enterms:
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
 ; Testing rookMoves "TAHER"
-rookMoves availMoves,grid,4,4
+; rookMoves availMoves,4,4
+
+; bishopMoves availMoves,4,4
+queenMoves availMoves,4,4
 
 
 ;;use color 07h to erase highlight

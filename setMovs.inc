@@ -26,7 +26,7 @@ popa
 endm callDrawSquare
 
 
-rookMoves MACRO availMoves ,grid, row, column
+rookMoves MACRO availMoves , row, column
     LOCAL checkRight, lastRight,preLeft, checkLeft,lastLeft,preTop,checkTop,lastTop,preBottom,checkBottom,lastBottom,leave
 
 
@@ -183,8 +183,13 @@ ENDM rookMoves
 
 ;-----------------------------------------------
 
-bishopMoves MACRO availMoves ,grid, row, column
-    local checkBR,lastBR,checkTL,lastTL,checkTR,lastTR,checkBL,lastBL
+bishopMoves MACRO availMoves , row, column
+    local checkBR,lastBR,checkTL,lastTL,checkTR,lastTR,checkBL,lastBL,precheckTL,precheckTR,precheckBL
+
+; ------------------------- TESTING
+drawSquareOnCell 03h,row,column
+; callDrawSquare bx
+; --------------------------
     
 ; intialize indexes
 mov bl,column
@@ -196,24 +201,30 @@ mov si,bx
     inc si
     checkBR: ;bottom right
         cmp bx,08h
-        jz checkTL
+        jz precheckTL
         cmp si,08h
-        jz checkTL
+        jz precheckTL
         mov cl,8
     mov al,bl
     imul cl
+    push bx
 mov bx,ax
 add bx,si
         mov al,grid[bx]
         cmp al,00
-        jnz,lastBR
+        jnz lastBR
         mov availMoves[bx],0ffh
+        callDrawSquare bx
+        pop bx
         inc bx
         inc si
         jmp checkBR
         lastBR:
+        callDrawSquare bx
         mov availMoves[bx],0ffh
 
+
+precheckTL:
 ;reset indexes
 mov bl,column
 mov bh,0
@@ -223,20 +234,31 @@ mov si,bx
     dec bx
     dec si
     checkTL: ;top left
-        cmp bx,0ffh
-        jz checkTR
-        cmp si,0ffh
-        jz checkTR
-        mov ax,grid[bx]
-        cmp ax,00
-        jnz,lastTL
+        cmp bx,0ffffh
+        jz precheckTR
+        cmp si,0ffffh
+        jz precheckTR
+         mov cl,8
+    mov al,bl
+    imul cl
+    push bx
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
+        cmp al,00
+        jnz lastTL
         mov availMoves[bx],0ffh
+        callDrawSquare bx
+        pop bx
         dec bx
         dec si
         jmp checkTL
         lastTL:
         mov availMoves[bx],0ffh
+        callDrawSquare bx
 
+
+precheckTR:
 ;reset indexes
 mov bl,column
 mov bh,0
@@ -246,20 +268,30 @@ mov si,bx
     dec bx
     inc si
     checkTR: ;top right
-        cmp bx,0ffh
-        jz checkBL
+        cmp bx,0ffffh
+        jz precheckBL
         cmp si,08h
         jz checkBL
-        mov ax,grid[bx]
-        cmp ax,00
-        jnz,lastTR
+          mov cl,8
+    mov al,bl
+    imul cl
+    push bx
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
+        cmp al,00
+        jnz lastTR
         mov availMoves[bx],0ffh
+        callDrawSquare bx
+        pop bx
         dec bx
         inc si
         jmp checkTR
         lastTR:
         mov availMoves[bx],0ffh
+        callDrawSquare bx
 
+precheckBL:
 ;reset indexes
 mov bl,column
 mov bh,0
@@ -271,17 +303,26 @@ mov si,bx
     checkBL: ;bottom left
         cmp bx,08h
         jz leave
-        cmp si,0ffh
+        cmp si,0ffffh
         jz leave
-        mov ax,grid[bx]
-        cmp ax,00
-        jnz,lastBL
+         mov cl,8
+    mov al,bl
+    imul cl
+    push bx
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
+        cmp al,00
+        jnz lastBL
         mov availMoves[bx],0ffh
+        callDrawSquare bx
+        pop bx
         inc bx
         dec si
         jmp checkBL
         lastBL:
         mov availMoves[bx],0ffh
+        callDrawSquare bx
 
     leave:                
     
@@ -289,10 +330,11 @@ ENDM bishopMoves
 
 ;------------------------------------------------
 
-queenMoves MACRO availMoves ,grid, row, column
+queenMoves MACRO availMoves , row, column
     
-        rookMoves availMoves,grid,row,column
-        bishopMoves availMoves,grid,row,column
+        rookMoves availMoves,row,column
+
+        bishopMoves availMoves,row,column
 
 ENDM queenMoves
 
