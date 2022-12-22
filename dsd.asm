@@ -5,53 +5,111 @@ include mymacros.inc
 include setMovs.inc
 
 HighlightAvailableForKing macro row,col
-local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft
+local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
 
-;highlight 3 above it 
+;highlight 3 above it
 mov ah, row
 mov al, col
 cmp ah, 1
 jl noAbove
+    cmp grid[row-1][col],00h
+    jmp EmptyAbove
+    cmp grid[row-1][col],06h
+    jl  noEnemyAbove
+    EmptyAbove:
     drawSquareOnCell 0Dh, row-1,col
+    mov availMoves[row-1][col],ffh
+    noEnemyAbove:
+
     cmp al,1
     jl noAboveLeft
+        cmp grid[row-1][col-1],00h
+        jmp EmptyAboveLeft
+        cmp grid[row-1][col-1],06h
+        jl  noEnemyAboveLeft
+        EmptyAboveLeft:
         drawSquareOnCell 0Dh, row-1,col-1
+        mov availMoves[row-1][col-1],ffh
+        noEnemyAboveLeft:
     noAboveLeft:
     cmp al,6
     jg noAboveRight
+        cmp grid[row-1][col+1],00h
+        jmp EmptyAboveRight
+        cmp grid[row-1][col+1],06h
+        jl  noEnemyAboveRight
+        EmptyAboveRight:
         drawSquareOnCell 0Dh, row-1,col+1
+        mov availMoves[row-1][col+1],ffh
+        noEnemyAboveRight:
     noAboveRight:
 noAbove:
 
 ;highlight 3 below it
 cmp ah,6
 jg noBelow
+    cmp grid[row+1][col],00h
+    jmp EmptyBelow
+    cmp grid[row+1][col],06h
+    jl  noEnemyBelow
+    EmptyBelow:
     drawSquareOnCell 0Dh, row+1,col
+    mov availMoves[row+1][col],ffh
+    noEnemyBelow:
     cmp al,1
     jl noBelowLeft
+        cmp grid[row+1][col-1],00h
+        jmp EmptyBelowLeft
+        cmp grid[row+1][col-1],06h
+        jl  noEnemyBelowLeft
+        EmptyBelowLeft:
         drawSquareOnCell 0Dh, row+1,col-1
+        mov availMoves[row+1][col-1],ffh
+        noEnemyBelowLeft:
     noBelowLeft:
     cmp al,6
     jg noBelowRight
+        cmp grid[row+1][col+1],00h
+        jmp EmptyBelowRight
+        cmp grid[row+1][col+1],06h
+        jl  noEnemyBelowRight
+        EmptyBelowRight:
         drawSquareOnCell 0Dh, row+1,col+1
+        mov availMoves[row+1][col+1],ffh
+        noEnemyBelowRight:
     noBelowRight:
 noBelow:
 
 ;highlight right
 cmp al,6
 jg noRight
+    cmp grid[row][col+1],00h
+    jmp EmptyRight
+    cmp grid[row][col+1],06h
+    jl  noEnemyRight
+    EmptyRight:
     drawSquareOnCell 0Dh, row,col+1
+    mov availMoves[row][col+1],ffh
+    noEnemyRight:
 noRight:
 
 ;highlight left
 cmp al,1
 jl noLeft
+    cmp grid[row][col-1],00h
+    jmp EmptyLeft
+    cmp grid[row][col-1],06h
+    jl  noEnemyLeft
+    EmptyLeft:
     drawSquareOnCell 0Dh, row,col-1
+    mov availMoves[row][col-1],ffh
+    noEnemyLeft:
 noLeft:
 
 endm HighlightAvailableForKing
 ;=========================================================
 HighlightAvailableForKnight macro row,col
+local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight
 mov ah,row
 mov al,col
 ;highlight above
@@ -60,134 +118,197 @@ jl noAbove
 
 cmp al,1
 jl noLeftAbove
+    cmp grid[row-2][col-1],00h
+    jmp EmptyAboveLeft
+    cmp grid[row-2][col-1],06h
+    jl noEnemyAboveLeft
+    EmptyAboveLeft:
     drawSquareOnCell 0Dh, row-2,col-1
+    mov availMoves[row-2][col-1],ffh
+    noEnemyAboveLeft:
 noLeftAbove:
 
 cmp al,6
 jg noRightAbove
+    cmp grid[row-2][col+1],00h
+    jmp EmptyAboveRight
+    cmp grid[row-2][col+1],06h
+    jl noEnemyAboveRight
+    EmptyAboveRight:
     drawSquareOnCell 0Dh, row-2,col+1
+    mov availMoves[row-2][col+1],ffh
+    noEnemyAboveRight:
 noRightAbove:
 
 noAbove:
 ;highlight below
 cmp ah,5
-jg nobelow
+jg noBelow
 
 cmp al,1
-jl noLeftbelow
+jl noLeftBelow
+    cmp grid[row+2][col-1],00h
+    jmp EmptyBelowLeft
+    cmp grid[row+2][col-1],06h
+    jl noEnemyBelowLeft
+    EmptyBelowLeft:
     drawSquareOnCell 0Dh, row+2,col-1
-noLeftbelow:
+    mov availMoves[row+2][col-1],ffh
+    noEnemyBelowLeft:
+noLeftBelow:
 
 cmp al,6
-jg noRightbelow
+jg noRightBelow
+    cmp grid[row+2][col+1],00h
+    jmp EmptyBelowRight
+    cmp grid[row+2][col+1],06h
+    jl noEnemyBelowRight
+    EmptyBelowRight:
     drawSquareOnCell 0Dh, row+2,col+1
-noRightbelow:
+    mov availMoves[row+2][col+1],ffh
+    noEnemyBelowRight:
+noRightBelow:
 
-nobelow:
+noBelow:
 ;highlight right
 cmp al,5
-jg noright
+jg noRight
 
 cmp ah,1
-jl noUpright
+jl noUpRight
+    cmp grid[row-1][col+2],00h
+    jmp EmptyUpRight
+    cmp grid[row-1][col+2],06h
+    jl noEnemyUpright
+    EmptyUpRight:
     drawSquareOnCell 0Dh, row-1,col+2
-noUpright:
+    mov availMoves[row-1][col+2],ffh
+    noEnemyUpright:
+noUpRight:
 
 cmp ah,6
-jg noDownright
+jg noDownRight
+    cmp grid[row+1][col+2],00h
+    jmp EmptyDownRight
+    cmp grid[row+1][col+2],06h
+    jl noEnemyDownright
+    EmptyDownRight:
     drawSquareOnCell 0Dh, row+1,col+2
-noDownright:
+    mov availMoves[row+1][col+2],ffh
+    noEnemyDownright:
+noDownRight:
 
-noright:
+noRight:
 ;highlight left
 cmp al,2
 jl noLeft
 
 cmp ah,1
 jl noUpLeft
+    cmp grid[row-1][col-2],00h
+    jmp EmptyUpLeft
+    cmp grid[row-1][col-2],06h
+    jl noEnemyUpLeft
+    EmptyUpLeft:
     drawSquareOnCell 0Dh, row-1,col-2
+    mov availMoves[row-1][col-2],ffh
+    noEnemyUpLeft:
 noUpLeft:
 
 cmp ah,6
 jg noDownLeft
+    cmp grid[row+1][col-2],00h
+    jmp EmptyDownLeft
+    cmp grid[row+1][col-2],06h
+    jl noEnemyDownLeft
+    EmptyDownLeft:
     drawSquareOnCell 0Dh, row+1,col-2
+    mov availMoves[row+1][col-2],ffh
+    noEnemyDownLeft:
 noDownLeft:
 
 noLeft:
 endm HighlightAvailableForKnight
 
-;===============================================================
-;Pawn Available ;for One computer
+; ;===============================================================
+; ;Pawn Available ;for One computer
 
-HighlightAvailableForPawnOne macro row,col
-local notFirstStepP1, endOfBoardP1, done
-;if first step (one or two)
-mov ah,row
-mov al,col
-cmp ah,6 
-JNE notFirstStepP1
-    drawSquareOnCell 0Dh, row-1,col
-    drawSquareOnCell 0Dh, row-2,col
+; HighlightAvailableForPawnOne macro row,col
+; local notFirstStepP1, endOfBoardP1, done
+; ;if first step (one or two)
+; mov ah,row
+; mov al,col
+; cmp ah,6
+; JNE notFirstStepP1
+;     drawSquareOnCell 0Dh, row-1,col
+;     drawSquareOnCell 0Dh, row-2,col
 
-    cmp ah,6
-    je done
-notFirstStepP1:
+;     cmp ah,6
+;     je done
+; notFirstStepP1:
 
-;else
-cmp ah,0
-je endOfBoardP1
-    drawSquareOnCell 0Dh, row-1,col
-endOfBoardP1:
+; ;else
+; cmp ah,0
+; je endOfBoardP1
+;     drawSquareOnCell 0Dh, row-1,col
+; endOfBoardP1:
 
-done:
+; done:
 
-;second player
-endm HighlightAvailableForPawnOne
+; ;second player
+; endm HighlightAvailableForPawnOne
+
 ;======================================================
+;;for two computers
 HighlightAvailableForPawnTwo macro row,col
-local notFirstStepP2, endOfBoardP2, done
+local notFirstStepP2, endOfBoardP2, done,canNotMove1,canNotMove2
 ;if first step (one or two)
 mov ah,row
 mov al,col
-cmp ah,1 
+cmp ah,6
 JNE notFirstStepP2
-    drawSquareOnCell 0Dh, row+1,col
-    drawSquareOnCell 0Dh, row+2,col
-
-    cmp ah,1
+    cmp grid[row-1][col],00h
+    jne canNotMove1
+    drawSquareOnCell 0Dh, row-1,col
+    mov availMoves[row-1][col],ffh
+    drawSquareOnCell 0Dh, row-2,col
+    mov availMoves[row-2][col],ffh
+    canNotMove1:
+    cmp ah,6
     je done
 notFirstStepP2:
 
 ;else
-cmp ah,7
+cmp ah,0
 je endOfBoardP2
-    drawSquareOnCell 0Dh, row+1,col
+    cmp grid[row-1][col],00h
+    jne canNotMove2
+    drawSquareOnCell 0Dh, row-1,col
+    mov availMoves[row-1][col],ffh
+    canNotMove2:
 endOfBoardP2:
 
 done:
 
 endm HighlightAvailableForPawnTwo
-;======================================================
-eraseImage MACRO row, column, greyCell, whiteCell
-LOCAL eraseGrey, eraseWhite, rt
-    mov al, row
-    mov ah, column
-    add ah, al
-    and ah, 1
-    JZ eraseWhite
-    JNZ eraseGrey
+;;;;===============================================================
+;;need different color
+HighlightAvailableForPawnToEat macro row,col
+local DoNotHighlightToEat1,DoNotHighlightToEat2
 
-    eraseGrey:
-    drawImageOnBoard greyCell, 20, 20, row, column
-    jmp rt
+cmp grid[row-1][col-1],11
+jl DoNotHighlightToEat1
+    drawSquareOnCell 0Ch, row-1,col-1
+    mov availMoves[row-1][col-1],ffh ;;eat
+DoNotHighlightToEat1:
+cmp grid[row-1][col+1],11
+jl DoNotHighlightToEat2
+   drawSquareOnCell 0Ch, row-1,col+1
+   mov availMoves[row-1][col-1],ffh ;;eat
+DoNotHighlightToEat2:
+endm HighlightAvailableForPawnToEat
 
-    eraseWhite: 
-    drawImageOnBoard whiteCell, 20, 20, row, column
-    jmp rt
-
-rt:
-ENDM eraseImage
-
+;;;;;;===============================================================
 ;;;;;;;;;;;;;;;;;;;;;;
 drawSquareOnCell MACRO color, row, column
 LOCAL drawHorizontalLines
