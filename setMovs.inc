@@ -27,8 +27,8 @@ endm callDrawSquare
 ;****************************************************************************************************************************
 ;****************************************************************************************************************************
 
-rookMoves MACRO availMoves , row, column
-    LOCAL checkRight, lastRight,preLeft, checkLeft,lastLeft,preTop,checkTop,lastTop,preBottom,checkBottom,lastBottom,leave
+rookMoves MACRO  row, column
+    LOCAL checkRight, lastRight,preLeft, checkLeft,lastLeft,preTop,checkTop,lastTop,preBottom,checkBottom,lastBottom,rt
 
 
 ;------------------------- TESTING
@@ -182,7 +182,7 @@ preBottom:
     inc bx
     checkBottom:
         cmp bx,08h
-        jz leave
+        jz rt
         mov cl,8
         mov al,bl
         imul cl
@@ -203,7 +203,7 @@ preBottom:
         callDrawSquare bx
 
 
-    leave:
+    rt:
 
 ENDM rookMoves
 
@@ -214,8 +214,8 @@ ENDM rookMoves
 ;****************************************************************************************************************************
 ;****************************************************************************************************************************
 
-bishopMoves MACRO availMoves , row, column
-    local checkBR,lastBR,checkTL,lastTL,checkTR,lastTR,checkBL,lastBL,precheckTL,precheckTR,precheckBL
+bishopMoves MACRO row, column
+    local checkBR,lastBR,checkTL,lastTL,checkTR,lastTR,checkBL,lastBL,precheckTL,precheckTR,precheckBL,rt
 
 ; ------------------------- TESTING
 drawSquareOnCell 03h,row,column
@@ -350,9 +350,9 @@ precheckBL:
     dec si
     checkBL: ;bottom left
         cmp bx,08h
-        jz leave
+        jz rt
         cmp si,0ffffh
-        jz leave
+        jz rt
         mov cl,8
         mov al,bl
         imul cl
@@ -372,7 +372,7 @@ precheckBL:
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
-    leave:                
+    rt:                
     
 ENDM bishopMoves
 
@@ -383,11 +383,11 @@ ENDM bishopMoves
 ;****************************************************************************************************************************
 ;****************************************************************************************************************************
 
-queenMoves MACRO availMoves , row, column
+queenMoves MACRO row, column
     
-        rookMoves availMoves,row,column
+        rookMoves row,column
 
-        bishopMoves availMoves,row,column
+        bishopMoves row,column
 
 ENDM queenMoves
 

@@ -581,6 +581,7 @@ notempty:
 ENDM checkEmptyCell
 
 getAvailForSelectedPiece MACRO
+    local rt
 
 mov bl,8
 mov al,currRow
@@ -602,52 +603,64 @@ mov cl,grid[bx]
 ;check rock
 cmp cl,2
 jne blackrock
-rookMoves availMoves,currRow,currColumn
+rookMoves currRow,currColumn
+jmp rt
 blackrock:
 cmp cl,12
 jne whitebishop
-; rookMoves availMoves,grid,currRow,currColumn
+rookMoves currRow,currColumn
+jmp rt
 whitebishop:
 cmp cl,4
 jne blackbishop
-; bishopMoves availMoves,grid,currRow,currColumn
+bishopMoves currRow,currColumn
+jmp rt
 blackbishop:
 cmp cl,14
 jne whitequeen
-; bishopMoves availMoves,grid,currRow,currColumn
+bishopMoves currRow,currColumn
+jmp rt
 whitequeen:
 cmp cl,5
 jne blackqueen
-; queenMoves availMoves,grid,currRow,currColumn
+queenMoves currRow,currColumn
+jmp rt
 blackqueen:
 cmp cl,15
 jne whitepawn
-; queenMoves availMoves,grid,currRow,currColumn
+queenMoves currRow,currColumn
+jmp rt
 whitepawn:
 cmp cl,1
 jne blackpawn
 ; HighlightAvailableForPawnOne currRow,currColumn
+jmp rt
 blackpawn:
 cmp cl,11
 jne king1
 ; ; HighlightAvailableForPawnTwo currRow,currColumn
+jmp rt
 ; movePiece 1, currRow, currColumn, currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
 king1:
 cmp cl,6 
 jne king2
 ; HighlightAvailableForKing currRow,currColumn
+jmp rt
 king2:
 cmp cl,16
 jne whiteknight
 ; HighlightAvailableForKing currRow,currColumn
+jmp rt
 whiteknight:
 cmp cl,3
 jne blackknight
 ; HighlightAvailableForKnight currRow,currColumn
+jmp rt
 blackknight:
 cmp cl,13
 jne rt
 ; HighlightAvailableForKnight currRow,currColumn
+jmp rt
 rt:
 ;;;;;;;;;;con
 ENDM getAvailForSelectedPiece
@@ -655,7 +668,7 @@ ENDM getAvailForSelectedPiece
 
 checkSelected macro row,column
 local skip
-push CX
+pusha
 mov isSelectedCell,0
 
 mov cl,row
@@ -667,23 +680,68 @@ jnz skip
 mov isSelectedCell,1
 
 skip:
-pop CX
+popa
 endm checkSelected
 
+checkAvailable macro
+local end
+pusha
+mov isAvailableCell,0
+
+
+mov al,currRow
+mov ah,0
+mov bl,8
+imul bl
+mov bx,ax
+add bl,currColumn
+
+mov al,availMoves[bx]
+
+
+cmp al,0ffh
+jne end
+mov isAvailableCell,1
+
+end:
+
+popa
+endm checkAvailable
+
 eraseHighlight macro 
-local removeh,end
+local removeh,end,checks
+pusha
+; add al,'0'
+; mov ah,0ah
+; int 10h
+
+checkAvailable
+cmp isAvailableCell,0
+jz checks
+drawSquareOnCell 04h,currRow,currColumn
+jmp end
+
+checks:
+
 ;need to add check if available move
 checkSelected currRow,currColumn
 cmp isSelectedCell,0
 jz removeh
+drawSquareOnCell 03h,currRow,currColumn
+jmp end
+cmp al,0ffh
+jz removeh
 drawSquareOnCell 04h,currRow,currColumn
 jmp end
+
+
 
 
 removeh:
 drawSquareOnCell 07h,currRow,currColumn
 
 end:
+popa
 endm eraseHighlight
 
 navigateAfterSelect macro 
@@ -1131,7 +1189,10 @@ jnz s
 cmp currRow,0
 je skipnavu
 
-drawSquareOnCell 07h,currRow,currColumn
+eraseHighlight
+
+
+; drawSquareOnCell 07h,currRow,currColumn
 dec currRow
 drawSquareOnCell 0eh,currRow,currColumn
 skipnavu:
@@ -1152,7 +1213,10 @@ mov keypressed,al
 cmp currRow,7
 je skipnavd
 
-drawSquareOnCell 07h,currRow,currColumn
+; drawSquareOnCell 07h,currRow,currColumn
+
+eraseHighlight
+
 inc currRow
 drawSquareOnCell 0eh,currRow,currColumn
 skipnavd:
@@ -1173,7 +1237,10 @@ mov keypressed,al
 cmp currColumn,0
 je skipnavl
 
-drawSquareOnCell 07h,currRow,currColumn
+; drawSquareOnCell 07h,currRow,currColumn
+
+eraseHighlight
+
 dec currColumn
 drawSquareOnCell 0eh,currRow,currColumn
 skipnavl:
@@ -1192,7 +1259,9 @@ mov keypressed,al
 cmp currColumn,7
 je skipnavr
 
-drawSquareOnCell 07h,currRow,currColumn
+; drawSquareOnCell 07h,currRow,currColumn
+eraseHighlight
+
 inc currColumn
 drawSquareOnCell 0eh,currRow,currColumn
 skipnavr:
@@ -1213,7 +1282,7 @@ mov cl,currColumn
 mov selectedCol,cl
 mov cl,currRow
 mov selectedRow,cl
-drawSquareOnCell 04h,currRow,currColumn
+drawSquareOnCell 03h,currRow,currColumn
 
 getAvailForSelectedPiece
 
@@ -1711,6 +1780,7 @@ ENDM movePiece
 
     isSelectedCell db  ?
     isEmptyCell    db  ?
+    isAvailableCell db ?
 
     selectedPiece  db  ?
 
