@@ -630,7 +630,7 @@ jne blackpawn
 blackpawn:
 cmp cl,11
 jne king1
-movePiece 1, currRow, currColumn, currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
+; movePiece 1, currRow, currColumn, currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
 king1:
 cmp cl,6 
 jne king2
@@ -1059,23 +1059,27 @@ enterms:
     finishpieces:
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
+; Testing rookMoves "TAHER"
+rookMoves availMoves,grid,4,4
+
+
 ;;use color 07h to erase highlight
 
-;;highlight current cell
-drawSquareOnCell 0eh,currRow,currColumn
-movePiece 1, currRow, currColumn, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
-mov cx, 0fh
-mov dx, 4240h
-mov ah, 86h
-int 15h
-mov ah, 86h
-int 15h
-mov ah, 86h
-int 15h
-movePiece 1, currColumn, currRow, currRow, currColumn, grid, cooldown, winMessageP1, winMessageP2
-; HighlightAvailableForKing 5, 4
-; HighlightAvailableForKnight 1,4
-; HighlightAvailableForPawnTwo 1,7
+; ;;highlight current cell
+; drawSquareOnCell 0eh,currRow,currColumn
+; movePiece 1, currRow, currColumn, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+; mov cx, 0fh
+; mov dx, 4240h
+; mov ah, 86h
+; int 15h
+; mov ah, 86h
+; int 15h
+; mov ah, 86h
+; int 15h
+; movePiece 1, currColumn, currRow, currRow, currColumn, grid, cooldown, winMessageP1, winMessageP2
+; ; HighlightAvailableForKing 5, 4
+; ; HighlightAvailableForKnight 1,4
+; ; HighlightAvailableForPawnTwo 1,7
 
 ;gm
 checkkeygm:
@@ -1356,8 +1360,8 @@ ENDM movePiece
     winMessageP1   db  "Game ended! Player 1 wins!$"
     winMessageP2   db  "Game ended! Player 2 wins!$"
 
-    x              dw   ?
-    y              dw   ?
+    x              dw  ?
+    y              dw  ?
 
     grid           db  12,13,14,15,16,14,13,12
                    db  11,11,11,11,11,11,11,11
