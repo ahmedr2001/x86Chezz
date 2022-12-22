@@ -22,7 +22,7 @@ endm callDrawSquare
 
 
 rookMoves MACRO availMoves ,grid, row, column
-    LOCAL checkRight, lastRight, checkLeft,lastLeft,checkTop,lastTop,checkDown,lastDown,leave
+    LOCAL checkRight, lastRight, checkLeft,lastLeft,checkTop,lastTop,checkBottom,lastBottom,leave
 
 ; intialize indexes
 
