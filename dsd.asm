@@ -807,7 +807,6 @@ jnz consumebuffer
 ; mov keypressed,al
 
 drawSquareOnCell 07,selectedRow,selectedCol
-
 ; consume buffer
 mov ah,0
 int 16h
@@ -821,7 +820,6 @@ consumebuffer:
 mov ah,0
 int 16h
 jmp checkkey
-
 
 endm navigateAfterSelect
 
@@ -1376,7 +1374,7 @@ ENDM movePiece
                    db  11,11,11,11,11,11,11,11
                    db  00,00,00,00,00,00,00,00
                    db  00,00,00,00,00,00,00,00
-                   db  00,00,00,00,00,00,00,00
+                   db  00,00,00,00,00,00h,00,00
                    db  00,00,00,00,00,00,00,00
                    db  01,01,01,01,01,01,01,01
                    db  02,03,04,05,06,04,03,02

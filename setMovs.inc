@@ -5,19 +5,24 @@
 ;------------------------------------------------
 
 callDrawSquare macro cellNumber
-
+pusha
 ; mov ax,cellNumber
 
 ; mov ah,0ah
 ; add al,'0'
 ; int 10h
-
+push bx
 mov ax, cellNumber
-mov cl,8
-idiv cl
+mov ah,0
+mov bl,8
+idiv bl
 
-drawSquareOnCell 04h,ah,al
 
+mov bx,ax
+drawSquareOnCell 04h,bl,bh
+pop bx
+
+popa
 endm callDrawSquare
 
 
@@ -43,7 +48,7 @@ checkRight: ;right columns
         cmp si,08h
         jz checkLeft
             mov cl,8
-            mov al,bl
+            mov al,row
             imul cl 
             mov bx,ax ;bx = bl(row number)*8
             add bx,si ;bx = bl(row number)*8 +si(column number)
@@ -119,7 +124,7 @@ mov si,bx
 ;         callDrawSquare bx
 
 
-; ;reset indexes
+;reset indexes
 ; mov bl,column
 ; mov bh,0
 ; mov si,bx
