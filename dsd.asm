@@ -1067,10 +1067,19 @@ enterms:
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
 ; Testing rookMoves "TAHER"
-; rookMoves availMoves,4,4
+; CORNERS
+; rookMoves availMoves,0,0 ;Works
+; rookMoves availMoves,0,7 ;Works
+; rookMoves availMoves,7,0 ;Error
+; rookMoves availMoves,7,7 ;Error
+; Lines
+; rookMoves availMoves,0,4 ;Works
+; rookMoves availMoves,7,4 ;Error
+; rookMoves availMoves,4,0 ;Works
+; rookMoves availMoves,4,7 ;Works
 
 ; bishopMoves availMoves,4,4
-queenMoves availMoves,4,4
+; queenMoves availMoves,4,4
 
 
 ;;use color 07h to erase highlight
