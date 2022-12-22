@@ -602,7 +602,7 @@ mov cl,grid[bx]
 ;check rock
 cmp cl,2
 jne blackrock
-rookMoves availMoves,grid,currRow,currColumn
+rookMoves availMoves,currRow,currColumn
 blackrock:
 cmp cl,12
 jne whitebishop
@@ -1402,7 +1402,7 @@ ENDM movePiece
                    db  11,11,11,11,11,11,11,11
                    db  00,00,00,00,00,00,00,00
                    db  00,00,00,00,00,00,00,00
-                   db  00,00,00,00,00,00h,00,00
+                   db  00,00,00,00,00,00,00,00
                    db  00,00,00,00,00,00,00,00
                    db  01,01,01,01,01,01,01,01
                    db  02,03,04,05,06,04,03,02
