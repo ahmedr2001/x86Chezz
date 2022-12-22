@@ -198,11 +198,15 @@ drawSquareOnCell 03h,row,column
 ; --------------------------
     
 ; intialize indexes
-mov bl,column
-mov bh,0
-mov si,bx
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
     
+;**********************************************
+;***************** 4 o'clock Cells ************
+;**********************************************
+
     inc bx
     inc si
     checkBR: ;bottom right
@@ -211,11 +215,11 @@ mov si,bx
         cmp si,08h
         jz precheckTL
         mov cl,8
-    mov al,bl
-    imul cl
-    push bx
-mov bx,ax
-add bx,si
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
         mov al,grid[bx]
         cmp al,00
         jnz lastBR
@@ -231,11 +235,16 @@ add bx,si
 
 
 precheckTL:
-;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+    ;reset indexes
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
+
+
+;***********************************************
+;***************** 10 o'clock Cells ************
+;***********************************************
 
     dec bx
     dec si
@@ -244,12 +253,12 @@ mov si,bx
         jz precheckTR
         cmp si,0ffffh
         jz precheckTR
-         mov cl,8
-    mov al,bl
-    imul cl
-    push bx
-mov bx,ax
-add bx,si
+        mov cl,8
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
         mov al,grid[bx]
         cmp al,00
         jnz lastTL
@@ -265,11 +274,15 @@ add bx,si
 
 
 precheckTR:
-;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+    ;reset indexes
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
+
+;**********************************************
+;***************** 2 o'clock Cells ************
+;**********************************************
 
     dec bx
     inc si
@@ -277,13 +290,13 @@ mov si,bx
         cmp bx,0ffffh
         jz precheckBL
         cmp si,08h
-        jz checkBL
-          mov cl,8
-    mov al,bl
-    imul cl
-    push bx
-mov bx,ax
-add bx,si
+        jz precheckBL
+        mov cl,8
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
         mov al,grid[bx]
         cmp al,00
         jnz lastTR
@@ -298,11 +311,15 @@ add bx,si
         callDrawSquare bx
 
 precheckBL:
-;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+    ;reset indexes
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
+
+;**********************************************
+;***************** 8 o'clock Cells ************
+;**********************************************
 
     inc bx
     dec si
@@ -311,12 +328,12 @@ mov si,bx
         jz leave
         cmp si,0ffffh
         jz leave
-         mov cl,8
-    mov al,bl
-    imul cl
-    push bx
-mov bx,ax
-add bx,si
+        mov cl,8
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
         mov al,grid[bx]
         cmp al,00
         jnz lastBL
@@ -333,6 +350,7 @@ add bx,si
     leave:                
     
 ENDM bishopMoves
+
 
 ;****************************************************************************************************************************
 ;****************************************************************************************************************************
