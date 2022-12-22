@@ -4,77 +4,136 @@
 ;(2) TODO: if piece of same color then last patch was last availMove
 ;------------------------------------------------
 
+callDrawSquare macro cellNumber
+
+mov ax,cellNumber
+
+mov ah,0ah
+add al,'0'
+int 10h
+
+mov ax, cellNumber
+mov cl,8
+idiv cl
+
+drawSquareOnCell 04h,al,ah
+
+endm callDrawSquare
+
+
 rookMoves MACRO availMoves ,grid, row, column
     LOCAL checkRight, lastRight, checkLeft,lastLeft,checkTop,lastTop,checkDown,lastDown,leave
 
 ; intialize indexes
-    mov bx,row
-    mov si,column
+
+mov bl,column
+mov bh,0
+mov si,bx
+    mov bl,row
 
     inc si
 checkRight: ;right columns
         cmp si,08h
         jz checkLeft
-        mov al,grid[8 * bx + si]
+        mov cl,8
+mov al,bl
+imul cl
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
         cmp al,00
         jnz lastRight
-        mov availMoves[8* bx + si],0ffh
-        drawSquareOnCell 0eh,bx,si
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
         inc si ;go to right boxes
         jmp checkRight
         lastRight:
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
 
 ;reset indexes
-    mov bx,row
-    mov si,column
+mov bl,column
+mov bh,0
+mov si,bx
+    mov bl,row
 
     dec si
     checkLeft: ;left columns
         cmp si,0ffh
         jz checkTop
-        mov al,grid[8* bx + si]
+        mov cl,8
+mov al,bl
+imul cl
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
         cmp al,00
         jnz lastLeft
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+
         dec si ;go to left boxes
         jmp checkLeft
         lastLeft:
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+
 
 ;reset indexes
-    mov bx,row
-    mov si,column
+mov bl,column
+mov bh,0
+mov si,bx
+    mov bl,row
 
     inc bx
     checkTop:
         cmp bx,08h
         jz checkBottom
-        mov al,grid[8* bx + si]
+        mov cl,8
+mov al,bl
+imul cl
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
         cmp al,00
         jnz lastTop
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+
         inc bx ;go to top boxes
         jmp checkTop
         lastTop:
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+
 
 ;reset indexes
-    mov bx,row
-    mov si,column
+mov bl,column
+mov bh,0
+mov si,bx
+    mov bl,row
 
     dec bx
     checkBottom:
         cmp bx,0ffh
         jz leave
-        mov al,grid[8* bx + si]
+        mov cl,8
+mov al,bl
+imul cl
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
         cmp al,00
         jnz lastBottom
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+
         dec bx ;go to bottom boxes
         jmp checkBottom
         lastBottom:
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+
 
     leave:
 
@@ -86,8 +145,10 @@ bishopMoves MACRO availMoves ,grid, row, column
     local checkBR,lastBR,checkTL,lastTL,checkTR,lastTR,checkBL,lastBL
     
 ; intialize indexes
-    mov bx,row
-    mov si,column
+mov bl,column
+mov bh,0
+mov si,bx
+    mov bl,row
     
     inc bx
     inc si
@@ -96,19 +157,26 @@ bishopMoves MACRO availMoves ,grid, row, column
         jz checkTL
         cmp si,08h
         jz checkTL
-        mov al,grid[8* bx + si]
+        mov cl,8
+    mov al,bl
+    imul cl
+mov bx,ax
+add bx,si
+        mov al,grid[bx]
         cmp al,00
         jnz,lastBR
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
         inc bx
         inc si
         jmp checkBR
         lastBR:
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
 
 ;reset indexes
-    mov bx,row
-    mov si,column
+mov bl,column
+mov bh,0
+mov si,bx
+    mov bl,row
 
     dec bx
     dec si
@@ -117,19 +185,21 @@ bishopMoves MACRO availMoves ,grid, row, column
         jz checkTR
         cmp si,0ffh
         jz checkTR
-        mov ax,grid[8* bx + si]
+        mov ax,grid[bx]
         cmp ax,00
         jnz,lastTL
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
         dec bx
         dec si
         jmp checkTL
         lastTL:
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
 
 ;reset indexes
-    mov bx,row
-    mov si,column
+mov bl,column
+mov bh,0
+mov si,bx
+    mov bl,row
 
     dec bx
     inc si
@@ -138,19 +208,21 @@ bishopMoves MACRO availMoves ,grid, row, column
         jz checkBL
         cmp si,08h
         jz checkBL
-        mov ax,grid[8* bx + si]
+        mov ax,grid[bx]
         cmp ax,00
         jnz,lastTR
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
         dec bx
         inc si
         jmp checkTR
         lastTR:
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
 
 ;reset indexes
-    mov bx,row
-    mov si,column
+mov bl,column
+mov bh,0
+mov si,bx
+    mov bl,row
 
     inc bx
     dec si
@@ -159,15 +231,15 @@ bishopMoves MACRO availMoves ,grid, row, column
         jz leave
         cmp si,0ffh
         jz leave
-        mov ax,grid[8* bx + si]
+        mov ax,grid[bx]
         cmp ax,00
         jnz,lastBL
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
         inc bx
         dec si
         jmp checkBL
         lastBL:
-        mov availMoves[8* bx + si],0ffh
+        mov availMoves[bx],0ffh
 
     leave:                
     
