@@ -27,7 +27,7 @@ endm callDrawSquare
 
 
 rookMoves MACRO availMoves ,grid, row, column
-    LOCAL checkRight, lastRight, checkLeft,lastLeft,checkTop,lastTop,checkBottom,lastBottom,leave,precheckleft,prechecktop
+    LOCAL checkRight, lastRight,preLeft, checkLeft,lastLeft,preTop,checkTop,lastTop,preBottom,checkBottom,lastBottom,leave
 
 
 ;------------------------- TESTING
@@ -42,11 +42,14 @@ drawSquareOnCell 03h,row,column
     mov si,bx ;store column number in si
     mov bl,row ;store row number in bl
 
+;******************************************
+;***************** Right Cells ************
+;******************************************
 
     inc si
 checkRight: ;right columns
         cmp si,08h
-        jz precheckleft
+        jz preLeft
             mov cl,8
             mov al,row
             imul cl 
@@ -68,98 +71,113 @@ checkRight: ;right columns
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
-precheckleft:
-;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx  ;si has column
 
-    mov bl,row
+
+preLeft:
+;reset indexes
+    mov bl,column
+    mov bh,0
+    mov si,bx ;store column number in si
+    mov bl,row ;store row number in bl
+
+;****************************************
+;***************** left Cells ***********
+;****************************************
 
     dec si
-
-
-    checkLeft: ;left columns
+checkLeft: ;right columns
         cmp si,0ffffh
-        jz prechecktop
-        mov cl,8
-mov al,row
-imul cl
-mov bx,ax
-add bx,si
+        jz preTop
+            mov cl,8
+            mov al,row
+            imul cl 
+            mov bx,ax ;bx = bl(row number)*8
+            add bx,si ;bx = bl(row number)*8 +si(column number)
+; -------------------------- TESTING (delete)
+; drawSquareOnCell 04h,row,column
+callDrawSquare bx
+; --------------------------
         mov al,grid[bx]
         cmp al,00
         jnz lastLeft
         mov availMoves[bx],0ffh
         callDrawSquare bx
-        dec si ;go to left boxes
+        dec si ;go to right boxes
         jmp checkLeft
         lastLeft:
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
-
-prechecktop:
+preTop:
 ;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
+
+;*************************************
+;***************** Top Cells *********
+;*************************************
 
     dec bx
     checkTop:
-        cmp bx,0ffffh
-        jz checkBottom
+         cmp bx,0ffffh
+        jz preBottom
         mov cl,8
-mov al,bl
-imul cl
-mov bx,ax
-add bx,si
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
         mov al,grid[bx]
         cmp al,00
         jnz lastTop
         mov availMoves[bx],0ffh
         callDrawSquare bx
-        mov bl,row
+        pop bx
 
         dec bx ;go to top boxes
-        
-
         jmp checkTop
         lastTop:
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
-
-;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+preBottom:
+; reset indexes
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
 
-    dec bx
+;*************************************
+;***************** Bottom Cells *********
+;*************************************
+
+    inc bx
     checkBottom:
-;         cmp bx,0ffh
-;         jz leave
-;         mov cl,8
-; mov al,bl
-; imul cl
-; mov bx,ax
-; add bx,si
-;         mov al,grid[bx]
-;         cmp al,00
-;         jnz lastBottom
-;         mov availMoves[bx],0ffh
-;         callDrawSquare bx
+        cmp bx,0ffffh
+        jz leave
+        mov cl,8
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
+        mov al,grid[bx]
+        cmp al,00
+        jnz lastTop
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
+        pop bx
 
-;         dec bx ;go to bottom boxes
-;         jmp checkBottom
-;         lastBottom:
-;         mov availMoves[bx],0ffh
-;         callDrawSquare bx
+        inc bx ;go to top boxes
+        jmp checkBottom
+        lastBottom:
+        mov availMoves[bx],0ffh
+        callDrawSquare bx
 
 
-;     leave:
+    leave:
 
 ENDM rookMoves
 
