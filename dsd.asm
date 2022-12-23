@@ -1255,7 +1255,7 @@ jmp checkkeygm
      jmp consumebufferms   
       
                      
-     consumebufferms:  
+     consumebufferms:
      mov ah,0
      int 16h
      jmp checkkey
