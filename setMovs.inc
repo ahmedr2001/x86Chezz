@@ -385,11 +385,11 @@ ENDM bishopMoves
 ;****************************************************************************************************************************
 
 queenMoves MACRO row, column
-        pusha
+        ; pusha ;no need to it as you push in rook and bishop and queen doesn't change rigisters (for optimization)
     
         bishopMoves row,column
         rookMoves row,column
-        popa
+        ; popa
 ENDM queenMoves
 
 ;------------------------------------------------
