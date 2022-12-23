@@ -29,7 +29,7 @@ endm callDrawSquare
 
 rookMoves MACRO  row, column
     LOCAL checkRight, lastRight,preLeft, checkLeft,lastLeft,preTop,checkTop,lastTop,preBottom,checkBottom,lastBottom,rt
-
+    pusha
 
 ;------------------------- TESTING
 drawSquareOnCell 03h,row,column
@@ -204,7 +204,7 @@ preBottom:
 
 
     rt:
-
+    popa
 ENDM rookMoves
 
 
@@ -216,7 +216,7 @@ ENDM rookMoves
 
 bishopMoves MACRO row, column
     local checkBR,lastBR,checkTL,lastTL,checkTR,lastTR,checkBL,lastBL,precheckTL,precheckTR,precheckBL,rt
-
+    pusha
 ; ------------------------- TESTING
 drawSquareOnCell 03h,row,column
 ; callDrawSquare bx
@@ -373,7 +373,7 @@ precheckBL:
         callDrawSquare bx
 
     rt:                
-    
+    popa
 ENDM bishopMoves
 
 
@@ -384,11 +384,12 @@ ENDM bishopMoves
 ;****************************************************************************************************************************
 
 queenMoves MACRO row, column
+        pusha
     
+        bishopMoves row,column
         rookMoves row,column
 
-        bishopMoves row,column
-
+        popa
 ENDM queenMoves
 
 ;------------------------------------------------
