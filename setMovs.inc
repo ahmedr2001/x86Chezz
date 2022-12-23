@@ -5,41 +5,62 @@
 ;------------------------------------------------
 
 callDrawSquare macro cellNumber
+pusha
 
-mov ax,cellNumber
+    push bx
+    mov ax, cellNumber
+    mov ah,0
+    mov bl,8
+    idiv bl
+    mov bx,ax
+    drawSquareOnCell 04h,bl,bh
+    pop bx
 
-mov ah,0ah
-add al,'0'
-int 10h
-
-mov ax, cellNumber
-mov cl,8
-idiv cl
-
-drawSquareOnCell 04h,al,ah
-
+popa
 endm callDrawSquare
 
 
-rookMoves MACRO availMoves ,grid, row, column
-    LOCAL checkRight, lastRight, checkLeft,lastLeft,checkTop,lastTop,checkDown,lastDown,leave
+
+;****************************************************************************************************************************
+;****************************************************************************************************************************
+;**************************************************   Rook Moves    *********************************************************
+;****************************************************************************************************************************
+;****************************************************************************************************************************
+
+rookMoves MACRO  row, column
+    LOCAL checkRight, lastRight,preLeft, checkLeft,lastLeft,preTop,checkTop,lastTop,preBottom,checkBottom,lastBottom,rt
+
+
+;------------------------- TESTING
+drawSquareOnCell 03h,row,column
+; callDrawSquare bx
+; --------------------------
 
 ; intialize indexes
 
-mov bl,column
-mov bh,0
-mov si,bx
-    mov bl,row
+    mov bl,column
+    mov bh,0
+    mov si,bx ;store column number in si
+    mov bl,row ;store row number in bl
+
+;******************************************
+;***************** Right Cells ************
+;******************************************
 
     inc si
 checkRight: ;right columns
         cmp si,08h
-        jz checkLeft
-        mov cl,8
-mov al,bl
-imul cl
-mov bx,ax
-add bx,si
+        jz preLeft
+            mov cl,8
+            mov al,row
+            imul cl 
+            mov bx,ax ;bx = bl(row number)*8
+            add bx,si ;bx = bl(row number)*8 +si(column number)
+; -------------------------- TESTING (delete)
+; drawSquareOnCell 04h,row,column
+; callDrawSquare bx
+; --------------------------
+
         mov al,grid[bx]
         cmp al,00
         jnz lastRight
@@ -48,209 +69,325 @@ add bx,si
         inc si ;go to right boxes
         jmp checkRight
         lastRight:
+        ; ;check same team?
+        ; ;get away piece code
+        ;     mov dl,grid[bx] 
+        ;     push bx 
+        ;         ;get attacker piece code
+        ;         ;reset bx
+        ;         mov bl,column
+        ;         mov bh,0
+        ;         mov si,bx ;store column number in si
+        ;         mov bl,row ;store row number in bl
+
+        ;         mov cl,8
+        ;         mov al,row
+        ;         imul cl 
+        ;         mov bx,ax ;bx = bl(row number)*8
+        ;         add bx,si ;bx = bl(row number)*8 +si(column number)
+        ;     mov dh,grid[bx]
+        ;     pop bx
+        ;     ;is same Color?
+        ;         ; mov dl,02
+        ;         and dl,10
+        ;         ; mov dh,03
+        ;         and dh,10
+        ;     xor dl,dh
+        ;     jz preLeft
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
+
+
+preLeft:
 ;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
-    mov bl,row
+    mov bl,column
+    mov bh,0
+    mov si,bx ;store column number in si
+    mov bl,row ;store row number in bl
+
+;****************************************
+;***************** left Cells ***********
+;****************************************
 
     dec si
-    checkLeft: ;left columns
-        cmp si,0ffh
-        jz checkTop
-        mov cl,8
-mov al,bl
-imul cl
-mov bx,ax
-add bx,si
+checkLeft: ;right columns
+        cmp si,0ffffh
+        jz preTop
+            mov cl,8
+            mov al,row
+            imul cl 
+            mov bx,ax ;bx = bl(row number)*8
+            add bx,si ;bx = bl(row number)*8 +si(column number)
+; -------------------------- TESTING (delete)
+; drawSquareOnCell 04h,row,column
+callDrawSquare bx
+; --------------------------
         mov al,grid[bx]
         cmp al,00
         jnz lastLeft
         mov availMoves[bx],0ffh
         callDrawSquare bx
-
-        dec si ;go to left boxes
+        dec si ;go to right boxes
         jmp checkLeft
         lastLeft:
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
-
+preTop:
 ;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
 
-    inc bx
+;*************************************
+;***************** Top Cells *********
+;*************************************
+
+    dec bx
     checkTop:
-        cmp bx,08h
-        jz checkBottom
+         cmp bx,0ffffh
+        jz preBottom
         mov cl,8
-mov al,bl
-imul cl
-mov bx,ax
-add bx,si
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
         mov al,grid[bx]
         cmp al,00
         jnz lastTop
         mov availMoves[bx],0ffh
         callDrawSquare bx
+        pop bx
 
-        inc bx ;go to top boxes
+        dec bx ;go to top boxes
         jmp checkTop
         lastTop:
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
-
-;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+preBottom:
+; reset indexes
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
 
-    dec bx
+;*************************************
+;***************** Bottom Cells *********
+;*************************************
+
+    inc bx
     checkBottom:
-        cmp bx,0ffh
-        jz leave
+        cmp bx,08h
+        jz rt
         mov cl,8
-mov al,bl
-imul cl
-mov bx,ax
-add bx,si
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
         mov al,grid[bx]
         cmp al,00
-        jnz lastBottom
+        jnz lastTop
         mov availMoves[bx],0ffh
         callDrawSquare bx
+        pop bx
 
-        dec bx ;go to bottom boxes
+        inc bx ;go to top boxes
         jmp checkBottom
         lastBottom:
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
 
-    leave:
+    rt:
 
 ENDM rookMoves
 
-;-----------------------------------------------
 
-bishopMoves MACRO availMoves ,grid, row, column
-    local checkBR,lastBR,checkTL,lastTL,checkTR,lastTR,checkBL,lastBL
+;****************************************************************************************************************************
+;****************************************************************************************************************************
+;**************************************************   Bishop Moves    *******************************************************
+;****************************************************************************************************************************
+;****************************************************************************************************************************
+
+bishopMoves MACRO row, column
+    local checkBR,lastBR,checkTL,lastTL,checkTR,lastTR,checkBL,lastBL,precheckTL,precheckTR,precheckBL,rt
+
+; ------------------------- TESTING
+drawSquareOnCell 03h,row,column
+; callDrawSquare bx
+; --------------------------
     
 ; intialize indexes
-mov bl,column
-mov bh,0
-mov si,bx
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
     
+;**********************************************
+;***************** 4 o'clock Cells ************
+;**********************************************
+
     inc bx
     inc si
     checkBR: ;bottom right
         cmp bx,08h
-        jz checkTL
+        jz precheckTL
         cmp si,08h
-        jz checkTL
+        jz precheckTL
         mov cl,8
-    mov al,bl
-    imul cl
-mov bx,ax
-add bx,si
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
         mov al,grid[bx]
         cmp al,00
-        jnz,lastBR
+        jnz lastBR
         mov availMoves[bx],0ffh
+        callDrawSquare bx
+        pop bx
         inc bx
         inc si
         jmp checkBR
         lastBR:
+        callDrawSquare bx
         mov availMoves[bx],0ffh
 
-;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+
+precheckTL:
+    ;reset indexes
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
+
+
+;***********************************************
+;***************** 10 o'clock Cells ************
+;***********************************************
 
     dec bx
     dec si
     checkTL: ;top left
-        cmp bx,0ffh
-        jz checkTR
-        cmp si,0ffh
-        jz checkTR
-        mov ax,grid[bx]
-        cmp ax,00
-        jnz,lastTL
+        cmp bx,0ffffh
+        jz precheckTR
+        cmp si,0ffffh
+        jz precheckTR
+        mov cl,8
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
+        mov al,grid[bx]
+        cmp al,00
+        jnz lastTL
         mov availMoves[bx],0ffh
+        callDrawSquare bx
+        pop bx
         dec bx
         dec si
         jmp checkTL
         lastTL:
         mov availMoves[bx],0ffh
+        callDrawSquare bx
 
-;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+
+precheckTR:
+    ;reset indexes
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
+
+;**********************************************
+;***************** 2 o'clock Cells ************
+;**********************************************
 
     dec bx
     inc si
     checkTR: ;top right
-        cmp bx,0ffh
-        jz checkBL
+        cmp bx,0ffffh
+        jz precheckBL
         cmp si,08h
-        jz checkBL
-        mov ax,grid[bx]
-        cmp ax,00
-        jnz,lastTR
+        jz precheckBL
+        mov cl,8
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
+        mov al,grid[bx]
+        cmp al,00
+        jnz lastTR
         mov availMoves[bx],0ffh
+        callDrawSquare bx
+        pop bx
         dec bx
         inc si
         jmp checkTR
         lastTR:
         mov availMoves[bx],0ffh
+        callDrawSquare bx
 
-;reset indexes
-mov bl,column
-mov bh,0
-mov si,bx
+precheckBL:
+    ;reset indexes
+    mov bl,column
+    mov bh,0
+    mov si,bx
     mov bl,row
+
+;**********************************************
+;***************** 8 o'clock Cells ************
+;**********************************************
 
     inc bx
     dec si
     checkBL: ;bottom left
         cmp bx,08h
-        jz leave
-        cmp si,0ffh
-        jz leave
-        mov ax,grid[bx]
-        cmp ax,00
-        jnz,lastBL
+        jz rt
+        cmp si,0ffffh
+        jz rt
+        mov cl,8
+        mov al,bl
+        imul cl
+        push bx
+        mov bx,ax
+        add bx,si
+        mov al,grid[bx]
+        cmp al,00
+        jnz lastBL
         mov availMoves[bx],0ffh
+        callDrawSquare bx
+        pop bx
         inc bx
         dec si
         jmp checkBL
         lastBL:
         mov availMoves[bx],0ffh
+        callDrawSquare bx
 
-    leave:                
+    rt:                
     
 ENDM bishopMoves
 
-;------------------------------------------------
 
-queenMoves MACRO availMoves ,grid, row, column
+;****************************************************************************************************************************
+;****************************************************************************************************************************
+;**************************************************   Queen Moves    ********************************************************
+;****************************************************************************************************************************
+;****************************************************************************************************************************
+
+queenMoves MACRO row, column
     
-        rookMoves availMoves,grid,row,column
-        bishopMoves availMoves,grid,row,column
+        rookMoves row,column
+
+        bishopMoves row,column
 
 ENDM queenMoves
 
