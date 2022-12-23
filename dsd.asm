@@ -1300,7 +1300,7 @@ enterms:
     
     finishpieces:
 
-    drawSquareOnCell 0eh,7,0
+    drawSquareOnCell 0eh,currRow,currColumn
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
 ; ###################################################
