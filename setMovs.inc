@@ -67,31 +67,31 @@ checkRight: ;right columns
         inc si ;go to right boxes
         jmp checkRight
         lastRight:
-        ; ;check same team?
-        ; ;get away piece code
-        ;     mov dl,grid[bx] 
-        ;     push bx 
-        ;         ;get attacker piece code
-        ;         ;reset bx
+        ; ; Disable friendly fire... "NOT WORKING"
+        ;     ;check same team?
+        ;     ;get away piece code
+        ;         mov dl,grid[bx] 
+        ;         push bx 
+        ;     ;get attacker piece code
+        ;     ;reset bx
         ;         mov bl,column
         ;         mov bh,0
         ;         mov si,bx ;store column number in si
         ;         mov bl,row ;store row number in bl
-
         ;         mov cl,8
         ;         mov al,row
         ;         imul cl 
         ;         mov bx,ax ;bx = bl(row number)*8
         ;         add bx,si ;bx = bl(row number)*8 +si(column number)
-        ;     mov dh,grid[bx]
-        ;     pop bx
-        ;     ;is same Color?
-        ;         ; mov dl,02
-        ;         and dl,10
-        ;         ; mov dh,03
-        ;         and dh,10
-        ;     xor dl,dh
-        ;     jz preLeft
+        ;         mov dh,grid[bx]
+        ;         pop bx
+        ;     ;is same Color? "dl:away piece / dh:home piece" ;NOTES: dh is correct,dl is correct
+        ;         ; ERORR FROM HERE
+        ;         ; and dh,10d
+        ;         ; cmp dh,00
+        ;         ; ERORR TO HERE
+        ;         ; jz preLeft
+        ; ; Friendly fire is disabled
         mov availMoves[bx],0ffh
         callDrawSquare bx
 
@@ -385,11 +385,11 @@ ENDM bishopMoves
 ;****************************************************************************************************************************
 
 queenMoves MACRO row, column
-        pusha
+        ; pusha ;no need to it as you push in rook and bishop and queen doesn't change rigisters (for optimization)
     
         bishopMoves row,column
         rookMoves row,column
-        popa
+        ; popa
 ENDM queenMoves
 
 ;------------------------------------------------

@@ -1236,8 +1236,8 @@ mov selectedCol,0ffh
 resetavailmoves
 
 ; consume buffer
-mov ah,0
-int 16h
+; mov ah,0
+; int 16h
 
 
 jmp ennav
@@ -1271,8 +1271,8 @@ drawSquareOnCell 0eh,currRow,currColumn
 
 
 ; consume buffer
-mov ah,0
-int 16h
+; mov ah,0
+; int 16h
 jmp ennav
 
 
@@ -1286,6 +1286,91 @@ jmp checkkey
 ennav:
 
 endm navigateAfterSelect
+
+initializeGrid macro
+push bx
+
+mov grid[0], 12
+mov cooldown[0], 0000
+mov availMoves[0], 00
+mov grid[1], 13
+mov cooldown[1], 0000
+mov availMoves[1], 00
+mov grid[2], 14
+mov cooldown[2], 0000
+mov availMoves[2], 00
+mov grid[3], 15
+mov cooldown[3], 0000
+mov availMoves[3], 00
+mov grid[4], 16
+mov cooldown[4], 0000
+mov availMoves[4], 00
+mov grid[5], 14
+mov cooldown[5], 0000
+mov availMoves[5], 00
+mov grid[6], 13
+mov cooldown[6], 0000
+mov availMoves[6], 00
+mov grid[7], 12
+mov cooldown[7], 0000
+mov availMoves[7], 00
+
+mov bx,8
+
+inirow2:
+mov grid[bx],11
+mov cooldown[bx], 0000
+mov availMoves[bx], 00
+inc bx
+cmp bx,16
+jne inirow2
+
+inizeros:
+mov grid[bx],0
+mov cooldown[bx], 0000
+mov availMoves[bx], 00
+inc bx
+cmp bx,48
+jne inizeros
+
+inirow7:
+mov grid[bx],1
+mov cooldown[bx], 0000
+mov availMoves[bx], 00
+inc bx
+cmp bx,56
+jne inirow7
+
+
+mov grid[56],02
+mov cooldown[56], 0000
+mov availMoves[56], 00
+mov grid[57],03
+mov cooldown[57], 0000
+mov availMoves[57], 00
+mov grid[58],04
+mov cooldown[58], 0000
+mov availMoves[58], 00
+mov grid[59],05
+mov cooldown[59], 0000
+mov availMoves[59], 00
+mov grid[60],06
+mov cooldown[60], 0000
+mov availMoves[60], 00
+mov grid[61],04
+mov cooldown[61], 0000
+mov availMoves[61], 00
+mov grid[62],03
+mov cooldown[62], 0000
+mov availMoves[62], 00
+mov grid[63],02
+mov cooldown[63], 0000
+mov availMoves[63], 00
+
+
+
+pop bx
+endm initializeGrid
 
 mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2
     
@@ -1528,6 +1613,10 @@ enterms:
 
     
     finishpieces:
+    
+    initializeGrid
+
+    drawSquareOnCell 0eh,currRow,currColumn
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
 ; ###################################################
@@ -1883,14 +1972,14 @@ ENDM movePiece
     x               dw  ?
     y               dw  ?
 
-    grid            db  12,13,14,15,16,14,13,12
-                    db  11,11,11,11,11,11,11,11
-                    db  00,00,00,00,00,00,00,00
-                    db  00,00,00,00,00,00,00,00
-                    db  00,00,00,00,00,00,00,00
-                    db  00,00,00,00,00,00,00,00
-                    db  01,01,01,01,01,01,01,01
-                    db  02,03,04,05,06,04,03,02
+    grid            db  12,13,14,15,16,14,13,12 ;0-7
+                    db  11,11,11,11,11,11,11,11 ;9-15
+                    db  00,00,00,00,00,00,00,00 ;16-23
+                    db  00,00,00,00,00,00,00,00 ;24-31
+                    db  00,00,00,00,00,00,00,00 ;32-39
+                    db  00,00,00,00,00,00,00,00 ;40-47
+                    db  01,01,01,01,01,01,01,01 ;48-55
+                    db  02,03,04,05,06,04,03,02 ;56-64
    
     cooldown        dw  0000,0000,0000,0000,0000,0000,0000,0000
                     dw  0000,0000,0000,0000,0000,0000,0000,0000
