@@ -384,10 +384,11 @@ ENDM bishopMoves
 ;****************************************************************************************************************************
 
 queenMoves MACRO row, column
+        pusha
     
         bishopMoves row,column
         rookMoves row,column
-
+        popa
 ENDM queenMoves
 
 ;------------------------------------------------
