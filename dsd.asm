@@ -669,6 +669,124 @@ rt:
 popa
 ENDM getAvailForSelectedPiece
 
+callAppropriateMove macro
+pusha
+
+checkAvailable
+cmp isAvailableCell,0
+je notmoved
+
+
+mov al,selectedRow
+mov bl,8
+imul bl
+add al,selectedCol
+mov bx,ax
+mov al,grid[bx]
+
+cmp al,1
+jne check2
+movePiece 1, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check2:
+cmp al,2
+jne check3
+movePiece 2, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check3:
+cmp al,3
+jne check4
+movePiece 3, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check4:
+cmp al,4
+jne check5
+movePiece 4, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check5:
+cmp al,5
+jne check6
+movePiece 5, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check6:
+cmp al,6
+jne check7
+movePiece 6, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check7:
+cmp al,7
+jne check8
+movePiece 7, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check8:
+cmp al,8
+jne check9
+movePiece 8, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check9:
+cmp al,9
+jne check10
+movePiece 9, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check10:
+cmp al,10
+jne check11
+movePiece 10, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check11:
+cmp al,11
+jne check12
+movePiece 11, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check12:
+cmp al,12
+jne check13
+movePiece 12, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check13:
+cmp al,13
+jne check14
+movePiece 13, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check14:
+cmp al,14
+jne check15
+movePiece 14, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check15:
+cmp al,15
+jne check16
+movePiece 15, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+check16:
+cmp al,16
+jne en
+movePiece 16, selectedRow, selectedCol, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved,1
+jmp en
+
+notmoved:
+mov hasmoved,0
+
+en:
+popa
+endm callAppropriateMove
+
 
 checkSelected macro row,column
 local skip
@@ -879,6 +997,15 @@ jnz escape
 ;first remove highlight from selected cell then move the piece at seleted cell to curr cell if available
 ;and remove the highlight of available moves
 ;then jump to consumebuffergm
+callAppropriateMove
+
+cmp hasmoved,0
+je noreset
+drawSquareOnCell 07h,selectedRow,selectedCol
+
+
+resetavailmoves
+noreset:
 
 
 ; mov keypressed,al
@@ -1829,9 +1956,10 @@ ENDM movePiece
     selectedRow     db  0ffh
     selectedCol     db  0ffh
 
-    isSelectedCell  db  0
-    isEmptyCell     db  ?
-    isAvailableCell db  ?
+    isSelectedCell db  0
+    isEmptyCell    db  ?
+    isAvailableCell db ?
+    hasmoved       db ?
 
     selectedPiece   db  ?
 
