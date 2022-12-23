@@ -560,6 +560,7 @@ endm usernameScreen
 
 checkEmptyCell MACRO 
 local notempty
+pusha
 
 mov bl,8
 mov al,currRow
@@ -577,11 +578,13 @@ jnz notempty
 mov isEmptyCell,1
 
 notempty:
+popa
 
 ENDM checkEmptyCell
 
 getAvailForSelectedPiece MACRO
     local rt
+    pusha
 
 mov bl,8
 mov al,currRow
@@ -663,6 +666,7 @@ jne rt
 jmp rt
 rt:
 ;;;;;;;;;;con
+popa
 ENDM getAvailForSelectedPiece
 
 
@@ -711,9 +715,6 @@ endm checkAvailable
 eraseHighlight macro 
 local removeh,end,checks
 pusha
-; add al,'0'
-; mov ah,0ah
-; int 10h
 
 checkAvailable
 cmp isAvailableCell,0
@@ -723,15 +724,10 @@ jmp end
 
 checks:
 
-;need to add check if available move
 checkSelected currRow,currColumn
 cmp isSelectedCell,0
 jz removeh
 drawSquareOnCell 03h,currRow,currColumn
-jmp end
-cmp al,0ffh
-jz removeh
-drawSquareOnCell 04h,currRow,currColumn
 jmp end
 
 
@@ -743,6 +739,39 @@ drawSquareOnCell 07h,currRow,currColumn
 end:
 popa
 endm eraseHighlight
+
+
+removeHighlightFromCellnumber macro cellNumber
+pusha
+
+    mov ax, cellNumber
+    mov ah,0
+    mov bl,8
+    idiv bl
+    mov bx,ax
+    drawSquareOnCell 07h,bl,bh
+
+popa
+endm removeHighlightFromCellnumber
+
+resetavailmoves macro
+local lo,freset
+
+push bx
+
+mov bx,0
+
+lo:
+cmp bx,64d
+je freset
+mov availMoves[bx],00
+removeHighlightFromCellnumber bx
+inc bx
+jmp lo
+freset:
+
+pop bx
+endm resetavailmoves
 
 navigateAfterSelect macro 
 LOCAL checkkey,up,down,left,right,consumebuffer,q,skipnavd,skipnavu,skip,skipErase,skipnavl,skipnavr,escape
@@ -860,11 +889,23 @@ escape:
 cmp al,1bh
 jnz consumebuffer
 
-;exitgame
 
 ; mov keypressed,al
 
 drawSquareOnCell 07,selectedRow,selectedCol
+mov selectedRow,0ffh
+mov selectedCol,0ffh
+
+
+;Reset availMoves and Remove Highlights
+resetavailmoves
+
+drawSquareOnCell 0eh,currRow,currColumn
+
+
+
+
+
 ; consume buffer
 mov ah,0
 int 16h
@@ -1785,10 +1826,10 @@ ENDM movePiece
     currRow         db  7
     currColumn      db  0
 
-    selectedRow     db  ?
-    selectedCol     db  ?
+    selectedRow     db  0ffh
+    selectedCol     db  0ffh
 
-    isSelectedCell  db  ?
+    isSelectedCell  db  0
     isEmptyCell     db  ?
     isAvailableCell db  ?
 
