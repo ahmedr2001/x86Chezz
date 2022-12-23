@@ -191,7 +191,7 @@ preBottom:
         add bx,si
         mov al,grid[bx]
         cmp al,00
-        jnz lastTop
+        jnz lastBottom
         mov availMoves[bx],0ffh
         callDrawSquare bx
         pop bx
