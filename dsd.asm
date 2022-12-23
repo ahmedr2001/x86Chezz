@@ -892,7 +892,7 @@ pop bx
 endm resetavailmoves
 
 navigateAfterSelect macro 
-LOCAL checkkey,up,down,left,right,consumebuffer,q,skipnavd,skipnavu,skip,skipErase,skipnavl,skipnavr,escape
+LOCAL checkkey,up,down,left,right,consumebuffer,q,skipnavd,skipnavu,skip,skipErase,skipnavl,skipnavr,escape,ennav
 ;first you should know which piece is at selected cell then call highlight available moves then navigate
 
 checkkey:
@@ -1004,10 +1004,15 @@ je noreset
 drawSquareOnCell 07h,selectedRow,selectedCol
 mov selectedRow,0ffh
 mov selectedCol,0ffh
-
-
-
 resetavailmoves
+
+; consume buffer
+mov ah,0
+int 16h
+
+
+jmp ennav
+
 noreset:
 
 
@@ -1039,9 +1044,7 @@ drawSquareOnCell 0eh,currRow,currColumn
 ; consume buffer
 mov ah,0
 int 16h
-
-
-jmp checkkeygm
+jmp ennav
 
 
 
@@ -1049,6 +1052,9 @@ consumebuffer:
 mov ah,0
 int 16h
 jmp checkkey
+
+
+ennav:
 
 endm navigateAfterSelect
 
