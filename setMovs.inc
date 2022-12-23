@@ -389,7 +389,7 @@ queenMoves MACRO row, column
     
         bishopMoves row,column
         rookMoves row,column
-
+        popa
 ENDM queenMoves
 
 ;------------------------------------------------
