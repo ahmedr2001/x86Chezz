@@ -1007,8 +1007,8 @@ mov selectedCol,0ffh
 resetavailmoves
 
 ; consume buffer
-mov ah,0
-int 16h
+; mov ah,0
+; int 16h
 
 
 jmp ennav
@@ -1042,8 +1042,8 @@ drawSquareOnCell 0eh,currRow,currColumn
 
 
 ; consume buffer
-mov ah,0
-int 16h
+; mov ah,0
+; int 16h
 jmp ennav
 
 
@@ -1299,6 +1299,8 @@ enterms:
 
     
     finishpieces:
+
+    drawSquareOnCell 0eh,7,0
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
 ; ###################################################
