@@ -754,8 +754,27 @@ pusha
 popa
 endm removeHighlightFromCellnumber
 
+resetavailmoves macro
+local lo,freset
+
+push bx
+
+mov bx,0
+
+lo:
+cmp bx,64d
+je freset
+mov availMoves[bx],00
+removeHighlightFromCellnumber bx
+inc bx
+jmp lo
+freset:
+
+pop bx
+endm resetavailmoves
+
 navigateAfterSelect macro 
-LOCAL checkkey,up,down,left,right,consumebuffer,q,skipnavd,skipnavu,skip,skipErase,skipnavl,skipnavr,escape,resetavailmoves,freset
+LOCAL checkkey,up,down,left,right,consumebuffer,q,skipnavd,skipnavu,skip,skipErase,skipnavl,skipnavr,escape
 ;first you should know which piece is at selected cell then call highlight available moves then navigate
 
 checkkey:
@@ -879,16 +898,7 @@ mov selectedCol,0ffh
 
 
 ;Reset availMoves and Remove Highlights
-mov bx,0
-
-resetavailmoves:
-cmp bx,64d
-je freset
-mov availMoves[bx],00
-removeHighlightFromCellnumber bx
-inc bx
-jmp resetavailmoves
-freset:
+resetavailmoves
 
 drawSquareOnCell 0eh,currRow,currColumn
 
