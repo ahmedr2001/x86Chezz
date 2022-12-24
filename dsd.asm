@@ -1182,13 +1182,6 @@ enterms:
 
 ;gm
 checkkeygm:
-mov ah,1
-int 16h
-jnz w
-jz checkkeygm
-
-w:
-push ax
 lea si, buf
 mov ah,00
 int 1ah
@@ -1201,7 +1194,14 @@ int 10h
 mov ah,9
 mov dx, offset buf
 int 21h
-pop ax
+mov ah,1
+int 16h
+jnz w
+jz checkkeygm
+
+w:
+; push ax
+; pop ax
 
 cmp al,77h
 jnz arrowup
@@ -1554,7 +1554,7 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winM
     mov ax, cooldown[bx]
     sub dx, ax
     cmp dx, 50
-    ; jl noMove
+    jl noMove
 
     eraseImage fromColumn, fromRow, greyCell, whiteCell
     ; lea si, grid
