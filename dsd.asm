@@ -656,21 +656,27 @@ popa
 endm removeHighlightFromCellnumber
 
 resetavailmoves macro
-local lo,freset
+local lo,freset,skip
 
 push bx
+push ax
 
 mov bx,0
 
 lo:
 cmp bx,64d
 je freset
+mov al,availMoves[bx]
+cmp al,0
+je skip
 mov availMoves[bx],00
 removeHighlightFromCellnumber bx
+skip:
 inc bx
 jmp lo
 freset:
 
+pop ax
 pop bx
 endm resetavailmoves
 
