@@ -279,427 +279,237 @@ notempty:
 popa
 ENDM checkEmptyCell
 
-getAvailForSelectedPiece MACRO r,c,player
-    local rt,blackrock,whitebishop,blackbishop,whitequeen,blackqueen,king1,king2,whitepawn,blackpawn,blackknight,whiteknight,preking,prepawn,preknight
-    pusha
-
-mov bl,8
-mov al,r
-imul bl
-add al,c
-mov bx,ax
-
-mov cl,grid[bx]
-
-;check rock
-cmp cl,2
-jne blackrock
-push ax
-push bx
-mov al,r
-mov ah,c
-mov bl,player
-mov row,al
-mov col,ah
-mov PNO,bl
-pop bx
-pop ax
-call rookMoves 
-jmp rt
-blackrock:
-cmp cl,12
-jne whitebishop
-push ax
-push bx
-mov al,r
-mov ah,c
-mov bl,player
-mov row,al
-mov col,ah
-mov PNO,bl
-pop bx
-pop ax
-call rookMoves 
-jmp rt
-whitebishop:
-cmp cl,4
-jne blackbishop
-push ax
-push bx
-mov al,r
-mov ah,c
-mov bl,player
-mov row,al
-mov col,ah
-mov PNO,bl
-pop bx
-pop ax
-call bishopMoves 
-jmp rt
-blackbishop:
-cmp cl,14
-jne whitequeen
-push ax
-push bx
-mov al,r
-mov ah,c
-mov bl,player
-mov row,al
-mov col,ah
-mov PNO,bl
-pop bx
-pop ax
-call bishopMoves 
-jmp rt
-whitequeen:
-cmp cl,5
-jne blackqueen
-push ax
-push bx
-mov al,r
-mov ah,c
-mov bl,player
-mov row,al
-mov col,ah
-mov PNO,bl
-pop bx
-pop ax
-call queenMoves 
-jmp rt
-blackqueen:
-cmp cl,15
-jne prepawn
-push ax
-push bx
-mov al,r
-mov ah,c
-mov bl,player
-mov row,al
-mov col,ah
-mov PNO,bl
-pop bx
-pop ax
-call queenMoves 
-jmp rt
-
-prepawn:
-push ax
-push bx
-mov al,r
-mov ah,c
-mov bl,player
-mov row,al
-mov col,ah
-mov PNO,bl
-pop bx
-pop ax
-cmp PNO,1
-je whitepawn
-jne blackpawn
-
-whitepawn:
-cmp cl,1
-jne preking
- call HighlightAvailableForWPawnToEat 
- call HighlightAvailableForWPawnTwo 
-jmp rt
-blackpawn:
-cmp cl,11
-jne preking
- call HighlightAvailableForBPawnToEat 
- call HighlightAvailableForBPawnTwo 
-jmp rt
-
-preking:
-push ax
-push bx
-mov al,r
-mov ah,c
-mov bl,player
-mov row,al
-mov col,ah
-mov PNO,bl
-pop bx
-pop ax
-cmp PNO,1
-je king1
-jne king2
-
-king1:
-cmp cl,6 
-jne preknight
-call HighlightAvailableForWKing 
-jmp rt
-king2:
-cmp cl,16
-jne preknight
-call HighlightAvailableForBKing 
-jmp rt
-
-preknight:
-push ax
-push bx
-mov al,r
-mov ah,c
-mov bl,player
-mov row,al
-mov col,ah
-mov PNO,bl
-pop bx
-pop ax
-cmp PNO,1
-je whiteknight
-jne blackknight
-
-whiteknight:
-cmp cl,3
-jne rt
-call HighlightAvailableForWKnight 
-jmp rt
-blackknight:
-cmp cl,13
-jne rt
-call HighlightAvailableForBKnight 
-jmp rt
-rt:
-popa
-ENDM getAvailForSelectedPiece
-
-callAppropriateMove macro
-local en,notmoved,check2,check3,check4,check5,check6,check7,check8,check9,check10,check11,check12,check13,check14,check15,check16
+callAppropriateMove macro player,sr,sc,cr,cc
+local en,notmoved,check2,check3,check4,check5,check6,check7,check8,check9,check10,check11,check12,check13,check14,check15,check16,p2,startm
+local enm,p22,enm3,p23,enm4,p24,enm5,enm6,enm7,enm8,enm9,enm10,enm11,enm12,enm13,enm14,enm15,enm16,enm17,p25,p26,p27,p28,p29,p210,p211,p212,p213,p214,p215,p216,p217
 pusha
+mov cl,player
 
+cmp cl,1
+jne p2
 checkAvailable
 cmp isAvailableCell,0
 je notmoved
+jmp startm
 
-mov al,selectedRow
-mov bl,8
-imul bl
-add al,selectedCol
-mov bx,ax
-mov al,grid[bx]
-
-cmp al,1
-jne check2
-movePiece 1, selectedRow, selectedCol,currRow, currColumn, grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check2:
-cmp al,2
-jne check3
-movePiece 2, selectedRow, selectedCol, currRow,currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check3:
-cmp al,3
-jne check4
-movePiece 3, selectedRow, selectedCol,  currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check4:
-cmp al,4
-jne check5
-movePiece 4, selectedRow, selectedCol, currRow,currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check5:
-cmp al,5
-jne check6
-movePiece 5, selectedRow, selectedCol,  currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check6:
-cmp al,6
-jne check7
-movePiece 6, selectedRow, selectedCol, currRow,currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check7:
-cmp al,7
-jne check8
-movePiece 7, selectedRow, selectedCol,currRow, currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check8:
-cmp al,8
-jne check9
-movePiece 8, selectedRow, selectedCol,  currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check9:
-cmp al,9
-jne check10
-movePiece 9, selectedRow, selectedCol, currRow,currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check10:
-cmp al,10
-jne check11
-movePiece 10, selectedRow, selectedCol, currRow,currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check11:
-cmp al,11
-jne check12
-movePiece 11, selectedRow, selectedCol, currRow,currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check12:
-cmp al,12
-jne check13
-movePiece 12, selectedRow, selectedCol, currRow,currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check13:
-cmp al,13
-jne check14
-movePiece 13, selectedRow, selectedCol,currRow, currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check14:
-cmp al,14
-jne check15
-movePiece 14, selectedRow, selectedCol,currRow, currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check15:
-cmp al,15
-jne check16
-movePiece 15, selectedRow, selectedCol,currRow, currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-check16:
-cmp al,16
-jne en
-movePiece 16, selectedRow, selectedCol,currRow, currColumn,  grid, cooldown, winMessageP1, winMessageP2
-mov hasmoved,1
-jmp en
-
-notmoved:
-mov hasmoved,0
-
-en:
-popa
-endm callAppropriateMove
-
-callAppropriateMove2 macro
-local en,notmoved,check2,check3,check4,check5,check6,check7,check8,check9,check10,check11,check12,check13,check14,check15,check16
-pusha
-
+p2:
 checkAvailable2
 cmp isAvailableCell2,0
 je notmoved
 
-mov al,selectedRow2
+startm:
+
+mov al,sr
 mov bl,8
 imul bl
-add al,selectedCol2
+add al,sc
 mov bx,ax
 mov al,grid[bx]
 
 cmp al,1
 jne check2
-movePiece 1, selectedRow2, selectedCol2,currRow2, currColumn2, grid, cooldown, winMessageP1, winMessageP2
+movePiece 1, sr, sc,cr, cc, grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p22
+mov hasmoved,1
+jmp enm
+p22:
 mov hasmoved2,1
+enm:
 jmp en
 check2:
 cmp al,2
 jne check3
-movePiece 2, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 2, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p23
+mov hasmoved,1
+jmp enm3
+p23:
 mov hasmoved2,1
+enm3:
 jmp en
 check3:
 cmp al,3
 jne check4
-movePiece 3, selectedRow2, selectedCol2,  currRow2,currColumn2, grid, cooldown, winMessageP1, winMessageP2
+movePiece 3, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p24
+mov hasmoved,1
+jmp enm4
+p24:
 mov hasmoved2,1
+enm4:
 jmp en
 check4:
 cmp al,4
 jne check5
-movePiece 4, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 4, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p25
+mov hasmoved,1
+jmp enm5
+p25:
 mov hasmoved2,1
+enm5:
 jmp en
 check5:
 cmp al,5
 jne check6
-movePiece 5, selectedRow2, selectedCol2,  currRow2,currColumn2, grid, cooldown, winMessageP1, winMessageP2
+movePiece 5, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p26
+mov hasmoved,1
+jmp enm6
+p26:
 mov hasmoved2,1
+enm6:
 jmp en
 check6:
 cmp al,6
 jne check7
-movePiece 6, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 6, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p27
+mov hasmoved,1
+jmp enm7
+p27:
 mov hasmoved2,1
+enm7:
 jmp en
 check7:
 cmp al,7
 jne check8
-movePiece 7, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 7, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p28
+mov hasmoved,1
+jmp enm8
+p28:
 mov hasmoved2,1
+enm8:
 jmp en
 check8:
 cmp al,8
 jne check9
-movePiece 8, selectedRow2, selectedCol2,  currRow2,currColumn2, grid, cooldown, winMessageP1, winMessageP2
+movePiece 8, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p29
+mov hasmoved,1
+jmp enm9
+p29:
 mov hasmoved2,1
+enm9:
 jmp en
 check9:
 cmp al,9
 jne check10
-movePiece 9, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 9, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p210
+mov hasmoved,1
+jmp enm10
+p210:
 mov hasmoved2,1
+enm10:
 jmp en
 check10:
 cmp al,10
 jne check11
-movePiece 10, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 10, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p211
+mov hasmoved,1
+jmp enm11
+p211:
 mov hasmoved2,1
+enm11:
 jmp en
 check11:
 cmp al,11
 jne check12
-movePiece 11, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 11, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p212
+mov hasmoved,1
+jmp enm12
+p212:
 mov hasmoved2,1
+enm12:
 jmp en
 check12:
 cmp al,12
 jne check13
-movePiece 12, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 12, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p213
+mov hasmoved,1
+jmp enm13
+p213:
 mov hasmoved2,1
+enm13:
 jmp en
 check13:
 cmp al,13
 jne check14
-movePiece 13, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 13, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p214
+mov hasmoved,1
+jmp enm14
+p214:
 mov hasmoved2,1
+enm14:
 jmp en
 check14:
 cmp al,14
 jne check15
-movePiece 14, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 14, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p215
+mov hasmoved,1
+jmp enm15
+p215:
 mov hasmoved2,1
+enm15:
 jmp en
 check15:
 cmp al,15
 jne check16
-movePiece 15, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 15, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p216
+mov hasmoved,1
+jmp enm16
+p216:
 mov hasmoved2,1
+enm16:
 jmp en
 check16:
 cmp al,16
 jne en
-movePiece 16, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 16, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+cmp cl,1
+jne p217
+mov hasmoved,1
+jmp enm17
+p217:
 mov hasmoved2,1
+enm17:
 jmp en
 
 notmoved:
+cmp cl,1
+jne nm2
+mov hasmoved,0
+jmp en
+nm2:
 mov hasmoved2,0
 
 en:
 popa
 endm callAppropriateMove
+
 
 
 checkSelected macro row,column
@@ -1371,7 +1181,7 @@ q2:
 cmp al,71h
 jne esc2
 
-callAppropriateMove
+callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
 
 cmp hasmoved,0
 je noreset
@@ -1429,15 +1239,15 @@ sel22:
 cmp al,2fh
 jne esc22
 
-; callAppropriateMove2
-
+; callAppropriateMove 2,selectedRow2,selectedCol2,currRow2,currColumn2
+; 
 ; cmp hasmoved2,0
 ; je noreset2
 ; drawSquareOnCell 07h,selectedRow2,selectedCol2
 ; mov selectedRow2,0ffh
 ; mov selectedCol2,0ffh
 ; resetavailmoves2
-
+; 
 ; mov checkq2,0
 ; noreset2:
 
@@ -1621,6 +1431,192 @@ int 16h
 noMove:
     popa
 ENDM movePiece
+
+getAvailForSelectedPiece MACRO r,c,player
+    local rt,blackrock,whitebishop,blackbishop,whitequeen,blackqueen,king1,king2,whitepawn,blackpawn,blackknight,whiteknight,preking,prepawn,preknight
+    pusha
+
+mov bl,8
+mov al,r
+imul bl
+add al,c
+mov bx,ax
+
+mov cl,grid[bx]
+
+;check rock
+cmp cl,2
+jne blackrock
+push ax
+push bx
+mov al,r
+mov ah,c
+mov bl,player
+mov row,al
+mov col,ah
+mov PNO,bl
+pop bx
+pop ax
+call rookMoves 
+jmp rt
+blackrock:
+cmp cl,12
+jne whitebishop
+push ax
+push bx
+mov al,r
+mov ah,c
+mov bl,player
+mov row,al
+mov col,ah
+mov PNO,bl
+pop bx
+pop ax
+call rookMoves 
+jmp rt
+whitebishop:
+cmp cl,4
+jne blackbishop
+push ax
+push bx
+mov al,r
+mov ah,c
+mov bl,player
+mov row,al
+mov col,ah
+mov PNO,bl
+pop bx
+pop ax
+call bishopMoves 
+jmp rt
+blackbishop:
+cmp cl,14
+jne whitequeen
+push ax
+push bx
+mov al,r
+mov ah,c
+mov bl,player
+mov row,al
+mov col,ah
+mov PNO,bl
+pop bx
+pop ax
+call bishopMoves 
+jmp rt
+whitequeen:
+cmp cl,5
+jne blackqueen
+push ax
+push bx
+mov al,r
+mov ah,c
+mov bl,player
+mov row,al
+mov col,ah
+mov PNO,bl
+pop bx
+pop ax
+call queenMoves 
+jmp rt
+blackqueen:
+cmp cl,15
+jne prepawn
+push ax
+push bx
+mov al,r
+mov ah,c
+mov bl,player
+mov row,al
+mov col,ah
+mov PNO,bl
+pop bx
+pop ax
+call queenMoves 
+jmp rt
+
+prepawn:
+push ax
+push bx
+mov al,r
+mov ah,c
+mov bl,player
+mov row,al
+mov col,ah
+mov PNO,bl
+pop bx
+pop ax
+cmp PNO,1
+je whitepawn
+jne blackpawn
+
+whitepawn:
+cmp cl,1
+jne preking
+ call HighlightAvailableForWPawnToEat 
+ call HighlightAvailableForWPawnTwo 
+jmp rt
+blackpawn:
+cmp cl,11
+jne preking
+ call HighlightAvailableForBPawnToEat 
+ call HighlightAvailableForBPawnTwo 
+jmp rt
+
+preking:
+push ax
+push bx
+mov al,r
+mov ah,c
+mov bl,player
+mov row,al
+mov col,ah
+mov PNO,bl
+pop bx
+pop ax
+cmp PNO,1
+je king1
+jne king2
+
+king1:
+cmp cl,6 
+jne preknight
+call HighlightAvailableForWKing 
+jmp rt
+king2:
+cmp cl,16
+jne preknight
+call HighlightAvailableForBKing 
+jmp rt
+
+preknight:
+push ax
+push bx
+mov al,r
+mov ah,c
+mov bl,player
+mov row,al
+mov col,ah
+mov PNO,bl
+pop bx
+pop ax
+cmp PNO,1
+je whiteknight
+jne blackknight
+
+whiteknight:
+cmp cl,3
+jne rt
+call HighlightAvailableForWKnight 
+jmp rt
+blackknight:
+cmp cl,13
+jne rt
+call HighlightAvailableForBKnight 
+jmp rt
+rt:
+popa
+ENDM getAvailForSelectedPiece
 ;-------------------------------------------------------------- 
 
 ; include resZahran.inc
@@ -2356,6 +2352,7 @@ rookMoves proc
                                     popa
                                     ret
                                     ENDp             rookMoves
+
 
 HighlightAvailableForWKing proc
     ;local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
@@ -3394,6 +3391,7 @@ HighlightAvailableForBPawnToEat proc
                                     ret
                                     endp             HighlightAvailableForBPawnToEat
     ;;;;;;===============================================================
+
 
 
 bishopMoves proc
