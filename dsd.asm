@@ -1886,6 +1886,288 @@ main proc far
                                     int              21h
 main ENDP
 
+rookMoves proc
+                                    pusha
+    ; ;------------------------- TESTING
+    ;                                 drawSquareOnCell 03h,row,col
+    ; ; callDrawSquare bx
+    ; ; --------------------------
+
+    ; intialize indexes
+
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+
+    ;******************************************
+    ;***************** Right Cells ************
+    ;******************************************
+
+                                    inc              si
+    checkRight:                                                                                                                                                                                                                                   ;right cols
+                                    cmp              si,08h
+                                    jz               preLeft
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+    ; -------------------------- TESTING (delete)
+    ; drawSquareOnCell 04h,row,col
+    ; callDrawSquare bx
+    ; --------------------------
+
+                                    mov              al,grid[bx]
+                                    cmp              al,00
+                                    jnz              lastRight
+                                    mov              availMoves[bx],0ffh
+                                    callDrawSquare   bx
+                                    inc              si                                                                                                                                                                                           ;go to right boxes
+                                    jmp              checkRight
+    lastRight:                      
+    ; Disable friendly fire... "NOT WORKING"
+    ;check same team?
+    ;get away piece code
+                                    mov              dl,grid[bx]
+                                    push             bx
+    ;get attacker piece code
+    ;reset bx
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              dh,grid[bx]
+                                    pop              bx
+    ;is same Color? "dl:away piece / dh:home piece"
+                                    cmp              dh,10
+                                    jl               whiteAttackerR                                                                                                                                                                               ;white Attacker
+    ;black Attacker
+                                    cmp              dl,10
+                                    jg               preleft
+                                    jmp              eatRight
+    ;white Attacker
+    whiteAttackerR:                 
+                                    cmp              dl,10
+                                    jl               preleft
+    ; Friendly fire is disabled
+    eatRight:                       
+                                    mov              availMoves[bx],0ffh
+                                    callDrawSquare   bx
+
+
+
+    preLeft:                        
+    ;reset indexes
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+
+    ;****************************************
+    ;***************** left Cells ***********
+    ;****************************************
+
+                                    dec              si
+    checkLeft:                                                                                                                                                                                                                                    ;right cols
+                                    cmp              si,0ffffh
+                                    jz               preTop
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+    ; -------------------------- TESTING (delete)
+    ; drawSquareOnCell 04h,row,col
+    ; callDrawSquare bx
+    ; --------------------------
+                                    mov              al,grid[bx]
+                                    cmp              al,00
+                                    jnz              lastLeft
+                                    mov              availMoves[bx],0ffh
+                                    callDrawSquare   bx
+                                    dec              si                                                                                                                                                                                           ;go to right boxes
+                                    jmp              checkLeft
+    lastLeft:                       
+    ; Disable friendly fire... "NOT WORKING"
+    ;check same team?
+    ;get away piece code
+                                    mov              dl,grid[bx]
+                                    push             bx
+    ;get attacker piece code
+    ;reset bx
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              dh,grid[bx]
+                                    pop              bx
+    ;is same Color? "dl:away piece / dh:home piece"
+                                    cmp              dh,10
+                                    jl               whiteAttackerL                                                                                                                                                                               ;white Attacker
+    ;black Attacker
+                                    cmp              dl,10
+                                    jg               preTop
+                                    jmp              eatLeft
+    ;white Attacker
+    whiteAttackerL:                 
+                                    cmp              dl,10
+                                    jl               preTop
+    ; Friendly fire is disabled
+    eatLeft:                        
+                                    mov              availMoves[bx],0ffh
+                                    callDrawSquare   bx
+
+    preTop:                         
+    ;reset indexes
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx
+                                    mov              bl,row
+
+    ;*************************************
+    ;***************** Top Cells *********
+    ;*************************************
+
+                                    dec              bx
+    checkTop:
+                                    cmp              bx,0ffffh
+                                    jz               preBottom
+                                    mov              cl,8
+                                    mov              al,bl
+                                    imul             cl
+                                    push             bx
+                                    mov              bx,ax
+                                    add              bx,si
+                                    mov              al,grid[bx]
+                                    cmp              al,00
+                                    jnz              lastTop
+                                    mov              availMoves[bx],0ffh
+                                    callDrawSquare   bx
+                                    pop              bx
+
+                                    dec              bx                                                                                                                                                                                           ;go to top boxes
+                                    jmp              checkTop
+    lastTop:
+    ; Disable friendly fire... "NOT WORKING"
+    ;check same team?
+    ;get away piece code
+                                    pop              ax
+
+                                    mov              dl,grid[bx]
+                                    push             bx
+    ;get attacker piece code
+    ;reset bx
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              dh,grid[bx]
+                                    pop              bx
+    ;is same Color? "dl:away piece / dh:home piece"
+                                    cmp              dh,10
+                                    jl               whiteAttackerT                                                                                                                                                                               ;white Attacker
+    ;black Attacker
+                                    cmp              dl,10
+                                    jg               preBottom
+                                    jmp              eatTop
+    ;white Attacker
+    whiteAttackerT:
+                                    cmp              dl,10
+                                    jl               preBottom
+    ; Friendly fire is disabled
+    eatTop:
+                                    mov              availMoves[bx],0ffh
+                                    callDrawSquare   bx
+
+    preBottom:
+    ; reset indexes
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx
+                                    mov              bl,row
+
+    ;*************************************
+    ;***************** Bottom Cells *********
+    ;*************************************
+
+                                    inc              bx
+    checkBottom:
+                                    cmp              bx,08h
+                                    jz               rt91
+                                    mov              cl,8
+                                    mov              al,bl
+                                    imul             cl
+                                    push             bx
+                                    mov              bx,ax
+                                    add              bx,si
+                                    mov              al,grid[bx]
+                                    cmp              al,00
+                                    jnz              lastBottom
+                                    mov              availMoves[bx],0ffh
+                                    callDrawSquare   bx
+                                    pop              bx
+
+                                    inc              bx                                                                                                                                                                                           ;go to top boxes
+                                    jmp              checkBottom
+    lastBottom:
+    ; Disable friendly fire... "NOT WORKING"
+    ;check same team?
+    ;get away piece code
+                                    pop ax
+                                    mov              dl,grid[bx]
+                                    push             bx
+    ;get attacker piece code
+    ;reset bx
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              dh,grid[bx]
+                                    pop              bx
+    ;is same Color? "dl:away piece / dh:home piece"
+                                    cmp              dh,10
+                                    jl               whiteAttackerB                                                                                                                                                                               ;white Attacker
+    ;black Attacker
+                                    cmp              dl,10
+                                    jg               rt91
+                                    jmp              eatBottom
+    ;white Attacker
+    whiteAttackerB:
+                                    cmp              dl,10
+                                    jl               preTop
+    ; Friendly fire is disabled
+    eatBottom:
+                                    mov              availMoves[bx],0ffh
+                                    callDrawSquare   bx
+
+
+    rt91:
+
+                                    popa
+                                    ret
+                                    ENDp             rookMoves
+
 HighlightAvailableForWKing proc
     ;local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
     ;highlight 3 above it
@@ -2923,287 +3205,6 @@ HighlightAvailableForBPawnToEat proc
                                     ret
                                     endp             HighlightAvailableForBPawnToEat
     ;;;;;;===============================================================
-
-
-
-rookMoves proc
-                                    pusha
-    ; ;------------------------- TESTING
-    ;                                 drawSquareOnCell 03h,row,col
-    ; ; callDrawSquare bx
-    ; ; --------------------------
-
-    ; intialize indexes
-
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
-
-    ;******************************************
-    ;***************** Right Cells ************
-    ;******************************************
-
-                                    inc              si
-    checkRight:                                                                                                                                                                                                                                   ;right cols
-                                    cmp              si,08h
-                                    jz               preLeft
-                                    mov              cl,8
-                                    mov              al,row
-                                    imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-    ; -------------------------- TESTING (delete)
-    ; drawSquareOnCell 04h,row,col
-    ; callDrawSquare bx
-    ; --------------------------
-
-                                    mov              al,grid[bx]
-                                    cmp              al,00
-                                    jnz              lastRight
-                                    mov              availMoves[bx],0ffh
-                                    callDrawSquare   bx
-                                    inc              si                                                                                                                                                                                           ;go to right boxes
-                                    jmp              checkRight
-    lastRight:                      
-    ; Disable friendly fire... "NOT WORKING"
-    ;check same team?
-    ;get away piece code
-                                    mov              dl,grid[bx]
-                                    push             bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
-                                    mov              cl,8
-                                    mov              al,row
-                                    imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-                                    mov              dh,grid[bx]
-                                    pop              bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp              dh,10
-                                    jl               whiteAttackerR                                                                                                                                                                               ;white Attacker
-    ;black Attacker
-                                    cmp              dl,10
-                                    jg               preleft
-                                    jmp              eatRight
-    ;white Attacker
-    whiteAttackerR:                 
-                                    cmp              dl,10
-                                    jl               preleft
-    ; Friendly fire is disabled
-    eatRight:                       
-                                    mov              availMoves[bx],0ffh
-                                    callDrawSquare   bx
-
-
-
-    preLeft:                        
-    ;reset indexes
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
-
-    ;****************************************
-    ;***************** left Cells ***********
-    ;****************************************
-
-                                    dec              si
-    checkLeft:                                                                                                                                                                                                                                    ;right cols
-                                    cmp              si,0ffffh
-                                    jz               preTop
-                                    mov              cl,8
-                                    mov              al,row
-                                    imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-    ; -------------------------- TESTING (delete)
-    ; drawSquareOnCell 04h,row,col
-    ; callDrawSquare bx
-    ; --------------------------
-                                    mov              al,grid[bx]
-                                    cmp              al,00
-                                    jnz              lastLeft
-                                    mov              availMoves[bx],0ffh
-                                    callDrawSquare   bx
-                                    dec              si                                                                                                                                                                                           ;go to right boxes
-                                    jmp              checkLeft
-    lastLeft:                       
-    ; Disable friendly fire... "NOT WORKING"
-    ;check same team?
-    ;get away piece code
-                                    mov              dl,grid[bx]
-                                    push             bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
-                                    mov              cl,8
-                                    mov              al,row
-                                    imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-                                    mov              dh,grid[bx]
-                                    pop              bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp              dh,10
-                                    jl               whiteAttackerL                                                                                                                                                                               ;white Attacker
-    ;black Attacker
-                                    cmp              dl,10
-                                    jg               preTop
-                                    jmp              eatLeft
-    ;white Attacker
-    whiteAttackerL:                 
-                                    cmp              dl,10
-                                    jl               preTop
-    ; Friendly fire is disabled
-    eatLeft:                        
-                                    mov              availMoves[bx],0ffh
-                                    callDrawSquare   bx
-
-    preTop:                         
-    ;reset indexes
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx
-                                    mov              bl,row
-
-    ;*************************************
-    ;***************** Top Cells *********
-    ;*************************************
-
-    ;                                 dec              bx
-    ; checkTop:
-    ;                                 cmp              bx,0ffffh
-    ;                                 jz               preBottom
-    ;                                 mov              cl,8
-    ;                                 mov              al,bl
-    ;                                 imul             cl
-    ;                                 push             bx
-    ;                                 mov              bx,ax
-    ;                                 add              bx,si
-    ;                                 mov              al,grid[bx]
-    ;                                 cmp              al,00
-    ;                                 jnz              lastTop
-    ;                                 mov              availMoves[bx],0ffh
-    ;                                 callDrawSquare   bx
-    ;                                 pop              bx
-
-    ;                                 dec              bx                                                                                                                                                                                           ;go to top boxes
-    ;                                 jmp              checkTop
-    ; lastTop:
-    ; ; Disable friendly fire... "NOT WORKING"
-    ; ;check same team?
-    ; ;get away piece code
-    ;                                 mov              dl,grid[bx]
-    ;                                 push             bx
-    ; ;get attacker piece code
-    ; ;reset bx
-    ;                                 mov              bl,col
-    ;                                 mov              bh,0
-    ;                                 mov              si,bx                                                                                                                                                                                        ;store col number in si
-    ;                                 mov              bl,row                                                                                                                                                                                       ;store row number in bl
-    ;                                 mov              cl,8
-    ;                                 mov              al,row
-    ;                                 imul             cl
-    ;                                 mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-    ;                                 add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-    ;                                 mov              dh,grid[bx]
-    ;                                 pop              bx
-    ; ;is same Color? "dl:away piece / dh:home piece"
-    ;                                 cmp              dh,10
-    ;                                 jl               whiteAttackerT                                                                                                                                                                               ;white Attacker
-    ; ;black Attacker
-    ;                                 cmp              dl,10
-    ;                                 jg               preBottom
-    ;                                 jmp              eatTop
-    ; ;white Attacker
-    ; whiteAttackerT:
-    ;                                 cmp              dl,10
-    ;                                 jl               preBottom
-    ; ; Friendly fire is disabled
-    ; eatTop:
-    ;                                 mov              availMoves[bx],0ffh
-    ;                                 callDrawSquare   bx
-
-    ; preBottom:
-    ; ; reset indexes
-    ;                                 mov              bl,col
-    ;                                 mov              bh,0
-    ;                                 mov              si,bx
-    ;                                 mov              bl,row
-
-    ;*************************************
-    ;***************** Bottom Cells *********
-    ;*************************************
-
-    ;                                 inc              bx
-    ; checkBottom:
-    ;                                 cmp              bx,08h
-    ;                                 jz               rt91
-    ;                                 mov              cl,8
-    ;                                 mov              al,bl
-    ;                                 imul             cl
-    ;                                 push             bx
-    ;                                 mov              bx,ax
-    ;                                 add              bx,si
-    ;                                 mov              al,grid[bx]
-    ;                                 cmp              al,00
-    ;                                 jnz              lastBottom
-    ;                                 mov              availMoves[bx],0ffh
-    ;                                 callDrawSquare   bx
-    ;                                 pop              bx
-
-    ;                                 inc              bx                                                                                                                                                                                           ;go to top boxes
-    ;                                 jmp              checkBottom
-    ; lastBottom:
-    ; ; Disable friendly fire... "NOT WORKING"
-    ; ;check same team?
-    ; ;get away piece code
-    ;                                 mov              dl,grid[bx]
-    ;                                 push             bx
-    ; ;get attacker piece code
-    ; ;reset bx
-    ;                                 mov              bl,col
-    ;                                 mov              bh,0
-    ;                                 mov              si,bx                                                                                                                                                                                        ;store col number in si
-    ;                                 mov              bl,row                                                                                                                                                                                       ;store row number in bl
-    ;                                 mov              cl,8
-    ;                                 mov              al,row
-    ;                                 imul             cl
-    ;                                 mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-    ;                                 add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-    ;                                 mov              dh,grid[bx]
-    ;                                 pop              bx
-    ; ;is same Color? "dl:away piece / dh:home piece"
-    ;                                 cmp              dh,10
-    ;                                 jl               whiteAttackerB                                                                                                                                                                               ;white Attacker
-    ; ;black Attacker
-    ;                                 cmp              dl,10
-    ;                                 jg               rt91
-    ;                                 jmp              eatBottom
-    ; ;white Attacker
-    ; whiteAttackerB:
-    ;                                 cmp              dl,10
-    ;                                 jl               preTop
-    ; ; Friendly fire is disabled
-    ; eatBottom:
-    ;                                 mov              availMoves[bx],0ffh
-    ;                                 callDrawSquare   bx
-
-
-    ; rt91:
-
-                                    popa
-                                    ret
-                                    ENDp             rookMoves
 
 
 bishopMoves proc
