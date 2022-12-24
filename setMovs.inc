@@ -1,50 +1,30 @@
-;Author: Mohammed Taher
-;Setting avaliable moves of pieces (Rook, Bioshop, Queen) 
 ;(1) need testing
 ;(2) TODO: if piece of same color then last patch was last availMove
 ;------------------------------------------------
-
 callDrawSquare macro cellNumber
 pusha
-
     mov ax, cellNumber
     mov ah,0
     mov bl,8
     idiv bl
     mov bx,ax
     drawSquareOnCell 04h,bl,bh
-
 popa
 endm callDrawSquare
-
-
-
-;****************************************************************************************************************************
-;****************************************************************************************************************************
 ;**************************************************   Rook Moves    *********************************************************
-;****************************************************************************************************************************
-;****************************************************************************************************************************
-
 rookMoves MACRO  row, column
     LOCAL checkRight, lastRight,preLeft, checkLeft,lastLeft,preTop,checkTop,lastTop,preBottom,checkBottom,lastBottom,rt
 pusha
-
 ;------------------------- TESTING
 drawSquareOnCell 03h,row,column
 ; callDrawSquare bx
 ; --------------------------
-
 ; intialize indexes
-
     mov bl,column
     mov bh,0
     mov si,bx ;store column number in si
     mov bl,row ;store row number in bl
-
-;******************************************
 ;***************** Right Cells ************
-;******************************************
-
     inc si
 checkRight: ;right columns
         cmp si,08h
@@ -58,7 +38,6 @@ checkRight: ;right columns
 ; drawSquareOnCell 04h,row,column
 ; callDrawSquare bx
 ; --------------------------
-
         mov al,grid[bx]
         cmp al,00
         jnz lastRight
@@ -94,20 +73,13 @@ checkRight: ;right columns
         ; ; Friendly fire is disabled
         mov availMoves[bx],0ffh
         callDrawSquare bx
-
-
-
 preLeft:
 ;reset indexes
     mov bl,column
     mov bh,0
     mov si,bx ;store column number in si
     mov bl,row ;store row number in bl
-
-;****************************************
 ;***************** left Cells ***********
-;****************************************
-
     dec si
 checkLeft: ;right columns
         cmp si,0ffffh
@@ -120,7 +92,6 @@ checkLeft: ;right columns
 ; -------------------------- TESTING (delete)
 ; drawSquareOnCell 04h,row,column
 callDrawSquare bx
-; --------------------------
         mov al,grid[bx]
         cmp al,00
         jnz lastLeft
@@ -131,18 +102,13 @@ callDrawSquare bx
         lastLeft:
         mov availMoves[bx],0ffh
         callDrawSquare bx
-
 preTop:
 ;reset indexes
     mov bl,column
     mov bh,0
     mov si,bx
     mov bl,row
-
-;*************************************
 ;***************** Top Cells *********
-;*************************************
-
     dec bx
     checkTop:
          cmp bx,0ffffh
@@ -159,24 +125,18 @@ preTop:
         mov availMoves[bx],0ffh
         callDrawSquare bx
         pop bx
-
         dec bx ;go to top boxes
         jmp checkTop
         lastTop:
         mov availMoves[bx],0ffh
         callDrawSquare bx
-
 preBottom:
 ; reset indexes
     mov bl,column
     mov bh,0
     mov si,bx
     mov bl,row
-
-;*************************************
 ;***************** Bottom Cells *********
-;*************************************
-
     inc bx
     checkBottom:
         cmp bx,08h
@@ -193,46 +153,28 @@ preBottom:
         mov availMoves[bx],0ffh
         callDrawSquare bx
         pop bx
-
         inc bx ;go to top boxes
         jmp checkBottom
         lastBottom:
         mov availMoves[bx],0ffh
         callDrawSquare bx
-
-
     rt:
-
 popa
 ENDM rookMoves
-
-
-;****************************************************************************************************************************
-;****************************************************************************************************************************
 ;**************************************************   Bishop Moves    *******************************************************
-;****************************************************************************************************************************
-;****************************************************************************************************************************
-
 bishopMoves MACRO row, column
     local checkBR,lastBR,checkTL,lastTL,checkTR,lastTR,checkBL,lastBL,precheckTL,precheckTR,precheckBL,rt
-
 PUSHA
-
 ; ------------------------- TESTING
 drawSquareOnCell 03h,row,column
 ; callDrawSquare bx
 ; --------------------------
-    
 ; intialize indexes
     mov bl,column
     mov bh,0
     mov si,bx
     mov bl,row
-    
-;**********************************************
 ;***************** 4 o'clock Cells ************
-;**********************************************
-
     inc bx
     inc si
     checkBR: ;bottom right
@@ -258,20 +200,13 @@ drawSquareOnCell 03h,row,column
         lastBR:
         callDrawSquare bx
         mov availMoves[bx],0ffh
-
-
 precheckTL:
     ;reset indexes
     mov bl,column
     mov bh,0
     mov si,bx
     mov bl,row
-
-
-;***********************************************
 ;***************** 10 o'clock Cells ************
-;***********************************************
-
     dec bx
     dec si
     checkTL: ;top left
@@ -297,19 +232,13 @@ precheckTL:
         lastTL:
         mov availMoves[bx],0ffh
         callDrawSquare bx
-
-
 precheckTR:
     ;reset indexes
     mov bl,column
     mov bh,0
     mov si,bx
     mov bl,row
-
-;**********************************************
 ;***************** 2 o'clock Cells ************
-;**********************************************
-
     dec bx
     inc si
     checkTR: ;top right
@@ -335,18 +264,13 @@ precheckTR:
         lastTR:
         mov availMoves[bx],0ffh
         callDrawSquare bx
-
 precheckBL:
     ;reset indexes
     mov bl,column
     mov bh,0
     mov si,bx
     mov bl,row
-
-;**********************************************
 ;***************** 8 o'clock Cells ************
-;**********************************************
-
     inc bx
     dec si
     checkBL: ;bottom left
@@ -372,24 +296,11 @@ precheckBL:
         lastBL:
         mov availMoves[bx],0ffh
         callDrawSquare bx
-
     rt:                
 popa 
 ENDM bishopMoves
-
-
-;****************************************************************************************************************************
-;****************************************************************************************************************************
 ;**************************************************   Queen Moves    ********************************************************
-;****************************************************************************************************************************
-;****************************************************************************************************************************
-
 queenMoves MACRO row, column
-        ; pusha ;no need to it as you push in rook and bishop and queen doesn't change rigisters (for optimization)
-    
         bishopMoves row,column
         rookMoves row,column
-        ; popa
 ENDM queenMoves
-
-;------------------------------------------------
