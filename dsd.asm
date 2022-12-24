@@ -24,7 +24,7 @@ LOCAL eraseGrey, eraseWhite, rt
 rt:
 ENDM eraseImage
 
-HighlightAvailableForKing macro row,col
+HighlightAvailableForWKing macro row,col
 local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
 pusha
 ;highlight 3 above it
@@ -35,15 +35,19 @@ mov bh,0
 mov cl,8
 lea di,grid
 lea si,availMoves
-dec al
+mul cl
+add di,ax   ;on current cell
+add di,bx
+add si,ax
+add si,bx
+
 cmp row,1
 jl noAbove
+    mov al,row
+    dec al
     mov IsmailRow,al
-    mul cl
-    add di,ax
-    add di,bx
-    add si,ax
-    add si,bx
+    sub di,8    ;above cell
+    sub si,8
     cmp byte ptr [di],00h
     je EmptyAbove
     cmp byte ptr [di],07h
@@ -84,16 +88,17 @@ jl noAbove
         noEnemyAboveRight:
     noAboveRight:
     dec bl
-    add di,7
+    add di,7    ;back to current cell
     add si,7
 noAbove:
 
 ;highlight 3 below it
-mov al,row  ;and bl => equal now col
-add di,8    ;below it
-add si,8    ;below it
+
 cmp row,6
 jg noBelow
+    mov al,row  ;and bl => equal now col
+    add di,8    ;below it
+    add si,8    ;below it
     inc al ;below it
     mov IsmailRow,al
     cmp byte ptr [di],00h
@@ -142,10 +147,12 @@ jg noBelow
         dec si
     noBelowRight:
     dec al  ;on cell and bl too
+    sub di,8
+    sub si,8
 noBelow:
 
-sub di,8    ;on cell
-sub si,8    ;on cell
+    ;di,si are on cell
+mov al,row  ;and bl => equal now col
 mov IsmailRow,al
 ;highlight right
 cmp col,6
@@ -184,10 +191,175 @@ jl noLeft
     noEnemyLeft:
 noLeft:
 popa
-endm HighlightAvailableForKing
+endm HighlightAvailableForWKing
+;==;==
+HighlightAvailableForBKing macro row,col
+local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
+pusha
+;highlight 3 above it
+mov al,row
+mov ah,0
+mov bl,col
+mov bh,0
+mov cl,8
+lea di,grid
+lea si,availMoves
+mul cl
+add di,ax   ;on current cell
+add di,bx
+add si,ax
+add si,bx
+
+cmp row,1
+jl noAbove
+    mov al,row
+    dec al
+    mov IsmailRow,al
+    sub di,8    ;above cell
+    sub si,8
+    cmp byte ptr [di],07h
+    jl EmptyAbove
+    jmp  noEnemyAbove
+    EmptyAbove:
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    noEnemyAbove:
+    dec di
+    dec si
+    dec bl
+    cmp col,1
+    jl noAboveLeft
+        cmp byte ptr [di],07h
+        jl EmptyAboveLeft
+        jmp noEnemyAboveLeft
+        EmptyAboveLeft:
+        mov IsmailCol,bl
+        drawSquareOnCell 04h,IsmailRow,IsmailCol
+        mov byte ptr [si],0ffh
+        noEnemyAboveLeft:
+    noAboveLeft:
+    add di,2
+    add si,2
+    add bl,2
+    cmp col,6
+    jg noAboveRight
+        cmp byte ptr [di],07h
+        jl EmptyAboveRight
+        jmp noEnemyAboveRight
+        EmptyAboveRight:
+        mov IsmailCol,bl
+        drawSquareOnCell 04h,IsmailRow,IsmailCol
+        mov byte ptr [si],0ffh
+        noEnemyAboveRight:
+    noAboveRight:
+    dec bl
+    add di,7    ;back to current cell
+    add si,7
+noAbove:
+
+;highlight 3 below it
+
+cmp row,6
+jg noBelow
+    mov al,row  ;and bl => equal now col
+    add di,8    ;below it
+    add si,8    ;below it
+    inc al ;below it
+    mov IsmailRow,al
+    cmp byte ptr [di],07h
+    jl EmptyBelow
+    jmp noEnemyBelow
+    EmptyBelow:
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    noEnemyBelow:
+    cmp col,1
+    jl noBelowLeft
+        dec di
+        dec si
+        cmp byte ptr [di],07h
+        jl EmptyBelowLeft
+        jmp  noEnemyBelowLeft
+        EmptyBelowLeft:
+        dec bl
+        mov IsmailCol,bl
+        drawSquareOnCell 04,IsmailRow,IsmailCol
+        mov byte ptr [si],0ffh
+        inc bl
+        noEnemyBelowLeft:
+        inc di
+        inc si
+    noBelowLeft:
+    cmp col,6
+    jg noBelowRight
+        inc di
+        inc si
+        cmp byte ptr [di],07h
+        jl EmptyBelowRight
+        jmp noEnemyBelowRight
+        EmptyBelowRight:
+        inc bl
+        mov IsmailCol,bl
+        drawSquareOnCell 04h,IsmailRow,IsmailCol
+        mov byte ptr [si],0ffh
+        dec bl
+        noEnemyBelowRight:
+        dec di
+        dec si
+    noBelowRight:
+    dec al  ;on cell and bl too
+    sub di,8
+    sub si,8
+noBelow:
+
+    ;di,si are on cell
+mov al,row  ;and bl => equal now col
+mov IsmailRow,al
+;highlight right
+cmp col,6
+jg noRight
+    inc di
+    inc si
+    cmp byte ptr [di],07h
+    jl EmptyRight
+    jmp noEnemyRight
+    EmptyRight:
+    inc bl
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    dec bl
+    mov byte ptr [si],0ffh
+    noEnemyRight:
+    dec di  ;on cell now
+    dec si  ;too
+noRight:
+
+;highlight left
+cmp col,1
+jl noLeft
+    dec di
+    dec si
+    cmp byte ptr [di],07h
+    jl EmptyLeft
+    jmp noEnemyLeft
+    EmptyLeft:
+    dec bl
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    inc bl
+    noEnemyLeft:
+    inc di
+    inc si
+noLeft:
+popa
+endm HighlightAvailableForBKing
+
 ;=========================================================
-HighlightAvailableForKnight macro row,col
-local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight
+HighlightAvailableForWKnight macro row,col
+local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight,noUpLeft,noDownLeft,noDownRight,noUpRight,noEnemyBelowLeft
 pusha
 mov al,row
 mov ah,0
@@ -213,15 +385,15 @@ cmp col,1
 jl noLeftAbove
     dec di
     dec si
-    cmp [di],00h
+   cmp byte ptr [di],00h
     je EmptyAboveLeft
-    cmp [di],07h
+   cmp byte ptr [di],07h
     jl noEnemyAboveLeft
     EmptyAboveLeft:
     dec bl
     mov IsmailCol,bl
     drawSquareOnCell 04h,IsmailRow,IsmailCol
-    mov [si],0ffh
+    mov byte ptr [si],0ffh
     inc bl
     noEnemyAboveLeft:
     inc di
@@ -231,15 +403,15 @@ cmp col,6
 jg noRightAbove
     inc di
     inc si
-    cmp [di],00h
+   cmp byte ptr [di],00h
     je EmptyAboveRight
-    cmp [di],07h
+   cmp byte ptr [di],07h
     jl noEnemyAboveRight
     EmptyAboveRight:
     inc bl
     mov IsmailCol,bl
     drawSquareOnCell 04h,IsmailRow,IsmailCol
-    mov [si],0ffh
+    mov byte ptr [si],0ffh
     dec bl
     noEnemyAboveRight:
     dec di
@@ -264,15 +436,15 @@ cmp col,1
 jl noLeftBelow
     dec di
     dec si
-    cmp [di],00h
+   cmp byte ptr [di],00h
     je EmptyBelowLeft
-    cmp [di],07h
+   cmp byte ptr [di],07h
     jl noEnemyBelowLeft
     EmptyBelowLeft:
     dec bl
     mov IsmailCol,bl
     drawSquareOnCell 04h,IsmailRow,IsmailCol
-    mov [si],0ffh
+    mov byte ptr [si],0ffh
     inc bl
     noEnemyBelowLeft:
     inc di
@@ -283,15 +455,15 @@ cmp col,6
 jg noRightBelow
     inc di
     inc si
-    cmp [di],00h
+   cmp byte ptr [di],00h
     je EmptyBelowRight
-    cmp [di],07h
+   cmp byte ptr [di],07h
     jl noEnemyBelowRight
     EmptyBelowRight:
     inc bl
     mov IsmailCol,bl
     drawSquareOnCell 04h,IsmailRow,IsmailCol
-    mov [si],0ffh
+    mov byte ptr [si],0ffh
     dec bl
     noEnemyBelowRight:
     dec di
@@ -317,15 +489,15 @@ cmp row,1
 jl noUpRight
     sub di,8
     sub si,8
-    cmp [di],00h
+   cmp byte ptr [di],00h
     je EmptyUpRight
-    cmp [di],07h
+   cmp byte ptr [di],07h
     jl noEnemyUpright
     EmptyUpRight:
     dec al
     mov IsmailRow,al
     drawSquareOnCell 04h,IsmailRow,IsmailCol
-    mov [si],0ffh
+    mov byte ptr [si],0ffh
     inc al
     noEnemyUpright:
     add di,8
@@ -335,15 +507,15 @@ cmp row,6
 jg noDownRight
     add di,8
     add si,8
-    cmp [di],00h
+   cmp byte ptr [di],00h
     je EmptyDownRight
-    cmp [di],07h
+   cmp byte ptr [di],07h
     jl noEnemyDownright
     EmptyDownRight:
     inc al
     mov IsmailRow,al
     drawSquareOnCell 04h,IsmailRow,IsmailCol
-    mov [si],0ffh
+    mov byte ptr [si],0ffh
     dec al
     noEnemyDownright:
 noDownRight:
@@ -368,15 +540,15 @@ cmp row,1
 jl noUpLeft
     sub di,8
     sub si,8
-    cmp [di],00h
+   cmp byte ptr [di],00h
     je EmptyUpLeft
-    cmp [di],07h
+   cmp byte ptr [di],07h
     jl noEnemyUpLeft
     EmptyUpLeft:
     dec al
     mov IsmailRow,al
     drawSquareOnCell 04h,IsmailRow,IsmailCol
-    mov [si],0ffh
+    mov byte ptr [si],0ffh
     inc al
     noEnemyUpLeft:
     add di,8
@@ -386,15 +558,15 @@ cmp row,6
 jg noDownLeft
     add di,8
     add si,8
-    cmp [di],00h
+   cmp byte ptr [di],00h
     je EmptyDownLeft
-    cmp [di],07h
+   cmp byte ptr [di],07h
     jl noEnemyDownLeft
     EmptyDownLeft:
     inc al
     mov IsmailRow,al
     drawSquareOnCell 04h,IsmailRow,IsmailCol
-    mov [si],0ffh
+    mov byte ptr [si],0ffh
     dec al
     noEnemyDownLeft:
     sub di,8
@@ -402,7 +574,225 @@ jg noDownLeft
 noDownLeft:
 noLeft:
 popa
-endm HighlightAvailableForKnight
+endm HighlightAvailableForWKnight
+;==;==
+HighlightAvailableForBKnight macro row,col
+local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight,noUpLeft,noDownLeft,noDownRight,noUpRight,noEnemyBelowLeft
+pusha
+mov al,row
+mov ah,0
+mov bl,col
+mov bh,0
+mov cl,8
+lea di,grid
+lea si,availMoves
+
+;highlight above
+cmp row,2
+jl noAbove
+sub al,2    ;above 2 steps
+mul cl
+add di,ax
+add di,bx
+add si,ax
+add si,bx
+mov al,row
+sub al,2
+mov IsmailRow,al
+cmp col,1
+jl noLeftAbove
+    dec di
+    dec si
+   cmp byte ptr [di],00h
+    je EmptyAboveLeft
+   cmp byte ptr [di],07h
+    jg noEnemyAboveLeft
+    EmptyAboveLeft:
+    dec bl
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    inc bl
+    noEnemyAboveLeft:
+    inc di
+    inc si
+noLeftAbove:
+cmp col,6
+jg noRightAbove
+    inc di
+    inc si
+   cmp byte ptr [di],00h
+    je EmptyAboveRight
+   cmp byte ptr [di],07h
+    jg noEnemyAboveRight
+    EmptyAboveRight:
+    inc bl
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    dec bl
+    noEnemyAboveRight:
+    dec di
+    dec si
+noRightAbove:
+noAbove:
+;highlight below
+
+cmp row,5
+jg noBelow
+lea di,grid
+lea si,availMoves
+mov al,row ;on cell and bl too
+add al,2    ;below 2 steps
+mov IsmailRow,al
+mul cl
+add di,ax
+add di,bx
+add si,ax
+add si,bx
+cmp col,1
+jl noLeftBelow
+    dec di
+    dec si
+   cmp byte ptr [di],00h
+    je EmptyBelowLeft
+   cmp byte ptr [di],07h
+    jg noEnemyBelowLeft
+    EmptyBelowLeft:
+    dec bl
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    inc bl
+    noEnemyBelowLeft:
+    inc di
+    inc si
+noLeftBelow:
+
+cmp col,6
+jg noRightBelow
+    inc di
+    inc si
+   cmp byte ptr [di],00h
+    je EmptyBelowRight
+   cmp byte ptr [di],07h
+    jg noEnemyBelowRight
+    EmptyBelowRight:
+    inc bl
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    dec bl
+    noEnemyBelowRight:
+    dec di
+    dec si
+noRightBelow:
+noBelow:
+;highlight right
+
+cmp col,5
+jg noRight
+lea di,grid
+lea si,availMoves
+mov al,row ;on cell and bl too
+add bl,2    ;right 2 steps
+mov IsmailCol,bl
+mul cl
+add di,ax
+add di,bx
+add si,ax
+add si,bx
+mov al,row
+cmp row,1
+jl noUpRight
+    sub di,8
+    sub si,8
+   cmp byte ptr [di],00h
+    je EmptyUpRight
+   cmp byte ptr [di],07h
+    jg noEnemyUpright
+    EmptyUpRight:
+    dec al
+    mov IsmailRow,al
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    inc al
+    noEnemyUpright:
+    add di,8
+    add si,8
+noUpRight:
+cmp row,6
+jg noDownRight
+    add di,8
+    add si,8
+   cmp byte ptr [di],00h
+    je EmptyDownRight
+   cmp byte ptr [di],07h
+    jg noEnemyDownright
+    EmptyDownRight:
+    inc al
+    mov IsmailRow,al
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    dec al
+    noEnemyDownright:
+noDownRight:
+sub bl,2
+noRight:
+;highlight left
+
+cmp col,2
+jl noLeft
+lea di,grid
+lea si,availMoves
+mov al,row ;on cell and bl too
+sub bl,2    ;left 2 steps
+mov IsmailCol,bl
+mul cl
+add di,ax
+add di,bx
+add si,ax
+add si,bx
+mov al,row
+cmp row,1
+jl noUpLeft
+    sub di,8
+    sub si,8
+   cmp byte ptr [di],00h
+    je EmptyUpLeft
+   cmp byte ptr [di],07h
+    jg noEnemyUpLeft
+    EmptyUpLeft:
+    dec al
+    mov IsmailRow,al
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    inc al
+    noEnemyUpLeft:
+    add di,8
+    add si,8
+noUpLeft:
+cmp row,6
+jg noDownLeft
+    add di,8
+    add si,8
+   cmp byte ptr [di],00h
+    je EmptyDownLeft
+   cmp byte ptr [di],07h
+    jg noEnemyDownLeft
+    EmptyDownLeft:
+    inc al
+    mov IsmailRow,al
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mov byte ptr [si],0ffh
+    dec al
+    noEnemyDownLeft:
+    sub di,8
+    sub si,8
+noDownLeft:
+noLeft:
+popa
+endm HighlightAvailableForBKnight
 
 ; ;===============================================================
 ; ;Pawn Available ;for One computer
@@ -434,7 +824,7 @@ endm HighlightAvailableForKnight
 
 ;======================================================
 ;;for two computers
-HighlightAvailableForPawnTwo macro row,col
+HighlightAvailableForWPawnTwo macro row,col
 local notFirstStepP2, endOfBoardP2, done,canNotMove1,canNotMove2,OK1,OK11,notFirstStepP22,OK2
 ;if first step (one or two)
 pusha
@@ -505,10 +895,84 @@ je endOfBoardP2
 endOfBoardP2:
 done:
 popa
-endm HighlightAvailableForPawnTwo
+endm HighlightAvailableForWPawnTwo
+;===;===
+HighlightAvailableForBPawnTwo macro row,col
+local notFirstStepP2, endOfBoardP2, done,canNotMove1,canNotMove2,OK1,OK11,notFirstStepP22,OK2
+;if first step (one or two)
+pusha
+mov al,row
+mov ah,0
+mov bl,col
+mov bh,0
+mov cl,8
+lea si,availMoves
+lea di,grid
+cmp ax,1
+JNE notFirstStepP2
+    add ax,1
+    mul cl
+    add di,ax
+    add di,bx
+    cmp byte ptr [di],00h
+    je OK1
+    jmp canNotMove1
+    OK1:
+    mov al,row
+    add al,1
+    mov IsmailRow,al
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mul cl
+    add si,ax
+    add si,bx
+    mov byte ptr [si],0ffh
+    notFirstStepP2:
+    mov al,row
+    cmp al,1
+    JNE notFirstStepP22
+    add ax,2
+    add di,8
+    cmp byte ptr [di],00h
+    je OK11
+    jmp canNotMove1
+    OK11:
+    mov IsmailRow,al
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    add si,8
+    mov byte ptr [si],0ffh
+    canNotMove1:
+    jmp done
+notFirstStepP22:
+;else
+cmp ax,7
+je endOfBoardP2
+    add ax,1
+    mul cl
+    add di,ax
+    add di,bx
+    cmp byte ptr [di],00h
+    je OK2
+    jmp canNotMove2
+    OK2:
+    mov al,row
+    inc al
+    mov IsmailRow,al
+    mov IsmailCol,bl
+    drawSquareOnCell 04h,IsmailRow,IsmailCol
+    mul cl
+    add si,ax
+    add si,bx
+    mov byte ptr [si],0ffh
+    canNotMove2:
+endOfBoardP2:
+done:
+popa
+endm HighlightAvailableForBPawnTwo
+
 ;;;;===============================================================
 ;;need different color
-HighlightAvailableForPawnToEat macro row,col
+HighlightAvailableForWPawnToEat macro row,col
 local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
 pusha
 mov al,row
@@ -518,43 +982,103 @@ mov bh,0
 mov cl,8
 lea si,availMoves
 lea di,grid
-dec al
-dec bl
 mul cl
-add di,ax
+add di,ax   ;on cell
 add di,bx
 add si,ax
 add si,bx
 cmp col,0
 je EndLeft
-cmp byte ptr [di],11
-jl DoNotHighlightToEat1
-    mov al,row
-    dec al
-    mov IsmailRow,al
-    mov IsmailCol,bl
-    drawSquareOnCell 04h, IsmailRow,IsmailCol
-    mov byte ptr [si],0ffh ;;eat
-DoNotHighlightToEat1:
+    sub di,9
+    sub si,9
+    cmp byte ptr [di],07h
+    jl DoNotHighlightToEat1
+        mov al,row
+        dec al
+        dec bl
+        mov IsmailRow,al
+        mov IsmailCol,bl
+        drawSquareOnCell 04h, IsmailRow,IsmailCol
+        mov byte ptr [si],0ffh ;;eat
+        inc bl
+    DoNotHighlightToEat1:
+    add di,9
+    add si,9
 EndLeft:
-add di,2
-add si,2
 cmp col,7
 je EndRight
-cmp byte ptr [di],11
-jl DoNotHighlightToEat2
-    mov al,row
-    dec al
-    add bl,2
-    mov IsmailRow,al
-    mov IsmailCol,bl
-    drawSquareOnCell 04h,IsmailRow,IsmailCol
-    mov byte ptr [si],0ffh ;;eat
-DoNotHighlightToEat2:
+    sub di,7
+    sub si,7
+    cmp byte ptr [di],07h
+    jl DoNotHighlightToEat2
+        mov al,row
+        dec al
+        inc bl
+        mov IsmailRow,al
+        mov IsmailCol,bl
+        drawSquareOnCell 04h,IsmailRow,IsmailCol
+        mov byte ptr [si],0ffh ;;eat
+        dec bl
+    DoNotHighlightToEat2:
 EndRight:
 popa
-endm HighlightAvailableForPawnToEat
+endm HighlightAvailableForWPawnToEat
 
+HighlightAvailableForBPawnToEat macro row,col
+local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
+pusha
+mov al,row
+mov ah,0
+mov bl,col
+mov bh,0
+mov cl,8
+lea si,availMoves
+lea di,grid
+mul cl
+add di,ax   ;on cell
+add di,bx
+add si,ax
+add si,bx
+cmp col,0
+je EndLeft
+    add di,7
+    add si,7
+    cmp byte ptr [di],00h
+    je DoNotHighlightToEat1
+    cmp byte ptr [di],07h
+    jg DoNotHighlightToEat1
+        mov al,row
+        inc al
+        dec bl
+        mov IsmailRow,al
+        mov IsmailCol,bl
+        drawSquareOnCell 04h, IsmailRow,IsmailCol
+        mov byte ptr [si],0ffh ;;eat
+        inc bl
+    DoNotHighlightToEat1:
+    sub di,7
+    sub si,7
+EndLeft:
+cmp col,7
+je EndRight
+    add di,9
+    add si,9
+    cmp byte ptr [di],00h
+    je DoNotHighlightToEat2
+    cmp byte ptr [di],07h
+    jg DoNotHighlightToEat2
+        mov al,row
+        inc al
+        inc bl
+        mov IsmailRow,al
+        mov IsmailCol,bl
+        drawSquareOnCell 04h,IsmailRow,IsmailCol
+        mov byte ptr [si],0ffh ;;eat
+        dec bl
+    DoNotHighlightToEat2:
+EndRight:
+popa
+endm HighlightAvailableForBPawnToEat
 ;;;;;;===============================================================
 ;;;;;;;;;;;;;;;;;;;;;;
 drawSquareOnCell MACRO color, row, column
@@ -863,35 +1387,35 @@ jmp rt
 whitepawn:
 cmp cl,1
 jne blackpawn
- HighlightAvailableForPawnToEat currRow,currColumn
- HighlightAvailableForPawnTwo currRow,currColumn
-
+ HighlightAvailableForWPawnToEat currRow,currColumn
+ HighlightAvailableForWPawnTwo currRow,currColumn
 jmp rt
 blackpawn:
 cmp cl,11
 jne king1
- ;HighlightAvailableForPawnTwo currRow,currColumn
+ HighlightAvailableForBPawnToEat currRow,currColumn
+ HighlightAvailableForBPawnTwo currRow,currColumn
 jmp rt
 ; movePiece 1, currRow, currColumn, currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
 king1:
 cmp cl,6 
 jne king2
-HighlightAvailableForKing currRow,currColumn
+HighlightAvailableForWKing currRow,currColumn
 jmp rt
 king2:
 cmp cl,16
 jne whiteknight
-HighlightAvailableForKing currRow,currColumn
+HighlightAvailableForBKing currRow,currColumn
 jmp rt
 whiteknight:
 cmp cl,3
 jne blackknight
- HighlightAvailableForKnight currRow,currColumn
+ HighlightAvailableForWKnight currRow,currColumn
 jmp rt
 blackknight:
 cmp cl,13
 jne rt
-;HighlightAvailableForKnight currRow,currColumn
+HighlightAvailableForBKnight currRow,currColumn
 jmp rt
 rt:
 ;;;;;;;;;;con
@@ -2307,8 +2831,8 @@ ENDM movePiece
     messageTemp     db  ' - Temporary notification bar for now. Happy Hacking!$'
     boardWidth      equ 160
     boardHeight     equ 160
-    row db 5
-    col db 2
+    row db 0
+    col db 4
     IsmailRow       db ?
     IsmailCol       db ?
 .code
@@ -2317,7 +2841,10 @@ ENDM movePiece
 main proc far
                   mov            ax,@DATA
                   mov            ds,ax
-               
+            ;    mov ah,0
+            ;    mov al,13h
+            ;    int 10h
+              
                   usernameScreen enterName, pressEnter
     ;Go to Main screen
     ;TODO: go to main screen
