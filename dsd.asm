@@ -1119,6 +1119,15 @@ enterms:
 ; queenMoves 4,0 ;Works
 ; queenMoves 4,7 ;Error -> solved
 
+; Inf Loop Bug -> Solved
+; push ax
+; mov al,4
+; mov ah,1
+; mov row,al
+; mov col,ah
+; pop ax
+; call queenMoves 
+
 ;#####################################################
 
 ;;use color 07h to erase highlight
@@ -1557,7 +1566,7 @@ ENDM movePiece
                      db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;7
                      db  00,00,00,00,00,00,00,00
                      
-    availMoves2       db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;1
+    availMoves2      db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;1
                      db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;2
                      db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;3
                      db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;4
@@ -1958,7 +1967,7 @@ rookMoves proc
                                     inc              si                                                                                                                                                                                           ;go to right boxes
                                     jmp              checkRight
     lastRight:                      
-    ; Disable friendly fire... "NOT WORKING"
+    ; Disable friendly fire...
     ;check same team?
     ;get away piece code
                                     mov              dl,grid[bx]
@@ -2026,7 +2035,7 @@ rookMoves proc
                                     dec              si                                                                                                                                                                                           ;go to right boxes
                                     jmp              checkLeft
     lastLeft:                       
-    ; Disable friendly fire... "NOT WORKING"
+    ; Disable friendly fire...
     ;check same team?
     ;get away piece code
                                     mov              dl,grid[bx]
@@ -2091,7 +2100,7 @@ rookMoves proc
                                     dec              bx                                                                                                                                                                                           ;go to top boxes
                                     jmp              checkTop
     lastTop:                        
-    ; Disable friendly fire... "NOT WORKING"
+    ; Disable friendly fire...
     ;check same team?
     ;get away piece code
                                     pop              ax
@@ -2158,7 +2167,7 @@ rookMoves proc
                                     inc              bx                                                                                                                                                                                           ;go to top boxes
                                     jmp              checkBottom
     lastBottom:                     
-    ; Disable friendly fire... "NOT WORKING"
+    ; Disable friendly fire...
     ;check same team?
     ;get away piece code
                                     pop              ax
@@ -2187,7 +2196,7 @@ rookMoves proc
     ;white Attacker
     whiteAttackerB:                 
                                     cmp              dl,10
-                                    jl               preTop
+                                    jl               rt91
     ; Friendly fire is disabled
     eatBottom:                      
                                     mov              availMoves[bx],0ffh
@@ -3281,7 +3290,7 @@ bishopMoves proc
                                     jmp              checkBR
     lastBR:                         
                                     pop              ax
-    ; Disable friendly fire... "NOT WORKING"
+    ; Disable friendly fire...
     ;check same team?
     ;get away piece code
                                     mov              dl,grid[bx]
@@ -3352,7 +3361,7 @@ bishopMoves proc
                                     jmp              checkTL
     lastTL:                         
                                     pop              ax
-    ; Disable friendly fire... "NOT WORKING"
+    ; Disable friendly fire...
     ;check same team?
     ;get away piece code
                                     mov              dl,grid[bx]
@@ -3422,7 +3431,7 @@ bishopMoves proc
                                     jmp              checkTR
     lastTR:                         
                                     pop              ax
-    ; Disable friendly fire... "NOT WORKING"
+    ; Disable friendly fire...
     ;check same team?
     ;get away piece code
                                     mov              dl,grid[bx]
@@ -3491,7 +3500,7 @@ bishopMoves proc
                                     jmp              checkBL
     lastBL:                         
                                     pop              ax
-    ; Disable friendly fire... "NOT WORKING"
+    ; Disable friendly fire...
     ;check same team?
     ;get away piece code
                                     mov              dl,grid[bx]
