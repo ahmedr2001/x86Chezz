@@ -266,57 +266,41 @@ usernameScreen MACRO entername, pressEnter
     call waitEnter
 endm usernameScreen
 
-checkEmptyCell MACRO 
+checkEmptyCell MACRO r,c
 local notempty
 pusha
-
 mov bl,8
-mov al,currRow
+mov al,r
 imul bl
-add al,currColumn
-
+add al,c
 mov bx,ax
-
 mov cl,grid[bx]
-
 mov isEmptyCell,0
-
 cmp cl,0
 jnz notempty
 mov isEmptyCell,1
-
 notempty:
 popa
-
 ENDM checkEmptyCell
 
-getAvailForSelectedPiece MACRO
-    local rt
+getAvailForSelectedPiece MACRO r,c
+    local rt,blackrock,whitebishop,blackbishop,whitequeen,blackqueen,king1,king2,whitepawn,blackpawn,blackknight,whiteknight
     pusha
 
 mov bl,8
-mov al,currRow
+mov al,r
 imul bl
-add al,currColumn
+add al,c
 mov bx,ax
 
 mov cl,grid[bx]
-
-;test
-;  mov ax, 0003h
-;      int 10h
-
-; mov ah,0ah
-; mov al,cl
-; add al,'0'
-; int 10h
 
 ;check rock
 cmp cl,2
 jne blackrock
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -326,8 +310,8 @@ blackrock:
 cmp cl,12
 jne whitebishop
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -337,8 +321,8 @@ whitebishop:
 cmp cl,4
 jne blackbishop
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -348,8 +332,8 @@ blackbishop:
 cmp cl,14
 jne whitequeen
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -359,9 +343,9 @@ whitequeen:
 cmp cl,5
 jne blackqueen
 push ax
-mov al,currRow
+mov al,r
 
-mov ah,currColumn
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -371,8 +355,8 @@ blackqueen:
 cmp cl,15
 jne whitepawn
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -382,8 +366,8 @@ whitepawn:
 cmp cl,1
 jne blackpawn
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -394,8 +378,8 @@ blackpawn:
 cmp cl,11
 jne king1
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -407,8 +391,8 @@ king1:
 cmp cl,6 
 jne king2
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -418,8 +402,8 @@ king2:
 cmp cl,16
 jne whiteknight
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -429,8 +413,8 @@ whiteknight:
 cmp cl,3
 jne blackknight
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -440,8 +424,8 @@ blackknight:
 cmp cl,13
 jne rt
 push ax
-mov al,currRow
-mov ah,currColumn
+mov al,r
+mov ah,c
 mov row,al
 mov col,ah
 pop ax
@@ -1296,7 +1280,7 @@ cmp al,71h
 jnz exitgame
 
 ;select
-checkEmptyCell
+checkEmptyCell currRow,currColumn
 
 cmp isEmptyCell,0
 jne preventSelection
@@ -1307,22 +1291,16 @@ mov cl,currRow
 mov selectedRow,cl
 drawSquareOnCell 03h,currRow,currColumn
 
-getAvailForSelectedPiece
+getAvailForSelectedPiece currRow,currColumn
 
 ;;;;;check available moves for the piece and draw them
 
-; mov ah,0
-; int 16h
-; navigateAfterSelect
 mov checkq,1
-
-
-mov keypressed,al
 
 preventSelection:
 
-; mov checkq,1
 jmp consumebuffergm
+
 
 q2:
 cmp al,71h
@@ -1343,32 +1321,9 @@ mov checkq,0
 noreset:
 jmp consumebuffergm
 
-
-exitgame:
-cmp al,1bh
-jnz consumebuffergm
-
-;exitgame
-
-mov keypressed,al
-;consume buffet then go to main screen
-
-; gameWon:
-
-mov ah,0
-int 16h
-
- mov ax, 0003h
-     int 10h
-
-jmp enterms
-
-
-jmp consumebuffergm
-
 esc2:
 cmp al,1bh
-jnz consumebuffer
+jnz presel2
 
 
 ; mov keypressed,al
@@ -1384,6 +1339,82 @@ resetavailmoves
 drawSquareOnCell 0eh,currRow,currColumn
 mov checkq,0
 jmp consumebuffergm
+
+presel2:
+cmp checkq2,0
+je sel2
+jne sel22
+
+sel2:
+cmp al,2fh
+jne exitgame2
+checkEmptyCell currRow2,currColumn2
+cmp isEmptyCell,0
+jne preventSelection2
+mov cl,currColumn2
+mov selectedCol2,cl
+mov cl,currRow2
+mov selectedRow2,cl
+drawSquareOnCell 03h,currRow2,currColumn2
+
+getAvailForSelectedPiece currRow2,currColumn2
+mov checkq2,1
+preventSelection2:
+jmp consumebuffergm
+
+sel22:
+cmp al,2fh
+jne esc22
+
+
+jmp consumebuffergm
+
+esc22:
+cmp al,2eh
+jnz consumebuffergm
+
+
+
+drawSquareOnCell 07,selectedRow2,selectedCol2
+mov selectedRow2,0ffh
+mov selectedCol2,0ffh
+
+
+; resetavailmoves
+
+drawSquareOnCell 0eh,currRow2,currColumn2
+mov checkq2,0
+jmp consumebuffergm
+
+exitgame2:
+cmp al,2eh
+jne consumebuffergm
+
+mov ah,0
+int 16h
+
+ mov ax, 0003h
+     int 10h
+
+jmp enterms
+; jmp consumebuffergm
+exitgame:
+cmp al,1bh
+jnz presel2
+
+;consume buffet then go to main screen
+
+mov ah,0
+int 16h
+
+ mov ax, 0003h
+     int 10h
+
+jmp enterms
+
+
+jmp consumebuffergm
+
 
 consumebuffergm:
 mov ah,0
