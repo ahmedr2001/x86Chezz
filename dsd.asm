@@ -293,6 +293,11 @@ je notmoved
 jmp startm
 
 p2:
+cmp cl,2
+jne notmoved
+; mov al,'0'
+; mov ah,0ah
+; int 10h
 checkAvailable2
 cmp isAvailableCell2,0
 je notmoved
@@ -1181,17 +1186,17 @@ q2:
 cmp al,71h
 jne esc2
 
-callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
+; callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
 
-cmp hasmoved,0
-je noreset
-drawSquareOnCell 07h,selectedRow,selectedCol
-mov selectedRow,0ffh
-mov selectedCol,0ffh
-resetavailmoves
+; cmp hasmoved,0
+; je noreset
+; drawSquareOnCell 07h,selectedRow,selectedCol
+; mov selectedRow,0ffh
+; mov selectedCol,0ffh
+; resetavailmoves
 
-mov checkq,0
-noreset:
+; mov checkq,0
+; noreset:
 jmp consumebuffergm
 
 esc2:
@@ -1239,17 +1244,21 @@ sel22:
 cmp al,2fh
 jne esc22
 
-; callAppropriateMove 2,selectedRow2,selectedCol2,currRow2,currColumn2
+; mov al,'0'
+; mov ah,0ah
+; int 10h
+
+callAppropriateMove 2,selectedRow2,selectedCol2,currRow2,currColumn2
 ; 
-; cmp hasmoved2,0
-; je noreset2
-; drawSquareOnCell 07h,selectedRow2,selectedCol2
-; mov selectedRow2,0ffh
-; mov selectedCol2,0ffh
-; resetavailmoves2
+cmp hasmoved2,0
+je noreset2
+drawSquareOnCell 07h,selectedRow2,selectedCol2
+mov selectedRow2,0ffh
+mov selectedCol2,0ffh
+resetavailmoves2
 ; 
-; mov checkq2,0
-; noreset2:
+mov checkq2,0
+noreset2:
 
 jmp consumebuffergm
 
@@ -1305,13 +1314,6 @@ mov ah,0
 int 16h
 jmp checkkeygm
 
-
-
-    ; Press any key to exit
-    ; MOV AH , 0
-    ; INT 16h
-    
-    ; call CloseFile
     
     ;Change to Text MODE
     
