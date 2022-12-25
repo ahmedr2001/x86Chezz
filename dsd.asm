@@ -53,9 +53,6 @@ imul bl
 add ax,80
 mov cx,ax
 
-; MOV CX,80+column*20
-; mov dx,row*20
-
 ;initialize color and draw pixel command
 MOV AH,0ch
 mov al,color
@@ -87,7 +84,6 @@ jne drawVerticalLines
 popa
 
 ENDM drawSquareOnCell
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;-----------------------------------------------------------------------
@@ -985,7 +981,7 @@ pop bx
 endm initializeGrid
 
 mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2
-    
+
       
      mov ax, 0003h
      int 10h
@@ -1071,8 +1067,6 @@ enterms:
     ; CALL ReadData
 	
     drawImage ism, boardWidth, boardHeight, 160-boardWidth/2, 0
-    ; drawImageOnBoard image1, image1Width, image1Height, 4, 4
-    ; eraseImage 4, 4, greyCell, whiteCell
 
 
 ;;;;;;;initializing pieces on board
@@ -1135,16 +1129,16 @@ enterms:
 
     drawkings:
     push ax
-    drawImageOnBoard white_king,20 , 20,3,7
-    drawImageOnBoard black_king,20 , 20,3,0
+    drawImageOnBoard white_king,20 , 20,4,7
+    drawImageOnBoard black_king,20 , 20,4,0
     pop ax
     inc al
     jmp drawpiecess
 
     drawqueens:
     push ax
-    drawImageOnBoard white_queen,20 , 20,4,7
-    drawImageOnBoard black_queen,20 , 20,4,0
+    drawImageOnBoard white_queen,20 , 20,3,7
+    drawImageOnBoard black_queen,20 , 20,3,0
     pop ax
     inc al
     jmp drawpiecess
@@ -1244,16 +1238,11 @@ drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavu2:
 
-
-
 jmp consumebuffergm
 
 s:
 cmp al,73h
 jnz arrowdown
-
-;navigate down
-
 
 cmp currRow,7
 je skipnavd
@@ -1284,17 +1273,12 @@ skipnavd2:
 jmp consumebuffergm
 
 
-
-
 a:
 cmp al,61h
 jnz arrowleft 
 
-;navigate laft
 cmp currColumn,0
 je skipnavl
-
-; drawSquareOnCell 07h,currRow,currColumn
 
 eraseHighlight
 
@@ -1302,7 +1286,6 @@ dec currColumn
 drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavl:
-
 jmp consumebuffergm
 
 arrowleft:
@@ -1312,22 +1295,17 @@ jne d
 cmp currColumn2,0
 je skipnavl2
 
-; drawSquareOnCell 07h,currRow,currColumn
-
 eraseHighlight
 
 dec currColumn2
 drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavl2:
-
 jmp consumebuffergm
 
 d:
 cmp al,64h
 jnz arrowright
-
-;navigate right
 
 cmp currColumn,7
 je skipnavr
@@ -1338,18 +1316,14 @@ inc currColumn
 drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavr:
-
 jmp consumebuffergm
 
 arrowright:
 cmp ah,4dh
 jne preq
-
 cmp currColumn2,7
 je skipnavr2
-
 eraseHighlight
-
 inc currColumn2
 
 drawSquareOnCell 0eh,currRow,currColumn
@@ -1362,6 +1336,9 @@ preq:
 cmp checkq,0
 je q
 jne q2
+
+st:
+jmp enterms
 
 q:
 cmp al,71h
@@ -1393,9 +1370,7 @@ jmp consumebuffergm
 q2:
 cmp al,71h
 jne esc2
-;first remove highlight from selected cell then move the piece at seleted cell to curr cell if available
-;and remove the highlight of available moves
-;then jump to consumebuffergm
+
 callAppropriateMove
 
 cmp hasmoved,0
@@ -1466,8 +1441,6 @@ jne esc22
 ; mov checkq2,0
 ; noreset2:
 
-
-
 jmp consumebuffergm
 
 esc22:
@@ -1497,7 +1470,7 @@ int 16h
  mov ax, 0003h
      int 10h
 
-jmp enterms
+jmp st
 ; jmp consumebuffergm
 exitgame:
 cmp al,1bh
@@ -1511,7 +1484,7 @@ int 16h
  mov ax, 0003h
      int 10h
 
-jmp enterms
+jmp st
 
 
 jmp consumebuffergm
@@ -1629,7 +1602,7 @@ int 16h
 
  mov ax, 0003h
      int 10h
-    jmp enterms
+    jmp st
     jmp noMove
 gameWon2:
     mov dx, offset winMessageP2
@@ -1644,7 +1617,7 @@ int 16h
 
  mov ax, 0003h
      int 10h
-    jmp enterms
+    jmp st
 noMove:
     popa
 ENDM movePiece
@@ -2135,10 +2108,10 @@ rookMoves proc
                                     jne              p22
                                     mov              availMoves[bx],0ffh
                                     jmp              e2
-    p22:                             
+    p22:                            
                                     mov              availMoves2[bx],0ffh
-    e2:                              
-                                   callDrawSquare   bx,04h
+    e2:                             
+                                    callDrawSquare   bx,04h
 
 
 
@@ -2173,10 +2146,10 @@ rookMoves proc
                                     jne              p23
                                     mov              availMoves[bx],0ffh
                                     jmp              e3
-    p23:                             
+    p23:                            
                                     mov              availMoves2[bx],0ffh
-    e3:                              
-                                   callDrawSquare   bx,04h
+    e3:                             
+                                    callDrawSquare   bx,04h
                                     dec              si                                                                                                                                                                                           ;go to right boxes
                                     jmp              checkLeft
     lastLeft:                       
@@ -2215,10 +2188,10 @@ rookMoves proc
                                     jne              p24
                                     mov              availMoves[bx],0ffh
                                     jmp              e4
-    p24:                             
+    p24:                            
                                     mov              availMoves2[bx],0ffh
-    e4:                              
-                                   callDrawSquare   bx,04h
+    e4:                             
+                                    callDrawSquare   bx,04h
 
     preTop:                         
     ;reset indexes
@@ -2248,10 +2221,10 @@ rookMoves proc
                                     jne              p25
                                     mov              availMoves[bx],0ffh
                                     jmp              e5
-    p25:                             
+    p25:                            
                                     mov              availMoves2[bx],0ffh
-    e5:                              
-                                   callDrawSquare   bx,04h
+    e5:                             
+                                    callDrawSquare   bx,04h
                                     pop              bx
 
                                     dec              bx                                                                                                                                                                                           ;go to top boxes
@@ -2294,10 +2267,10 @@ rookMoves proc
                                     jne              p26
                                     mov              availMoves[bx],0ffh
                                     jmp              e6
-    p26:                             
+    p26:                            
                                     mov              availMoves2[bx],0ffh
-    e6:                              
-                                   callDrawSquare   bx,04h
+    e6:                             
+                                    callDrawSquare   bx,04h
 
     preBottom:                      
     ; reset indexes
@@ -2327,10 +2300,10 @@ rookMoves proc
                                     jne              p27
                                     mov              availMoves[bx],0ffh
                                     jmp              e7
-    p27:                             
+    p27:                            
                                     mov              availMoves2[bx],0ffh
-    e7:                              
-                                   callDrawSquare   bx,04h
+    e7:                             
+                                    callDrawSquare   bx,04h
                                     pop              bx
 
                                     inc              bx                                                                                                                                                                                           ;go to top boxes
@@ -2372,10 +2345,10 @@ rookMoves proc
                                     jne              p28
                                     mov              availMoves[bx],0ffh
                                     jmp              e8
-    p28:                             
+    p28:                            
                                     mov              availMoves2[bx],0ffh
-    e8:                              
-                                   callDrawSquare   bx,04h
+    e8:                             
+                                    callDrawSquare   bx,04h
 
 
     rt91:                           
@@ -2731,18 +2704,19 @@ HighlightAvailableForWKnight proc
                                     mov              cl,8
                                     lea              di,grid
                                     lea              si,availMoves
-
-    ;highlight above
-                                    cmp              row,2
-                                    jl               noAbove1
-                                    sub              al,2                                                                                                                                                                                         ;above 2 steps
                                     mul              cl
                                     add              di,ax
                                     add              di,bx
                                     add              si,ax
                                     add              si,bx
+
+    ;highlight above
+                                    cmp              row,2
+                                    jl               noAbove1
+                                    sub              di,16                                                                                                                                                                                        ;above
+                                    sub              si,16
                                     mov              al,row
-                                    sub              al,2
+                                    sub              al,2                                                                                                                                                                                         ;above 2 steps
                                     mov              IsmailRow,al
                                     cmp              col,1
                                     jl               noLeftAbove1
@@ -2780,21 +2754,18 @@ HighlightAvailableForWKnight proc
                                     dec              di
                                     dec              si
     noRightAbove1:                  
+                                    add              di,16
+                                    add              si,16
     noAbove1:                       
     ;highlight below
 
                                     cmp              row,5
                                     jg               noBelow1
-                                    lea              di,grid
-                                    lea              si,availMoves
+                                    add              di,16
+                                    add              si,16
                                     mov              al,row                                                                                                                                                                                       ;on cell and bl too
                                     add              al,2                                                                                                                                                                                         ;below 2 steps
                                     mov              IsmailRow,al
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     cmp              col,1
                                     jl               noLeftBelow1
                                     dec              di
@@ -2832,21 +2803,17 @@ HighlightAvailableForWKnight proc
                                     dec              di
                                     dec              si
     noRightBelow1:                  
+                                    sub              di,16
+                                    sub              si,16
     noBelow1:                       
     ;highlight right
 
                                     cmp              col,5
-                                    jg               noRight
-                                    lea              di,grid
-                                    lea              si,availMoves
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
+                                    jg               noRight1
+                                    add              di,2
+                                    add              si,2                                                                                                                                                                                         ;on cell and bl too
                                     add              bl,2                                                                                                                                                                                         ;right 2 steps
                                     mov              IsmailCol,bl
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     mov              al,row
                                     cmp              row,1
                                     jl               noUpRight1
@@ -2881,23 +2848,23 @@ HighlightAvailableForWKnight proc
                                     mov              byte ptr [si],0ffh
                                     dec              al
     noEnemyDownright1:              
+                                    sub              di,8
+                                    sub              si,8
     noDownRight1:                   
                                     sub              bl,2
+                                    sub              di,2
+                                    sub              si,2
     noRight1:                       
     ;highlight left
 
                                     cmp              col,2
                                     jl               noLeft1
-                                    lea              di,grid
-                                    lea              si,availMoves
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
+                                    sub              di,2
+                                    sub              si,2
+    ;on cell and bl too
                                     sub              bl,2                                                                                                                                                                                         ;left 2 steps
                                     mov              IsmailCol,bl
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
+                                   
                                     mov              al,row
                                     cmp              row,1
                                     jl               noUpLeft1
@@ -2935,6 +2902,9 @@ HighlightAvailableForWKnight proc
                                     sub              di,8
                                     sub              si,8
     noDownLeft1:                    
+                                    add              di,2
+                                    add              si,2
+
     noLeft1:                        
                                     popa
                                     ret
@@ -2950,16 +2920,17 @@ HighlightAvailableForBKnight proc
                                     mov              cl,8
                                     lea              di,grid
                                     lea              si,availMoves2
-
-    ;highlight above
-                                    cmp              row,2
-                                    jl               noAbove
-                                    sub              al,2                                                                                                                                                                                         ;above 2 steps
                                     mul              cl
                                     add              di,ax
                                     add              di,bx
                                     add              si,ax
                                     add              si,bx
+
+    ;highlight above
+                                    cmp              row,2
+                                    jl               noAbove
+                                    sub              di,16
+                                    sub              si,16
                                     mov              al,row
                                     sub              al,2
                                     mov              IsmailRow,al
@@ -2999,21 +2970,18 @@ HighlightAvailableForBKnight proc
                                     dec              di
                                     dec              si
     noRightAbove:                   
+                                    add              di,16
+                                    add              si,16
     noAbove:                        
     ;highlight below
 
                                     cmp              row,5
                                     jg               noBelow
-                                    lea              di,grid
-                                    lea              si,availMoves2
+                                    add              di,16
+                                    add              si,16
                                     mov              al,row                                                                                                                                                                                       ;on cell and bl too
                                     add              al,2                                                                                                                                                                                         ;below 2 steps
                                     mov              IsmailRow,al
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     cmp              col,1
                                     jl               noLeftBelow
                                     dec              di
@@ -3051,21 +3019,17 @@ HighlightAvailableForBKnight proc
                                     dec              di
                                     dec              si
     noRightBelow:                   
+                                    sub              di,16
+                                    sub              si,16
     noBelow:                        
     ;highlight right
 
                                     cmp              col,5
                                     jg               noRight
-                                    lea              di,grid
-                                    lea              si,availMoves2
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
+                                    add              di,2
+                                    add              si,2                                                                                                                                                                                         ;on cell and bl too
                                     add              bl,2                                                                                                                                                                                         ;right 2 steps
                                     mov              IsmailCol,bl
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     mov              al,row
                                     cmp              row,1
                                     jl               noUpRight
@@ -3100,23 +3064,21 @@ HighlightAvailableForBKnight proc
                                     mov              byte ptr [si],0ffh
                                     dec              al
     noEnemyDownright:               
+                                    sub              di,8
+                                    sub              si,8
     noDownRight:                    
                                     sub              bl,2
+                                    sub              di,2
+                                    sub              si,2
     noRight:                        
     ;highlight left
 
                                     cmp              col,2
                                     jl               noLeft
-                                    lea              di,grid
-                                    lea              si,availMoves2
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
+                                    sub              di,2
+                                    sub              si,2                                                                                                                                                                                         ;on cell and bl too
                                     sub              bl,2                                                                                                                                                                                         ;left 2 steps
                                     mov              IsmailCol,bl
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     mov              al,row
                                     cmp              row,1
                                     jl               noUpLeft
@@ -3151,8 +3113,6 @@ HighlightAvailableForBKnight proc
                                     mov              byte ptr [si],0ffh
                                     dec              al
     noEnemyDownLeft:                
-                                    sub              di,8
-                                    sub              si,8
     noDownLeft:                     
     noLeft:                         
                                     popa
@@ -3175,6 +3135,8 @@ HighlightAvailableForWPawnTwo proc
                                     lea              di,grid
                                     cmp              ax,6
                                     JNE              notFirstStepP21
+                                    
+
                                     sub              ax,1
                                     mul              cl
                                     add              di,ax
@@ -3210,7 +3172,7 @@ HighlightAvailableForWPawnTwo proc
                                     jmp              done121
     notFirstStepP221:               
     ;else
-                                    cmp              ax,0
+                                    cmp              row,0
                                     je               endOfBoardP212
                                     sub              ax,1
                                     mul              cl
@@ -3315,6 +3277,10 @@ HighlightAvailableForBPawnTwo proc
 HighlightAvailableForWPawnToEat proc
     ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
                                     pusha
+                                    cmp              row,0
+                                    jne              notGridEnd1
+                                    jmp              gridEnd1
+    notGridEnd1:                    
                                     mov              al,row
                                     mov              ah,0
                                     mov              bl,col
@@ -3361,6 +3327,7 @@ HighlightAvailableForWPawnToEat proc
                                     dec              bl
     DoNotHighlightToEat2:           
     EndRight:                       
+    gridEnd1:                       
                                     popa
                                     ret
                                     endp             HighlightAvailableForWPawnToEat
@@ -3368,6 +3335,10 @@ HighlightAvailableForWPawnToEat proc
 HighlightAvailableForBPawnToEat proc
     ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
                                     pusha
+                                    cmp              row,7
+                                    jne              notGridEnd2
+                                    jmp              gridEnd2
+    notGridEnd2:                    
                                     mov              al,row
                                     mov              ah,0
                                     mov              bl,col
@@ -3418,6 +3389,7 @@ HighlightAvailableForBPawnToEat proc
                                     dec              bl
     DoNotHighlightToEat221:         
     EndRight21:                     
+    gridEnd2:                       
                                     popa
                                     ret
                                     endp             HighlightAvailableForBPawnToEat
@@ -3462,10 +3434,10 @@ bishopMoves proc
                                     jne              p29
                                     mov              availMoves[bx],0ffh
                                     jmp              e9
-    p29:                             
+    p29:                            
                                     mov              availMoves2[bx],0ffh
-    e9:                              
-                                   callDrawSquare   bx,04h
+    e9:                             
+                                    callDrawSquare   bx,04h
                                     pop              bx
                                     inc              bx
                                     inc              si
@@ -3503,14 +3475,14 @@ bishopMoves proc
                                     jl               precheckTL
     ; Friendly fire is disabled
     eatBR:                          
-                                   callDrawSquare   bx,04h
+                                    callDrawSquare   bx,04h
                                     cmp              PNO,1
                                     jne              p210
                                     mov              availMoves[bx],0ffh
                                     jmp              e10
-    p210:                             
+    p210:                           
                                     mov              availMoves2[bx],0ffh
-    e10:                              
+    e10:                            
 
 
     precheckTL:                     
@@ -3545,10 +3517,10 @@ bishopMoves proc
                                     jne              p211
                                     mov              availMoves[bx],0ffh
                                     jmp              e11
-    p211:                             
+    p211:                           
                                     mov              availMoves2[bx],0ffh
-    e11:                              
-                                   callDrawSquare   bx,04h
+    e11:                            
+                                    callDrawSquare   bx,04h
                                     pop              bx
                                     dec              bx
                                     dec              si
@@ -3590,10 +3562,10 @@ bishopMoves proc
                                     jne              p212
                                     mov              availMoves[bx],0ffh
                                     jmp              e12
-    p212:                             
+    p212:                           
                                     mov              availMoves2[bx],0ffh
-    e12:                              
-                                   callDrawSquare   bx,04h
+    e12:                            
+                                    callDrawSquare   bx,04h
 
 
     precheckTR:                     
@@ -3627,10 +3599,10 @@ bishopMoves proc
                                     jne              p213
                                     mov              availMoves[bx],0ffh
                                     jmp              e13
-    p213:                             
+    p213:                           
                                     mov              availMoves2[bx],0ffh
-    e13:                              
-                                   callDrawSquare   bx,04h
+    e13:                            
+                                    callDrawSquare   bx,04h
                                     pop              bx
                                     dec              bx
                                     inc              si
@@ -3672,10 +3644,10 @@ bishopMoves proc
                                     jne              p214
                                     mov              availMoves[bx],0ffh
                                     jmp              e14
-    p214:                             
+    p214:                           
                                     mov              availMoves2[bx],0ffh
-    e14:                              
-                                   callDrawSquare   bx,04h
+    e14:                            
+                                    callDrawSquare   bx,04h
 
     precheckBL:                     
     ;reset indexes
@@ -3708,10 +3680,10 @@ bishopMoves proc
                                     jne              p215
                                     mov              availMoves[bx],0ffh
                                     jmp              e15
-    p215:                             
+    p215:                           
                                     mov              availMoves2[bx],0ffh
-    e15:                              
-                                   callDrawSquare   bx,04h
+    e15:                            
+                                    callDrawSquare   bx,04h
                                     pop              bx
                                     inc              bx
                                     dec              si
@@ -3753,10 +3725,10 @@ bishopMoves proc
                                     jne              p216
                                     mov              availMoves[bx],0ffh
                                     jmp              e16
-    p216:                             
+    p216:                           
                                     mov              availMoves2[bx],0ffh
-    e16:                              
-                                   callDrawSquare   bx,04h
+    e16:                            
+                                    callDrawSquare   bx,04h
 
     rt1:                            
                                     popa
