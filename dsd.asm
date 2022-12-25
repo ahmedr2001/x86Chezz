@@ -2586,18 +2586,19 @@ HighlightAvailableForWKnight proc
                                     mov              cl,8
                                     lea              di,grid
                                     lea              si,availMoves
-
-    ;highlight above
-                                    cmp              row,2
-                                    jl               noAbove1
-                                    sub              al,2                                                                                                                                                                                         ;above 2 steps
                                     mul              cl
                                     add              di,ax
                                     add              di,bx
                                     add              si,ax
                                     add              si,bx
+
+    ;highlight above
+                                    cmp              row,2
+                                    jl               noAbove1
+                                    sub              di,16                                                                                                                                                                                        ;above
+                                    sub              si,16
                                     mov              al,row
-                                    sub              al,2
+                                    sub              al,2                                                                                                                                                                                         ;above 2 steps
                                     mov              IsmailRow,al
                                     cmp              col,1
                                     jl               noLeftAbove1
@@ -2635,21 +2636,18 @@ HighlightAvailableForWKnight proc
                                     dec              di
                                     dec              si
     noRightAbove1:                  
+                                    add              di,16
+                                    add              si,16
     noAbove1:                       
     ;highlight below
 
                                     cmp              row,5
                                     jg               noBelow1
-                                    lea              di,grid
-                                    lea              si,availMoves
+                                    add              di,16
+                                    add              si,16
                                     mov              al,row                                                                                                                                                                                       ;on cell and bl too
                                     add              al,2                                                                                                                                                                                         ;below 2 steps
                                     mov              IsmailRow,al
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     cmp              col,1
                                     jl               noLeftBelow1
                                     dec              di
@@ -2687,21 +2685,17 @@ HighlightAvailableForWKnight proc
                                     dec              di
                                     dec              si
     noRightBelow1:                  
+                                    sub              di,16
+                                    sub              si,16
     noBelow1:                       
     ;highlight right
 
                                     cmp              col,5
-                                    jg               noRight
-                                    lea              di,grid
-                                    lea              si,availMoves
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
+                                    jg               noRight1
+                                    add              di,2
+                                    add              si,2                                                                                                                                                                                         ;on cell and bl too
                                     add              bl,2                                                                                                                                                                                         ;right 2 steps
                                     mov              IsmailCol,bl
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     mov              al,row
                                     cmp              row,1
                                     jl               noUpRight1
@@ -2736,23 +2730,23 @@ HighlightAvailableForWKnight proc
                                     mov              byte ptr [si],0ffh
                                     dec              al
     noEnemyDownright1:              
+                                    sub              di,8
+                                    sub              si,8
     noDownRight1:                   
                                     sub              bl,2
+                                    sub              di,2
+                                    sub              si,2
     noRight1:                       
     ;highlight left
 
                                     cmp              col,2
                                     jl               noLeft1
-                                    lea              di,grid
-                                    lea              si,availMoves
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
+                                    sub              di,2
+                                    sub              si,2
+    ;on cell and bl too
                                     sub              bl,2                                                                                                                                                                                         ;left 2 steps
                                     mov              IsmailCol,bl
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
+                                   
                                     mov              al,row
                                     cmp              row,1
                                     jl               noUpLeft1
@@ -2790,6 +2784,9 @@ HighlightAvailableForWKnight proc
                                     sub              di,8
                                     sub              si,8
     noDownLeft1:                    
+                                    add              di,2
+                                    add              si,2
+
     noLeft1:                        
                                     popa
                                     ret
@@ -2805,16 +2802,17 @@ HighlightAvailableForBKnight proc
                                     mov              cl,8
                                     lea              di,grid
                                     lea              si,availMoves2
-
-    ;highlight above
-                                    cmp              row,2
-                                    jl               noAbove
-                                    sub              al,2                                                                                                                                                                                         ;above 2 steps
                                     mul              cl
                                     add              di,ax
                                     add              di,bx
                                     add              si,ax
                                     add              si,bx
+
+    ;highlight above
+                                    cmp              row,2
+                                    jl               noAbove
+                                    sub              di,16
+                                    sub              si,16
                                     mov              al,row
                                     sub              al,2
                                     mov              IsmailRow,al
@@ -2854,21 +2852,18 @@ HighlightAvailableForBKnight proc
                                     dec              di
                                     dec              si
     noRightAbove:                   
+                                    add              di,16
+                                    add              si,16
     noAbove:                        
     ;highlight below
 
                                     cmp              row,5
                                     jg               noBelow
-                                    lea              di,grid
-                                    lea              si,availMoves2
+                                    add              di,16
+                                    add              si,16
                                     mov              al,row                                                                                                                                                                                       ;on cell and bl too
                                     add              al,2                                                                                                                                                                                         ;below 2 steps
                                     mov              IsmailRow,al
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     cmp              col,1
                                     jl               noLeftBelow
                                     dec              di
@@ -2906,21 +2901,17 @@ HighlightAvailableForBKnight proc
                                     dec              di
                                     dec              si
     noRightBelow:                   
+                                    sub              di,16
+                                    sub              si,16
     noBelow:                        
     ;highlight right
 
                                     cmp              col,5
                                     jg               noRight
-                                    lea              di,grid
-                                    lea              si,availMoves2
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
+                                    add              di,2
+                                    add              si,2                                                                                                                                                                                         ;on cell and bl too
                                     add              bl,2                                                                                                                                                                                         ;right 2 steps
                                     mov              IsmailCol,bl
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     mov              al,row
                                     cmp              row,1
                                     jl               noUpRight
@@ -2955,23 +2946,21 @@ HighlightAvailableForBKnight proc
                                     mov              byte ptr [si],0ffh
                                     dec              al
     noEnemyDownright:               
+                                    sub              di,8
+                                    sub              si,8
     noDownRight:                    
                                     sub              bl,2
+                                    sub              di,2
+                                    sub              si,2
     noRight:                        
     ;highlight left
 
                                     cmp              col,2
                                     jl               noLeft
-                                    lea              di,grid
-                                    lea              si,availMoves2
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
+                                    sub              di,2
+                                    sub              si,2                                                                                                                                                                                         ;on cell and bl too
                                     sub              bl,2                                                                                                                                                                                         ;left 2 steps
                                     mov              IsmailCol,bl
-                                    mul              cl
-                                    add              di,ax
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
                                     mov              al,row
                                     cmp              row,1
                                     jl               noUpLeft
@@ -3006,8 +2995,6 @@ HighlightAvailableForBKnight proc
                                     mov              byte ptr [si],0ffh
                                     dec              al
     noEnemyDownLeft:                
-                                    sub              di,8
-                                    sub              si,8
     noDownLeft:                     
     noLeft:                         
                                     popa
@@ -3030,6 +3017,8 @@ HighlightAvailableForWPawnTwo proc
                                     lea              di,grid
                                     cmp              ax,6
                                     JNE              notFirstStepP21
+                                    
+
                                     sub              ax,1
                                     mul              cl
                                     add              di,ax
@@ -3065,7 +3054,7 @@ HighlightAvailableForWPawnTwo proc
                                     jmp              done121
     notFirstStepP221:               
     ;else
-                                    cmp              ax,0
+                                    cmp              row,0
                                     je               endOfBoardP212
                                     sub              ax,1
                                     mul              cl
@@ -3170,6 +3159,10 @@ HighlightAvailableForBPawnTwo proc
 HighlightAvailableForWPawnToEat proc
     ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
                                     pusha
+                                    cmp              row,0
+                                    jne              notGridEnd1
+                                    jmp              gridEnd1
+    notGridEnd1:                    
                                     mov              al,row
                                     mov              ah,0
                                     mov              bl,col
@@ -3216,6 +3209,7 @@ HighlightAvailableForWPawnToEat proc
                                     dec              bl
     DoNotHighlightToEat2:           
     EndRight:                       
+    gridEnd1:                       
                                     popa
                                     ret
                                     endp             HighlightAvailableForWPawnToEat
@@ -3223,6 +3217,10 @@ HighlightAvailableForWPawnToEat proc
 HighlightAvailableForBPawnToEat proc
     ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
                                     pusha
+                                    cmp              row,7
+                                    jne              notGridEnd2
+                                    jmp              gridEnd2
+    notGridEnd2:                    
                                     mov              al,row
                                     mov              ah,0
                                     mov              bl,col
@@ -3273,6 +3271,7 @@ HighlightAvailableForBPawnToEat proc
                                     dec              bl
     DoNotHighlightToEat221:         
     EndRight21:                     
+    gridEnd2:                       
                                     popa
                                     ret
                                     endp             HighlightAvailableForBPawnToEat
