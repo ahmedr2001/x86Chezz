@@ -886,27 +886,35 @@ push bx
 mov grid[0], 12
 mov cooldown[0], 0000
 mov availMoves[0], 00
+mov availMoves2[0], 00
 mov grid[1], 13
 mov cooldown[1], 0000
 mov availMoves[1], 00
+mov availMoves2[1], 00
 mov grid[2], 14
 mov cooldown[2], 0000
 mov availMoves[2], 00
+mov availMoves2[2], 00
 mov grid[3], 15
 mov cooldown[3], 0000
 mov availMoves[3], 00
+mov availMoves2[3], 00
 mov grid[4], 16
 mov cooldown[4], 0000
 mov availMoves[4], 00
+mov availMoves2[4], 00
 mov grid[5], 14
 mov cooldown[5], 0000
 mov availMoves[5], 00
+mov availMoves2[5], 00
 mov grid[6], 13
 mov cooldown[6], 0000
 mov availMoves[6], 00
+mov availMoves2[6], 00
 mov grid[7], 12
 mov cooldown[7], 0000
 mov availMoves[7], 00
+mov availMoves2[7], 00
 
 mov bx,8
 
@@ -914,6 +922,7 @@ inirow2:
 mov grid[bx],11
 mov cooldown[bx], 0000
 mov availMoves[bx], 00
+mov availMoves2[bx], 00
 inc bx
 cmp bx,16
 jne inirow2
@@ -922,6 +931,7 @@ inizeros:
 mov grid[bx],0
 mov cooldown[bx], 0000
 mov availMoves[bx], 00
+mov availMoves2[bx], 00
 inc bx
 cmp bx,48
 jne inizeros
@@ -930,6 +940,7 @@ inirow7:
 mov grid[bx],1
 mov cooldown[bx], 0000
 mov availMoves[bx], 00
+mov availMoves2[bx], 00
 inc bx
 cmp bx,56
 jne inirow7
@@ -938,27 +949,35 @@ jne inirow7
 mov grid[56],02
 mov cooldown[56], 0000
 mov availMoves[56], 00
+mov availMoves2[56], 00
 mov grid[57],03
 mov cooldown[57], 0000
 mov availMoves[57], 00
+mov availMoves2[57], 00
 mov grid[58],04
 mov cooldown[58], 0000
 mov availMoves[58], 00
+mov availMoves2[58], 00
 mov grid[59],05
 mov cooldown[59], 0000
 mov availMoves[59], 00
+mov availMoves2[59], 00
 mov grid[60],06
 mov cooldown[60], 0000
 mov availMoves[60], 00
+mov availMoves2[60], 00
 mov grid[61],04
 mov cooldown[61], 0000
 mov availMoves[61], 00
+mov availMoves2[61], 00
 mov grid[62],03
 mov cooldown[62], 0000
 mov availMoves[62], 00
+mov availMoves2[62], 00
 mov grid[63],02
 mov cooldown[63], 0000
 mov availMoves[63], 00
+mov availMoves2[63], 00
 
 
 
@@ -1175,6 +1194,21 @@ jnz w
 jz checkkeygm
 
 w:
+push ax
+lea si, buf
+mov ah,00
+int 1ah
+mov ax, dx
+call number2string
+mov dx, 0000h
+mov bx, 0
+mov ah, 2
+int 10h
+mov ah,9
+mov dx, offset buf
+int 21h
+pop ax
+
 cmp al,77h
 jnz arrowup
 
@@ -1621,6 +1655,9 @@ ENDM movePiece
 .386
 .stack 64
 .data
+
+    seconds db ?         
+    buf     db 6 dup (?)
 
     winMessageP1     db  "Game ended! Player 1 wins!$"
     winMessageP2     db  "Game ended! Player 2 wins!$"
@@ -3825,4 +3862,56 @@ waitEnter proc
         
                                     ret
                                     endp             waitEnter
+
+;------------------------------------------
+;CONVERT A NUMBER IN STRING.
+;ALGORITHM : EXTRACT DIGITS ONE BY ONE, STORE
+;THEM IN STACK, THEN EXTRACT THEM IN REVERSE
+;ORDER TO CONSTRUCT STRING (STR).
+;PARAMETERS : AX = NUMBER TO CONVERT.
+;             SI = POINTING WHERE TO STORE STRING.
+
+number2string  proc
+;FILL BUF WITH DOLLARS.
+  push si
+  call dollars
+  pop  si
+
+  mov  bx, 10 ;DIGITS ARE EXTRACTED DIVIDING BY 10.
+  mov  cx, 0 ;COUNTER FOR EXTRACTED DIGITS.
+cycle1:       
+  mov  dx, 0 ;NECESSARY TO DIVIDE BY BX.
+  div  bx ;DX:AX / 10 = AX:QUOTIENT DX:REMAINDER.
+  push dx ;PRESERVE DIGIT EXTRACTED FOR LATER.
+  inc  cx ;INCREASE COUNTER FOR EVERY DIGIT EXTRACTED.
+  cmp  ax, 0  ;IF NUMBER IS
+  jne  cycle1 ;NOT ZERO, LOOP. 
+;NOW RETRIEVE PUSHED DIGITS.
+cycle2:  
+  pop  dx        
+  add  dl, 48 ;CONVERT DIGIT TO CHARACTER.
+  mov  [ si ], dl
+  inc  si
+  loop cycle2  
+
+  ret
+endp
+
+;------------------------------------------
+;FILLS VARIABLE WITH '$'.
+;USED BEFORE CONVERT NUMBERS TO STRING, BECAUSE
+;THE STRING WILL BE DISPLAYED.
+;PARAMETER : SI = POINTING TO STRING TO FILL.
+
+dollars                 proc
+  mov  cx, 6
+six_dollars:      
+  mov  bl, '$'
+  mov  [ si ], bl
+  inc  si
+  loop six_dollars
+
+  ret
+endp 
+
 end main 
