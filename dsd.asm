@@ -283,8 +283,8 @@ notempty:
 popa
 ENDM checkEmptyCell
 
-getAvailForSelectedPiece MACRO r,c
-    local rt,blackrock,whitebishop,blackbishop,whitequeen,blackqueen,king1,king2,whitepawn,blackpawn,blackknight,whiteknight
+getAvailForSelectedPiece MACRO r,c,player
+    local rt,blackrock,whitebishop,blackbishop,whitequeen,blackqueen,king1,king2,whitepawn,blackpawn,blackknight,whiteknight,preking,prepawn,preknight
     pusha
 
 mov bl,8
@@ -299,10 +299,14 @@ mov cl,grid[bx]
 cmp cl,2
 jne blackrock
 push ax
+push bx
 mov al,r
 mov ah,c
+mov bl,player
 mov row,al
 mov col,ah
+mov PNO,bl
+pop bx
 pop ax
 call rookMoves 
 jmp rt
@@ -310,10 +314,14 @@ blackrock:
 cmp cl,12
 jne whitebishop
 push ax
+push bx
 mov al,r
 mov ah,c
+mov bl,player
 mov row,al
 mov col,ah
+mov PNO,bl
+pop bx
 pop ax
 call rookMoves 
 jmp rt
@@ -321,10 +329,14 @@ whitebishop:
 cmp cl,4
 jne blackbishop
 push ax
+push bx
 mov al,r
 mov ah,c
+mov bl,player
 mov row,al
 mov col,ah
+mov PNO,bl
+pop bx
 pop ax
 call bishopMoves 
 jmp rt
@@ -332,10 +344,14 @@ blackbishop:
 cmp cl,14
 jne whitequeen
 push ax
+push bx
 mov al,r
 mov ah,c
+mov bl,player
 mov row,al
 mov col,ah
+mov PNO,bl
+pop bx
 pop ax
 call bishopMoves 
 jmp rt
@@ -343,106 +359,123 @@ whitequeen:
 cmp cl,5
 jne blackqueen
 push ax
+push bx
 mov al,r
-
 mov ah,c
+mov bl,player
 mov row,al
 mov col,ah
+mov PNO,bl
+pop bx
 pop ax
 call queenMoves 
 jmp rt
 blackqueen:
 cmp cl,15
-jne whitepawn
+jne prepawn
 push ax
+push bx
 mov al,r
 mov ah,c
+mov bl,player
 mov row,al
 mov col,ah
+mov PNO,bl
+pop bx
 pop ax
 call queenMoves 
 jmp rt
-whitepawn:
-cmp cl,1
-jne blackpawn
+
+prepawn:
 push ax
+push bx
 mov al,r
 mov ah,c
+mov bl,player
 mov row,al
 mov col,ah
+mov PNO,bl
+pop bx
 pop ax
+cmp PNO,1
+je whitepawn
+jne blackpawn
+
+whitepawn:
+cmp cl,1
+jne preking
  call HighlightAvailableForWPawnToEat 
  call HighlightAvailableForWPawnTwo 
 jmp rt
 blackpawn:
 cmp cl,11
-jne king1
-push ax
-mov al,r
-mov ah,c
-mov row,al
-mov col,ah
-pop ax
+jne preking
  call HighlightAvailableForBPawnToEat 
  call HighlightAvailableForBPawnTwo 
 jmp rt
-; movePiece 1, currRow, currColumn, currRow,currColumn, grid, cooldown, winMessageP1, winMessageP2
-king1:
-cmp cl,6 
-jne king2
+
+preking:
 push ax
+push bx
 mov al,r
 mov ah,c
+mov bl,player
 mov row,al
 mov col,ah
+mov PNO,bl
+pop bx
 pop ax
+cmp PNO,1
+je king1
+jne king2
+
+king1:
+cmp cl,6 
+jne preknight
 call HighlightAvailableForWKing 
 jmp rt
 king2:
 cmp cl,16
-jne whiteknight
-push ax
-mov al,r
-mov ah,c
-mov row,al
-mov col,ah
-pop ax
+jne preknight
 call HighlightAvailableForBKing 
 jmp rt
-whiteknight:
-cmp cl,3
-jne blackknight
+
+preknight:
 push ax
+push bx
 mov al,r
 mov ah,c
+mov bl,player
 mov row,al
 mov col,ah
+mov PNO,bl
+pop bx
 pop ax
- call HighlightAvailableForWKnight 
+cmp PNO,1
+je whiteknight
+jne blackknight
+
+whiteknight:
+cmp cl,3
+jne rt
+call HighlightAvailableForWKnight 
 jmp rt
 blackknight:
 cmp cl,13
 jne rt
-push ax
-mov al,r
-mov ah,c
-mov row,al
-mov col,ah
-pop ax
 call HighlightAvailableForBKnight 
 jmp rt
 rt:
-;;;;;;;;;;con
 popa
 ENDM getAvailForSelectedPiece
 
 callAppropriateMove macro
+local en,notmoved,check2,check3,check4,check5,check6,check7,check8,check9,check10,check11,check12,check13,check14,check15,check16
 pusha
 
 checkAvailable
 cmp isAvailableCell,0
 je notmoved
-
 
 mov al,selectedRow
 mov bl,8
@@ -554,6 +587,124 @@ en:
 popa
 endm callAppropriateMove
 
+callAppropriateMove2 macro
+local en,notmoved,check2,check3,check4,check5,check6,check7,check8,check9,check10,check11,check12,check13,check14,check15,check16
+pusha
+
+checkAvailable2
+cmp isAvailableCell2,0
+je notmoved
+
+mov al,selectedRow2
+mov bl,8
+imul bl
+add al,selectedCol2
+mov bx,ax
+mov al,grid[bx]
+
+cmp al,1
+jne check2
+movePiece 1, selectedRow2, selectedCol2,currRow2, currColumn2, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check2:
+cmp al,2
+jne check3
+movePiece 2, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check3:
+cmp al,3
+jne check4
+movePiece 3, selectedRow2, selectedCol2,  currRow2,currColumn2, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check4:
+cmp al,4
+jne check5
+movePiece 4, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check5:
+cmp al,5
+jne check6
+movePiece 5, selectedRow2, selectedCol2,  currRow2,currColumn2, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check6:
+cmp al,6
+jne check7
+movePiece 6, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check7:
+cmp al,7
+jne check8
+movePiece 7, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check8:
+cmp al,8
+jne check9
+movePiece 8, selectedRow2, selectedCol2,  currRow2,currColumn2, grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check9:
+cmp al,9
+jne check10
+movePiece 9, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check10:
+cmp al,10
+jne check11
+movePiece 10, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check11:
+cmp al,11
+jne check12
+movePiece 11, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check12:
+cmp al,12
+jne check13
+movePiece 12, selectedRow2, selectedCol2, currRow2,currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check13:
+cmp al,13
+jne check14
+movePiece 13, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check14:
+cmp al,14
+jne check15
+movePiece 14, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check15:
+cmp al,15
+jne check16
+movePiece 15, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+check16:
+cmp al,16
+jne en
+movePiece 16, selectedRow2, selectedCol2,currRow2, currColumn2,  grid, cooldown, winMessageP1, winMessageP2
+mov hasmoved2,1
+jmp en
+
+notmoved:
+mov hasmoved2,0
+
+en:
+popa
+endm callAppropriateMove
+
 
 checkSelected macro row,column
 local skip
@@ -603,8 +754,6 @@ mov bx,ax
 add bl,currColumn
 
 mov al,availMoves[bx]
-
-
 cmp al,0ffh
 jne end
 mov isAvailableCell,1
@@ -640,54 +789,72 @@ popa
 endm checkAvailable2
 
 eraseHighlight macro 
-local removeh,end,checks
+local checks,checks2,removeh,removeh2,end,checkp2
 pusha
 
 checkAvailable
 cmp isAvailableCell,0
 jz checks
 drawSquareOnCell 04h,currRow,currColumn
-jmp end
+jmp checkp2
 
 checks:
-
 checkSelected currRow,currColumn
 cmp isSelectedCell,0
 jz removeh
 drawSquareOnCell 03h,currRow,currColumn
-jmp end
+jmp checkp2
 
 removeh:
 drawSquareOnCell 07h,currRow,currColumn
+
+
+checkp2:
+
+checkAvailable2
+cmp isAvailableCell2,0
+jz checks2
+drawSquareOnCell 04h,currRow2,currColumn2
+jmp end
+
+checks2:
+checkSelected2 currRow2,currColumn2
+cmp isSelectedCell2,0
+jz removeh2
+drawSquareOnCell 03h,currRow2,currColumn2
+jmp end
+
+removeh2:
+drawSquareOnCell 07h,currRow2,currColumn2
 
 end:
 popa
 endm eraseHighlight
 
-eraseHighlight2 macro 
-local removeh,end,checks
-pusha
+; eraseHighlight2 macro 
+; local removeh,end,checks
+; pusha
 
-checkAvailable2
-cmp isAvailableCell2,0
-jz checks
-drawSquareOnCell 04h,currRow2,currColumn2
-jmp end
+; checkAvailable2
+; cmp isAvailableCell2,0
+; jz checks
+; drawSquareOnCell 04h,currRow2,currColumn2
+; jmp end
 
-checks:
+; checks:
 
-checkSelected2 currRow2,currColumn2
-cmp isSelectedCell2,0
-jz removeh
-drawSquareOnCell 03h,currRow2,currColumn2
-jmp end
+; checkSelected2 currRow2,currColumn2
+; cmp isSelectedCell2,0
+; jz removeh
+; drawSquareOnCell 03h,currRow2,currColumn2
+; jmp end
 
-removeh:
-drawSquareOnCell 07h,currRow2,currColumn2
+; removeh:
+; drawSquareOnCell 07h,currRow2,currColumn2
 
-end:
-popa
-endm eraseHighlight2
+; end:
+; popa
+; endm eraseHighlight2
 
 
 removeHighlightFromCellnumber macro cellNumber
@@ -727,6 +894,29 @@ freset:
 pop ax
 pop bx
 endm resetavailmoves
+
+resetavailmoves2 macro
+local lo,freset,skip
+push bx
+push ax
+mov bx,0
+
+lo:
+cmp bx,64d
+je freset
+mov al,availMoves2[bx]
+cmp al,0
+je skip
+mov availMoves2[bx],00
+removeHighlightFromCellnumber bx
+skip:
+inc bx
+jmp lo
+freset:
+
+pop ax
+pop bx
+endm resetavailmoves2
 
 initializeGrid macro
 push bx
@@ -979,33 +1169,7 @@ enterms:
     jmp drawpiecess
 
     drawpawns:
-    ; mov ah,0
-    ; drawwhitepawns:
-    ; cmp ah,8
-    ; je step2
-
-    ; finishpieces1:
-
-    ; push ax
-
-;;;;;;;;;;;; Can We call the macro with ah or al?;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;; when you have answer for this uncomment drawpawn loop code;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;; YES WE CAN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-
-    ; drawImageOnBoard white_pawn ,20,20,ah,6
-    ; drawImageOnBoard white_pawn ,20,20,ah,6
-    ; drawImageOnBoard white_pawn ,20,20,ah,6
-    ; drawImageOnBoard white_pawn ,20,20,ah,6
-    ; drawImageOnBoard white_pawn ,20,20,ah,6
-    ; drawImageOnBoard white_pawn ,20,20,ah,6
-    ; drawImageOnBoard white_pawn ,20,20,ah,6
-    ; drawImageOnBoard white_pawn ,20,20,ah,6
-
+    
 
     drawImageOnBoard white_pawn ,20,20,0,6
     drawImageOnBoard white_pawn ,20,20,1,6
@@ -1016,28 +1180,7 @@ enterms:
     drawImageOnBoard white_pawn ,20,20,6,6
     drawImageOnBoard white_pawn ,20,20,7,6
 
-    ; pop ax
-    ; inc ah
-    ; jmp drawwhitepawns
-
-    ; step2:
-    ;  mov ah,0
-
-    ; drawblackpawns:
-    ;  cmp ah,8
-    ;  je finishpieces
-    ;  push ax
-
-    ; drawImageOnBoard black_pawn,20,20,ah,1
-    ; drawImageOnBoard black_pawn ,20,20,ah,1
-    ; drawImageOnBoard black_pawn ,20,20,ah,1
-    ; drawImageOnBoard black_pawn ,20,20,ah,1
-    ; drawImageOnBoard black_pawn ,20,20,ah,1
-    ; drawImageOnBoard black_pawn ,20,20,ah,1
-    ; drawImageOnBoard black_pawn ,20,20,ah,1
-    ; drawImageOnBoard black_pawn ,20,20,ah,1
-
-
+    
     drawImageOnBoard black_pawn ,20,20,0,1
     drawImageOnBoard black_pawn ,20,20,1,1
     drawImageOnBoard black_pawn ,20,20,2,1
@@ -1046,11 +1189,6 @@ enterms:
     drawImageOnBoard black_pawn ,20,20,5,1
     drawImageOnBoard black_pawn ,20,20,6,1
     drawImageOnBoard black_pawn ,20,20,7,1
-    ; pop ax
-
-    ; inc ah
-    ; jmp drawblackpawns
-    ; 
 
     
     finishpieces:
@@ -1063,74 +1201,9 @@ enterms:
 
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
-; ###################################################
-
-; Testing Moves "TAHER"
-
-; rookMoves 4,4 ;Error
-; CORNERS
-; rookMoves 0,0 ;Error
-; rookMoves 0,7 ;Error
-; rookMoves 7,0 ;Works
-; rookMoves 7,7 ;Works
-; Lines
-; rookMoves 0,4 ;Error
-; rookMoves 7,4 ;Error -> solved
-; rookMoves 4,0 ;Works
-; rookMoves 4,7 ;Works
-
-; bishopMoves 4,4
-; CORNERS
-; bishopMoves 0,0 ;Works
-; bishopMoves 0,7 ;Works
-; bishopMoves 7,0 ;Works
-; bishopMoves 7,7 ;Error -> solved
-; Lines
-; bishopMoves 0,4 ;Works
-; bishopMoves 7,4 ;Works
-; bishopMoves 4,0 ;Works
-; bishopMoves 4,7 ;Error -> solved
-
-; queenMoves 4,4
-; CORNERS
-; queenMoves 0,0 ;Works
-; queenMoves 0,7 ;Works
-; queenMoves 7,0 ;Works
-; queenMoves 7,7 ;Error -> solved
-; Lines
-; queenMoves 0,4 ;Works
-; queenMoves 7,4 ;Works
-; queenMoves 4,0 ;Works
-; queenMoves 4,7 ;Error -> solved
-
-; Inf Loop Bug -> Solved
-; push ax
-; mov al,4
-; mov ah,1
-; mov row,al
-; mov col,ah
-; pop ax
-; call queenMoves 
 
 ;#####################################################
 
-;;use color 07h to erase highlight
-
-; ;;highlight current cell
-; drawSquareOnCell 0eh,currRow,currColumn
-; ; movePiece 1, currRow, currColumn, currColumn, currRow, grid, cooldown, winMessageP1, winMessageP2
-; ; mov cx, 0fh
-; ; mov dx, 4240h
-; ; mov ah, 86h
-; ; int 15h
-; ; mov ah, 86h
-; ; int 15h
-; ; mov ah, 86h
-; ; int 15h
-; ; movePiece 1, currColumn, currRow, currRow, currColumn, grid, cooldown, winMessageP1, winMessageP2
-; ; HighlightAvailableForKing 5, 4
-; ; HighlightAvailableForKnight 1,4
-; ; HighlightAvailableForPawnTwo 1,7
 
 ;gm
 checkkeygm:
@@ -1153,6 +1226,8 @@ eraseHighlight
 ; drawSquareOnCell 07h,currRow,currColumn
 dec currRow
 drawSquareOnCell 0eh,currRow,currColumn
+drawSquareOnCell 0eh,currRow2,currColumn2
+
 skipnavu:
 
 
@@ -1167,8 +1242,9 @@ jne s
 cmp currRow2,0
 je skipnavu2
 
-eraseHighlight2
+eraseHighlight
 dec currRow2
+drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavu2:
 
@@ -1191,6 +1267,7 @@ eraseHighlight
 
 inc currRow
 drawSquareOnCell 0eh,currRow,currColumn
+drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavd:
 jmp consumebuffergm
 
@@ -1202,9 +1279,10 @@ cmp currRow2,7
 je skipnavd2
 
 
-eraseHighlight2
+eraseHighlight
 
 inc currRow2
+drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavd2:
 jmp consumebuffergm
@@ -1226,6 +1304,7 @@ eraseHighlight
 
 dec currColumn
 drawSquareOnCell 0eh,currRow,currColumn
+drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavl:
 
 jmp consumebuffergm
@@ -1239,9 +1318,10 @@ je skipnavl2
 
 ; drawSquareOnCell 07h,currRow,currColumn
 
-eraseHighlight2
+eraseHighlight
 
 dec currColumn2
+drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavl2:
 
@@ -1260,6 +1340,7 @@ eraseHighlight
 
 inc currColumn
 drawSquareOnCell 0eh,currRow,currColumn
+drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavr:
 
 jmp consumebuffergm
@@ -1271,9 +1352,11 @@ jne preq
 cmp currColumn2,7
 je skipnavr2
 
-eraseHighlight2
+eraseHighlight
 
 inc currColumn2
+
+drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavr2:
 
@@ -1300,7 +1383,7 @@ mov cl,currRow
 mov selectedRow,cl
 drawSquareOnCell 03h,currRow,currColumn
 
-getAvailForSelectedPiece currRow,currColumn
+getAvailForSelectedPiece currRow,currColumn,1
 
 ;;;;;check available moves for the piece and draw them
 
@@ -1366,7 +1449,7 @@ mov cl,currRow2
 mov selectedRow2,cl
 drawSquareOnCell 03h,currRow2,currColumn2
 
-getAvailForSelectedPiece currRow2,currColumn2
+getAvailForSelectedPiece currRow2,currColumn2,2
 mov checkq2,1
 preventSelection2:
 jmp consumebuffergm
@@ -1374,6 +1457,19 @@ jmp consumebuffergm
 sel22:
 cmp al,2fh
 jne esc22
+
+; callAppropriateMove2
+
+; cmp hasmoved2,0
+; je noreset2
+; drawSquareOnCell 07h,selectedRow2,selectedCol2
+; mov selectedRow2,0ffh
+; mov selectedCol2,0ffh
+; resetavailmoves2
+
+; mov checkq2,0
+; noreset2:
+
 
 
 jmp consumebuffergm
@@ -1389,7 +1485,7 @@ mov selectedRow2,0ffh
 mov selectedCol2,0ffh
 
 
-; resetavailmoves
+resetavailmoves2
 
 drawSquareOnCell 0eh,currRow2,currColumn2
 mov checkq2,0
@@ -1937,6 +2033,7 @@ ENDM movePiece
     col              db  ?
     IsmailRow        db  ?
     IsmailCol        db  ?
+    PNO              db  ?
 .code
 
         
@@ -1993,7 +2090,13 @@ rookMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastRight
+                                    cmp              PNO,1
+                                    jne              p2
                                     mov              availMoves[bx],0ffh
+                                    jmp              e
+    p2:                             
+                                    mov              availMoves2[bx],0ffh
+    e:                              
                                     callDrawSquare   bx
                                     inc              si                                                                                                                                                                                           ;go to right boxes
                                     jmp              checkRight
@@ -2029,7 +2132,13 @@ rookMoves proc
                                     jl               preleft
     ; Friendly fire is disabled
     eatRight:                       
+                                    cmp              PNO,1
+                                    jne              p22
                                     mov              availMoves[bx],0ffh
+                                    jmp              e2
+    p22:                             
+                                    mov              availMoves2[bx],0ffh
+    e2:                              
                                     callDrawSquare   bx
 
 
@@ -2061,7 +2170,13 @@ rookMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastLeft
+                                    cmp              PNO,1
+                                    jne              p23
                                     mov              availMoves[bx],0ffh
+                                    jmp              e3
+    p23:                             
+                                    mov              availMoves2[bx],0ffh
+    e3:                              
                                     callDrawSquare   bx
                                     dec              si                                                                                                                                                                                           ;go to right boxes
                                     jmp              checkLeft
@@ -2097,7 +2212,13 @@ rookMoves proc
                                     jl               preTop
     ; Friendly fire is disabled
     eatLeft:                        
+                                    cmp              PNO,1
+                                    jne              p24
                                     mov              availMoves[bx],0ffh
+                                    jmp              e4
+    p24:                             
+                                    mov              availMoves2[bx],0ffh
+    e4:                              
                                     callDrawSquare   bx
 
     preTop:                         
@@ -2124,7 +2245,13 @@ rookMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastTop
+                                    cmp              PNO,1
+                                    jne              p25
                                     mov              availMoves[bx],0ffh
+                                    jmp              e5
+    p25:                             
+                                    mov              availMoves2[bx],0ffh
+    e5:                              
                                     callDrawSquare   bx
                                     pop              bx
 
@@ -2164,7 +2291,13 @@ rookMoves proc
                                     jl               preBottom
     ; Friendly fire is disabled
     eatTop:                         
+                                    cmp              PNO,1
+                                    jne              p26
                                     mov              availMoves[bx],0ffh
+                                    jmp              e6
+    p26:                             
+                                    mov              availMoves2[bx],0ffh
+    e6:                              
                                     callDrawSquare   bx
 
     preBottom:                      
@@ -2191,7 +2324,13 @@ rookMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastBottom
+                                    cmp              PNO,1
+                                    jne              p27
                                     mov              availMoves[bx],0ffh
+                                    jmp              e7
+    p27:                             
+                                    mov              availMoves2[bx],0ffh
+    e7:                              
                                     callDrawSquare   bx
                                     pop              bx
 
@@ -2230,7 +2369,13 @@ rookMoves proc
                                     jl               rt91
     ; Friendly fire is disabled
     eatBottom:                      
+                                    cmp              PNO,1
+                                    jne              p28
                                     mov              availMoves[bx],0ffh
+                                    jmp              e8
+    p28:                             
+                                    mov              availMoves2[bx],0ffh
+    e8:                              
                                     callDrawSquare   bx
 
 
@@ -2271,6 +2416,7 @@ HighlightAvailableForWKing proc
     EmptyAbove11:                   
                                     mov              IsmailCol,bl
                                     drawSquareOnCell 04h,IsmailRow,IsmailCol
+                                    
                                     mov              byte ptr [si],0ffh
     noEnemyAbove11:                 
                                     dec              di
@@ -3313,7 +3459,13 @@ bishopMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastBR
+                                    cmp              PNO,1
+                                    jne              p29
                                     mov              availMoves[bx],0ffh
+                                    jmp              e9
+    p29:                             
+                                    mov              availMoves2[bx],0ffh
+    e9:                              
                                     callDrawSquare   bx
                                     pop              bx
                                     inc              bx
@@ -3353,7 +3505,13 @@ bishopMoves proc
     ; Friendly fire is disabled
     eatBR:                          
                                     callDrawSquare   bx
+                                    cmp              PNO,1
+                                    jne              p210
                                     mov              availMoves[bx],0ffh
+                                    jmp              e10
+    p210:                             
+                                    mov              availMoves2[bx],0ffh
+    e10:                              
 
 
     precheckTL:                     
@@ -3384,7 +3542,13 @@ bishopMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastTL
+                                    cmp              PNO,1
+                                    jne              p211
                                     mov              availMoves[bx],0ffh
+                                    jmp              e11
+    p211:                             
+                                    mov              availMoves2[bx],0ffh
+    e11:                              
                                     callDrawSquare   bx
                                     pop              bx
                                     dec              bx
@@ -3423,7 +3587,13 @@ bishopMoves proc
                                     jl               precheckTR
     ; Friendly fire is disabled
     eatTL:                          
+                                    cmp              PNO,1
+                                    jne              p212
                                     mov              availMoves[bx],0ffh
+                                    jmp              e12
+    p212:                             
+                                    mov              availMoves2[bx],0ffh
+    e12:                              
                                     callDrawSquare   bx
 
 
@@ -3454,7 +3624,13 @@ bishopMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastTR
+                                    cmp              PNO,1
+                                    jne              p213
                                     mov              availMoves[bx],0ffh
+                                    jmp              e13
+    p213:                             
+                                    mov              availMoves2[bx],0ffh
+    e13:                              
                                     callDrawSquare   bx
                                     pop              bx
                                     dec              bx
@@ -3493,7 +3669,13 @@ bishopMoves proc
                                     jl               precheckBL
     ; Friendly fire is disabled
     eatTR:                          
+                                    cmp              PNO,1
+                                    jne              p214
                                     mov              availMoves[bx],0ffh
+                                    jmp              e14
+    p214:                             
+                                    mov              availMoves2[bx],0ffh
+    e14:                              
                                     callDrawSquare   bx
 
     precheckBL:                     
@@ -3523,7 +3705,13 @@ bishopMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastBL
+                                    cmp              PNO,1
+                                    jne              p215
                                     mov              availMoves[bx],0ffh
+                                    jmp              e15
+    p215:                             
+                                    mov              availMoves2[bx],0ffh
+    e15:                              
                                     callDrawSquare   bx
                                     pop              bx
                                     inc              bx
@@ -3562,7 +3750,13 @@ bishopMoves proc
                                     jl               rt1
     ; Friendly fire is disabled
     eatBL:                          
+                                    cmp              PNO,1
+                                    jne              p216
                                     mov              availMoves[bx],0ffh
+                                    jmp              e16
+    p216:                             
+                                    mov              availMoves2[bx],0ffh
+    e16:                              
                                     callDrawSquare   bx
 
     rt1:                            
