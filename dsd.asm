@@ -2420,7 +2420,7 @@ HighlightAvailableForBKing proc
                                     mov              bh,0
                                     mov              cl,8
                                     lea              di,grid
-                                    lea              si,availMoves
+                                    lea              si,availMoves2
                                     mul              cl
                                     add              di,ax                                                                                                                                                                                        ;on current cell
                                     add              di,bx
@@ -2804,7 +2804,7 @@ HighlightAvailableForBKnight proc
                                     mov              bh,0
                                     mov              cl,8
                                     lea              di,grid
-                                    lea              si,availMoves
+                                    lea              si,availMoves2
 
     ;highlight above
                                     cmp              row,2
@@ -2860,7 +2860,7 @@ HighlightAvailableForBKnight proc
                                     cmp              row,5
                                     jg               noBelow
                                     lea              di,grid
-                                    lea              si,availMoves
+                                    lea              si,availMoves2
                                     mov              al,row                                                                                                                                                                                       ;on cell and bl too
                                     add              al,2                                                                                                                                                                                         ;below 2 steps
                                     mov              IsmailRow,al
@@ -2912,7 +2912,7 @@ HighlightAvailableForBKnight proc
                                     cmp              col,5
                                     jg               noRight
                                     lea              di,grid
-                                    lea              si,availMoves
+                                    lea              si,availMoves2
                                     mov              al,row                                                                                                                                                                                       ;on cell and bl too
                                     add              bl,2                                                                                                                                                                                         ;right 2 steps
                                     mov              IsmailCol,bl
@@ -2963,7 +2963,7 @@ HighlightAvailableForBKnight proc
                                     cmp              col,2
                                     jl               noLeft
                                     lea              di,grid
-                                    lea              si,availMoves
+                                    lea              si,availMoves2
                                     mov              al,row                                                                                                                                                                                       ;on cell and bl too
                                     sub              bl,2                                                                                                                                                                                         ;left 2 steps
                                     mov              IsmailCol,bl
@@ -3100,7 +3100,7 @@ HighlightAvailableForBPawnTwo proc
                                     mov              bl,col
                                     mov              bh,0
                                     mov              cl,8
-                                    lea              si,availMoves
+                                    lea              si,availMoves2
                                     lea              di,grid
                                     cmp              ax,1
                                     JNE              notFirstStepP2
@@ -3228,7 +3228,7 @@ HighlightAvailableForBPawnToEat proc
                                     mov              bl,col
                                     mov              bh,0
                                     mov              cl,8
-                                    lea              si,availMoves
+                                    lea              si,availMoves2
                                     lea              di,grid
                                     mul              cl
                                     add              di,ax                                                                                                                                                                                        ;on cell
