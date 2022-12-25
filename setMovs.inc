@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 ;(1) need testing
 ;(2) TODO: if piece of same color then last patch was last availMove
 ;------------------------------------------------
@@ -306,4 +304,3 @@ queenMoves MACRO row, column
         bishopMoves row,column
         rookMoves row,column
 ENDM queenMoves
->>>>>>> 108971bae034e8e892c1b87593c0f4e983c35c12

@@ -14,6 +14,7 @@ mov isEmptyCell2,1
 notempty:
 popa
 ENDM checkEmptyCell2
+
 resetavailmoves2 macro
 local lo,freset,skip
 push bx
@@ -35,6 +36,7 @@ pop ax
 pop bx
 endm resetavailmoves2
 callAppropriateMove2 macro
+local check2,check3,check4,check5,check6,check7,check8,check9,check10,check11,check12,check13,check14,check15,check16
 pusha
 checkAvailable2
 cmp isAvailableCell2,0
@@ -159,6 +161,7 @@ mov isSelectedCell2,1
 skip:
 popa
 endm checkSelected2
+
 checkAvailable2 macro
 local end
 pusha
@@ -176,6 +179,7 @@ mov isAvailableCell2,1
 end:
 popa
 endm checkAvailable2
+
 eraseHighlight2 macro 
 local removeh,end,checks
 pusha
@@ -186,6 +190,7 @@ drawSquareOnCell 04h,currRow2,currColumn2
 jmp end
 checks:
 checkSelected2 currRow2,currColumn2
+
 cmp isSelectedCell2,0
 jz removeh
 drawSquareOnCell 03h,currRow2,currColumn2
@@ -195,6 +200,7 @@ drawSquareOnCell 07h,currRow2,currColumn2
 end:
 popa
 endm eraseHighlight2
+
 navigateAfterSelect2 macro 
 LOCAL checkkey,up,down,left,right,consumebuffer,sel,skipnavd,skipnavu,skip,skipErase,skipnavl,skipnavr,escape2,ennav
 checkkey:
