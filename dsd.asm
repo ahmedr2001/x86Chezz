@@ -1116,16 +1116,16 @@ enterms:
 
     drawkings:
     push ax
-    drawImageOnBoard white_king,20 , 20,3,7
-    drawImageOnBoard black_king,20 , 20,3,0
+    drawImageOnBoard white_king,20 , 20,4,7
+    drawImageOnBoard black_king,20 , 20,4,0
     pop ax
     inc al
     jmp drawpiecess
 
     drawqueens:
     push ax
-    drawImageOnBoard white_queen,20 , 20,4,7
-    drawImageOnBoard black_queen,20 , 20,4,0
+    drawImageOnBoard white_queen,20 , 20,3,7
+    drawImageOnBoard black_queen,20 , 20,3,0
     pop ax
     inc al
     jmp drawpiecess
@@ -2098,10 +2098,10 @@ rookMoves proc
                                     jne              p22
                                     mov              availMoves[bx],0ffh
                                     jmp              e2
-    p22:                             
+    p22:                            
                                     mov              availMoves2[bx],0ffh
-    e2:                              
-                                   callDrawSquare   bx,04h
+    e2:                             
+                                    callDrawSquare   bx,04h
 
 
 
@@ -2136,10 +2136,10 @@ rookMoves proc
                                     jne              p23
                                     mov              availMoves[bx],0ffh
                                     jmp              e3
-    p23:                             
+    p23:                            
                                     mov              availMoves2[bx],0ffh
-    e3:                              
-                                   callDrawSquare   bx,04h
+    e3:                             
+                                    callDrawSquare   bx,04h
                                     dec              si                                                                                                                                                                                           ;go to right boxes
                                     jmp              checkLeft
     lastLeft:                       
@@ -2178,10 +2178,10 @@ rookMoves proc
                                     jne              p24
                                     mov              availMoves[bx],0ffh
                                     jmp              e4
-    p24:                             
+    p24:                            
                                     mov              availMoves2[bx],0ffh
-    e4:                              
-                                   callDrawSquare   bx,04h
+    e4:                             
+                                    callDrawSquare   bx,04h
 
     preTop:                         
     ;reset indexes
@@ -2211,10 +2211,10 @@ rookMoves proc
                                     jne              p25
                                     mov              availMoves[bx],0ffh
                                     jmp              e5
-    p25:                             
+    p25:                            
                                     mov              availMoves2[bx],0ffh
-    e5:                              
-                                   callDrawSquare   bx,04h
+    e5:                             
+                                    callDrawSquare   bx,04h
                                     pop              bx
 
                                     dec              bx                                                                                                                                                                                           ;go to top boxes
@@ -2257,10 +2257,10 @@ rookMoves proc
                                     jne              p26
                                     mov              availMoves[bx],0ffh
                                     jmp              e6
-    p26:                             
+    p26:                            
                                     mov              availMoves2[bx],0ffh
-    e6:                              
-                                   callDrawSquare   bx,04h
+    e6:                             
+                                    callDrawSquare   bx,04h
 
     preBottom:                      
     ; reset indexes
@@ -2290,10 +2290,10 @@ rookMoves proc
                                     jne              p27
                                     mov              availMoves[bx],0ffh
                                     jmp              e7
-    p27:                             
+    p27:                            
                                     mov              availMoves2[bx],0ffh
-    e7:                              
-                                   callDrawSquare   bx,04h
+    e7:                             
+                                    callDrawSquare   bx,04h
                                     pop              bx
 
                                     inc              bx                                                                                                                                                                                           ;go to top boxes
@@ -2335,10 +2335,10 @@ rookMoves proc
                                     jne              p28
                                     mov              availMoves[bx],0ffh
                                     jmp              e8
-    p28:                             
+    p28:                            
                                     mov              availMoves2[bx],0ffh
-    e8:                              
-                                   callDrawSquare   bx,04h
+    e8:                             
+                                    callDrawSquare   bx,04h
 
 
     rt91:                           
@@ -3424,10 +3424,10 @@ bishopMoves proc
                                     jne              p29
                                     mov              availMoves[bx],0ffh
                                     jmp              e9
-    p29:                             
+    p29:                            
                                     mov              availMoves2[bx],0ffh
-    e9:                              
-                                   callDrawSquare   bx,04h
+    e9:                             
+                                    callDrawSquare   bx,04h
                                     pop              bx
                                     inc              bx
                                     inc              si
@@ -3465,14 +3465,14 @@ bishopMoves proc
                                     jl               precheckTL
     ; Friendly fire is disabled
     eatBR:                          
-                                   callDrawSquare   bx,04h
+                                    callDrawSquare   bx,04h
                                     cmp              PNO,1
                                     jne              p210
                                     mov              availMoves[bx],0ffh
                                     jmp              e10
-    p210:                             
+    p210:                           
                                     mov              availMoves2[bx],0ffh
-    e10:                              
+    e10:                            
 
 
     precheckTL:                     
@@ -3507,10 +3507,10 @@ bishopMoves proc
                                     jne              p211
                                     mov              availMoves[bx],0ffh
                                     jmp              e11
-    p211:                             
+    p211:                           
                                     mov              availMoves2[bx],0ffh
-    e11:                              
-                                   callDrawSquare   bx,04h
+    e11:                            
+                                    callDrawSquare   bx,04h
                                     pop              bx
                                     dec              bx
                                     dec              si
@@ -3552,10 +3552,10 @@ bishopMoves proc
                                     jne              p212
                                     mov              availMoves[bx],0ffh
                                     jmp              e12
-    p212:                             
+    p212:                           
                                     mov              availMoves2[bx],0ffh
-    e12:                              
-                                   callDrawSquare   bx,04h
+    e12:                            
+                                    callDrawSquare   bx,04h
 
 
     precheckTR:                     
@@ -3589,10 +3589,10 @@ bishopMoves proc
                                     jne              p213
                                     mov              availMoves[bx],0ffh
                                     jmp              e13
-    p213:                             
+    p213:                           
                                     mov              availMoves2[bx],0ffh
-    e13:                              
-                                   callDrawSquare   bx,04h
+    e13:                            
+                                    callDrawSquare   bx,04h
                                     pop              bx
                                     dec              bx
                                     inc              si
@@ -3634,10 +3634,10 @@ bishopMoves proc
                                     jne              p214
                                     mov              availMoves[bx],0ffh
                                     jmp              e14
-    p214:                             
+    p214:                           
                                     mov              availMoves2[bx],0ffh
-    e14:                              
-                                   callDrawSquare   bx,04h
+    e14:                            
+                                    callDrawSquare   bx,04h
 
     precheckBL:                     
     ;reset indexes
@@ -3670,10 +3670,10 @@ bishopMoves proc
                                     jne              p215
                                     mov              availMoves[bx],0ffh
                                     jmp              e15
-    p215:                             
+    p215:                           
                                     mov              availMoves2[bx],0ffh
-    e15:                              
-                                   callDrawSquare   bx,04h
+    e15:                            
+                                    callDrawSquare   bx,04h
                                     pop              bx
                                     inc              bx
                                     dec              si
@@ -3715,10 +3715,10 @@ bishopMoves proc
                                     jne              p216
                                     mov              availMoves[bx],0ffh
                                     jmp              e16
-    p216:                             
+    p216:                           
                                     mov              availMoves2[bx],0ffh
-    e16:                              
-                                   callDrawSquare   bx,04h
+    e16:                            
+                                    callDrawSquare   bx,04h
 
     rt1:                            
                                     popa
