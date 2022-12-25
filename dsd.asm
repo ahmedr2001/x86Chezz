@@ -53,9 +53,6 @@ imul bl
 add ax,80
 mov cx,ax
 
-; MOV CX,80+column*20
-; mov dx,row*20
-
 ;initialize color and draw pixel command
 MOV AH,0ch
 mov al,color
@@ -87,7 +84,6 @@ jne drawVerticalLines
 popa
 
 ENDM drawSquareOnCell
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;-----------------------------------------------------------------------
@@ -966,7 +962,7 @@ pop bx
 endm initializeGrid
 
 mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2
-    
+
       
      mov ax, 0003h
      int 10h
@@ -1052,8 +1048,6 @@ enterms:
     ; CALL ReadData
 	
     drawImage ism, boardWidth, boardHeight, 160-boardWidth/2, 0
-    ; drawImageOnBoard image1, image1Width, image1Height, 4, 4
-    ; eraseImage 4, 4, greyCell, whiteCell
 
 
 ;;;;;;;initializing pieces on board
@@ -1210,16 +1204,11 @@ drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavu2:
 
-
-
 jmp consumebuffergm
 
 s:
 cmp al,73h
 jnz arrowdown
-
-;navigate down
-
 
 cmp currRow,7
 je skipnavd
@@ -1250,17 +1239,12 @@ skipnavd2:
 jmp consumebuffergm
 
 
-
-
 a:
 cmp al,61h
 jnz arrowleft 
 
-;navigate laft
 cmp currColumn,0
 je skipnavl
-
-; drawSquareOnCell 07h,currRow,currColumn
 
 eraseHighlight
 
@@ -1268,7 +1252,6 @@ dec currColumn
 drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavl:
-
 jmp consumebuffergm
 
 arrowleft:
@@ -1278,22 +1261,17 @@ jne d
 cmp currColumn2,0
 je skipnavl2
 
-; drawSquareOnCell 07h,currRow,currColumn
-
 eraseHighlight
 
 dec currColumn2
 drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavl2:
-
 jmp consumebuffergm
 
 d:
 cmp al,64h
 jnz arrowright
-
-;navigate right
 
 cmp currColumn,7
 je skipnavr
@@ -1304,18 +1282,14 @@ inc currColumn
 drawSquareOnCell 0eh,currRow,currColumn
 drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavr:
-
 jmp consumebuffergm
 
 arrowright:
 cmp ah,4dh
 jne preq
-
 cmp currColumn2,7
 je skipnavr2
-
 eraseHighlight
-
 inc currColumn2
 
 drawSquareOnCell 0eh,currRow,currColumn
@@ -1328,6 +1302,9 @@ preq:
 cmp checkq,0
 je q
 jne q2
+
+st:
+jmp enterms
 
 q:
 cmp al,71h
@@ -1359,9 +1336,7 @@ jmp consumebuffergm
 q2:
 cmp al,71h
 jne esc2
-;first remove highlight from selected cell then move the piece at seleted cell to curr cell if available
-;and remove the highlight of available moves
-;then jump to consumebuffergm
+
 callAppropriateMove
 
 cmp hasmoved,0
@@ -1432,8 +1407,6 @@ jne esc22
 ; mov checkq2,0
 ; noreset2:
 
-
-
 jmp consumebuffergm
 
 esc22:
@@ -1463,7 +1436,7 @@ int 16h
  mov ax, 0003h
      int 10h
 
-jmp enterms
+jmp st
 ; jmp consumebuffergm
 exitgame:
 cmp al,1bh
@@ -1477,7 +1450,7 @@ int 16h
  mov ax, 0003h
      int 10h
 
-jmp enterms
+jmp st
 
 
 jmp consumebuffergm
@@ -1595,7 +1568,7 @@ int 16h
 
  mov ax, 0003h
      int 10h
-    jmp enterms
+    jmp st
     jmp noMove
 gameWon2:
     mov dx, offset winMessageP2
@@ -1610,7 +1583,7 @@ int 16h
 
  mov ax, 0003h
      int 10h
-    jmp enterms
+    jmp st
 noMove:
     popa
 ENDM movePiece
