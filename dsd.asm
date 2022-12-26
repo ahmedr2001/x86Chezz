@@ -1,9 +1,7 @@
-;Author:Mohammed Taher
-;Defining username screen
+;Authors:
+;CHESS GAME
 ;---------------------------
 include mymacros.inc
-;include setMovs.inc
-
 
 callDrawSquare macro cellNumber,color
 pusha
@@ -293,6 +291,11 @@ je notmoved
 jmp startm
 
 p2:
+cmp cl,2
+jne notmoved
+; mov al,'0'
+; mov ah,0ah
+; int 10h
 checkAvailable2
 cmp isAvailableCell2,0
 je notmoved
@@ -1182,17 +1185,17 @@ q2:
 cmp al,71h
 jne esc2
 
-callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
+; callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
 
-cmp hasmoved,0
-je noreset
-drawSquareOnCell 07h,selectedRow,selectedCol
-mov selectedRow,0ffh
-mov selectedCol,0ffh
-resetavailmoves
+; cmp hasmoved,0
+; je noreset
+; drawSquareOnCell 07h,selectedRow,selectedCol
+; mov selectedRow,0ffh
+; mov selectedCol,0ffh
+; resetavailmoves
 
-mov checkq,0
-noreset:
+; mov checkq,0
+; noreset:
 jmp consumebuffergm
 
 esc2:
@@ -1240,17 +1243,21 @@ sel22:
 cmp al,2fh
 jne esc22
 
-; callAppropriateMove 2,selectedRow2,selectedCol2,currRow2,currColumn2
+; mov al,'0'
+; mov ah,0ah
+; int 10h
+
+callAppropriateMove 2,selectedRow2,selectedCol2,currRow2,currColumn2
 ; 
-; cmp hasmoved2,0
-; je noreset2
-; drawSquareOnCell 07h,selectedRow2,selectedCol2
-; mov selectedRow2,0ffh
-; mov selectedCol2,0ffh
-; resetavailmoves2
+cmp hasmoved2,0
+je noreset2
+drawSquareOnCell 07h,selectedRow2,selectedCol2
+mov selectedRow2,0ffh
+mov selectedCol2,0ffh
+resetavailmoves2
 ; 
-; mov checkq2,0
-; noreset2:
+mov checkq2,0
+noreset2:
 
 jmp consumebuffergm
 
@@ -1306,13 +1313,6 @@ mov ah,0
 int 16h
 jmp checkkeygm
 
-
-
-    ; Press any key to exit
-    ; MOV AH , 0
-    ; INT 16h
-    
-    ; call CloseFile
     
     ;Change to Text MODE
     
@@ -3851,55 +3851,55 @@ waitEnter proc
                                     ret
                                     endp             waitEnter
 
-;------------------------------------------
-;CONVERT A NUMBER IN STRING.
-;ALGORITHM : EXTRACT DIGITS ONE BY ONE, STORE
-;THEM IN STACK, THEN EXTRACT THEM IN REVERSE
-;ORDER TO CONSTRUCT STRING (STR).
-;PARAMETERS : AX = NUMBER TO CONVERT.
-;             SI = POINTING WHERE TO STORE STRING.
+    ;------------------------------------------
+    ;CONVERT A NUMBER IN STRING.
+    ;ALGORITHM : EXTRACT DIGITS ONE BY ONE, STORE
+    ;THEM IN STACK, THEN EXTRACT THEM IN REVERSE
+    ;ORDER TO CONSTRUCT STRING (STR).
+    ;PARAMETERS : AX = NUMBER TO CONVERT.
+    ;             SI = POINTING WHERE TO STORE STRING.
 
-number2string  proc
-;FILL BUF WITH DOLLARS.
-  push si
-  call dollars
-  pop  si
+number2string proc
+    ;FILL BUF WITH DOLLARS.
+                                    push             si
+                                    call             dollars
+                                    pop              si
 
-  mov  bx, 10 ;DIGITS ARE EXTRACTED DIVIDING BY 10.
-  mov  cx, 0 ;COUNTER FOR EXTRACTED DIGITS.
-cycle1:       
-  mov  dx, 0 ;NECESSARY TO DIVIDE BY BX.
-  div  bx ;DX:AX / 10 = AX:QUOTIENT DX:REMAINDER.
-  push dx ;PRESERVE DIGIT EXTRACTED FOR LATER.
-  inc  cx ;INCREASE COUNTER FOR EVERY DIGIT EXTRACTED.
-  cmp  ax, 0  ;IF NUMBER IS
-  jne  cycle1 ;NOT ZERO, LOOP. 
-;NOW RETRIEVE PUSHED DIGITS.
-cycle2:  
-  pop  dx        
-  add  dl, 48 ;CONVERT DIGIT TO CHARACTER.
-  mov  [ si ], dl
-  inc  si
-  loop cycle2  
+                                    mov              bx, 10                                                                                                                                                                                       ;DIGITS ARE EXTRACTED DIVIDING BY 10.
+                                    mov              cx, 0                                                                                                                                                                                        ;COUNTER FOR EXTRACTED DIGITS.
+    cycle1:                         
+                                    mov              dx, 0                                                                                                                                                                                        ;NECESSARY TO DIVIDE BY BX.
+                                    div              bx                                                                                                                                                                                           ;DX:AX / 10 = AX:QUOTIENT DX:REMAINDER.
+                                    push             dx                                                                                                                                                                                           ;PRESERVE DIGIT EXTRACTED FOR LATER.
+                                    inc              cx                                                                                                                                                                                           ;INCREASE COUNTER FOR EVERY DIGIT EXTRACTED.
+                                    cmp              ax, 0                                                                                                                                                                                        ;IF NUMBER IS
+                                    jne              cycle1                                                                                                                                                                                       ;NOT ZERO, LOOP.
+    ;NOW RETRIEVE PUSHED DIGITS.
+    cycle2:                         
+                                    pop              dx
+                                    add              dl, 48                                                                                                                                                                                       ;CONVERT DIGIT TO CHARACTER.
+                                    mov              [ si ], dl
+                                    inc              si
+                                    loop             cycle2
 
-  ret
-endp
+                                    ret
+                                    endp
 
-;------------------------------------------
-;FILLS VARIABLE WITH '$'.
-;USED BEFORE CONVERT NUMBERS TO STRING, BECAUSE
-;THE STRING WILL BE DISPLAYED.
-;PARAMETER : SI = POINTING TO STRING TO FILL.
+    ;------------------------------------------
+    ;FILLS VARIABLE WITH '$'.
+    ;USED BEFORE CONVERT NUMBERS TO STRING, BECAUSE
+    ;THE STRING WILL BE DISPLAYED.
+    ;PARAMETER : SI = POINTING TO STRING TO FILL.
 
-dollars                 proc
-  mov  cx, 6
-six_dollars:      
-  mov  bl, '$'
-  mov  [ si ], bl
-  inc  si
-  loop six_dollars
+dollars proc
+                                    mov              cx, 6
+    six_dollars:                    
+                                    mov              bl, '$'
+                                    mov              [ si ], bl
+                                    inc              si
+                                    loop             six_dollars
 
-  ret
-endp 
+                                    ret
+                                    endp
 
 end main 
