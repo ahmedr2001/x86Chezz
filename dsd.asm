@@ -1365,7 +1365,7 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winM
     mov ax, cooldown[bx]
     sub dx, ax
     cmp dx, 50
-    ; jl noMove
+    jl noMove
 
     eraseImage fromColumn, fromRow, greyCell, whiteCell
     ; lea si, grid
