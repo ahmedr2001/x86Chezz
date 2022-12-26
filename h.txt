@@ -1,0 +1,250 @@
+checkKing1Message db "Check White King!$"
+    checkKing2Message db "Check Black King!$"
+
+    mov ax, code
+    cmp ax, 1
+    jne checkWRook
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 1
+    call HighlightAvailableForWPawnToEat
+    mov bx, 0
+lpavailWPawn:
+    mov al, availMoves[bx]
+    cmp al, 16
+    je checkKing2
+    inc bx
+    cmp bx, 64
+    jl lpavailWPawn
+    resetavailmoves
+    jmp noMove
+checkWRook:
+    cmp ax, 2
+    jne checkWKnight
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 1
+    call rookMoves
+    mov bx, 0
+lpavailWRook:
+    mov al, availMoves[bx]
+    cmp al, 16
+    je checkKing2
+    inc bx
+    cmp bx, 64
+    jl lpavailWRook
+    resetavailmoves
+    jmp noMove
+checkWKnight:
+    cmp ax, 3
+    jne checkWBishop
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 1
+    call HighlightAvailableForWKnight
+    mov bx, 0
+lpavailWKnight:
+    mov al, availMoves[bx]
+    cmp al, 16
+    je checkKing2
+    inc bx
+    cmp bx, 64
+    jl lpavailWKnight  
+    resetavailmoves  
+    jmp noMove
+checkWBishop:
+    cmp ax, 4
+    jne checkWQueen
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 1
+    call bishopMoves
+    mov bx, 0
+lpavailWBishop:
+    mov al, availMoves[bx]
+    cmp al, 16
+    je checkKing2
+    inc bx
+    cmp bx, 64
+    jl lpavailWBishop
+    resetavailmoves
+    jmp noMove
+checkWQueen:
+    cmp ax, 5
+    jne checkWKing
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 1
+    call queenMoves
+    mov bx, 0
+lpavailWQueen:
+    mov al, availMoves[bx]
+    cmp al, 16
+    je checkKing2
+    inc bx
+    cmp bx, 64
+    jl lpavailWQueen
+    resetavailmoves
+    jmp noMove
+checkWKing:
+    cmp ax, 6
+    jne checkBPawn
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 1
+    call HighlightAvailableForWKing
+    mov bx, 0
+lpavailWKing:
+    mov al, availMoves[bx]
+    cmp al, 16
+    je checkKing2
+    inc bx
+    cmp bx, 64
+    jl lpavailWKing
+    resetavailmoves
+    jmp noMove
+checkBPawn:
+    cmp ax, 11
+    jne checkBRook
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 0
+    call HighlightAvailableForBPawnToEat
+    mov bx, 0
+lpavailBPawn:
+    mov al, availMoves2[bx]
+    cmp al, 6
+    je checkKing1
+    inc bx
+    cmp bx, 64
+    jl lpavailBPawn
+    resetavailmoves2
+    jmp noMove
+checkBRook:
+    cmp ax, 12
+    jne checkBKnight
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 0
+    call rookMoves
+    mov bx, 0
+lpavailBRook:
+    mov al, availMoves2[bx]
+    cmp al, 6
+    je checkKing1
+    inc bx
+    cmp bx, 64
+    jl lpavailBRook
+    resetavailmoves2
+    jmp noMove
+checkBKnight:
+    cmp ax, 13
+    jne checkBBishop
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 0
+    call HighlightAvailableForBKnight
+    mov bx, 0
+lpavailBKnight:
+    mov al, availMoves2[bx]
+    cmp al, 6
+    je checkKing1
+    inc bx
+    cmp bx, 64
+    jl lpavailBKnight
+    resetavailmoves2
+    jmp noMove
+checkBBishop:
+    cmp ax, 14
+    jne checkBQueen
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 0
+    call bishopMoves
+    mov bx, 0
+lpavailBBishop:
+    mov al, availMoves2[bx]
+    cmp al, 6
+    je checkKing1
+    inc bx
+    cmp bx, 64
+    jl lpavailBBishop
+    resetavailmoves2
+    jmp noMove
+checkBQueen:
+    cmp ax, 15
+    jne checkBKing
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 0
+    call queenMoves
+    mov bx, 0
+lpavailBQueen:
+    mov al, availMoves2[bx]
+    cmp al, 6
+    je checkKing1
+    inc bx
+    cmp bx, 64
+    jl lpavailBQueen
+    resetavailmoves2
+    jmp noMove
+checkBKing:
+    cmp ax, 16
+    jne noMove
+    mov ah, toRow
+    mov al, toColumn
+    mov row, ah
+    mov col, al
+    mov PNO, 0
+    call HighlightAvailableForBKing
+    mov bx, 0
+lpavailBKing:
+    mov al, availMoves2[bx]
+    cmp al, 6
+    je checkKing1
+    inc bx
+    cmp bx, 64
+    jl lpavailBKing
+    resetavailmoves2
+    jmp noMove
+checkKing1:
+    mov dx, offset checkKing1Message
+    mov ah, 9
+    int 21h    
+    mov cx, 0fh
+    mov dx, 4240h
+    mov ah, 86h
+    int 15h
+    jmp noMove
+checkKing2:
+    resetavailmoves
+    mov dx, offset checkKing2Message
+    mov ah, 9    
+    int 21h
+    mov cx, 0fh
+    mov dx, 4240h
+    mov ah, 86h
+    int 15h
+    jmp noMove

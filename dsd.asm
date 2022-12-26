@@ -308,7 +308,7 @@ mov al,grid[bx]
 
 cmp al,1
 jne check2
-movePiece 1, sr, sc,cr, cc, grid, cooldown, winMessageP1, winMessageP2
+movePiece 1, sr, sc,cr, cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p22
 mov hasmoved,1
@@ -320,7 +320,7 @@ jmp en
 check2:
 cmp al,2
 jne check3
-movePiece 2, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 2, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p23
 mov hasmoved,1
@@ -332,7 +332,7 @@ jmp en
 check3:
 cmp al,3
 jne check4
-movePiece 3, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2
+movePiece 3, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p24
 mov hasmoved,1
@@ -344,7 +344,7 @@ jmp en
 check4:
 cmp al,4
 jne check5
-movePiece 4, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 4, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p25
 mov hasmoved,1
@@ -356,7 +356,7 @@ jmp en
 check5:
 cmp al,5
 jne check6
-movePiece 5, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2
+movePiece 5, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p26
 mov hasmoved,1
@@ -368,7 +368,7 @@ jmp en
 check6:
 cmp al,6
 jne check7
-movePiece 6, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 6, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p27
 mov hasmoved,1
@@ -380,7 +380,7 @@ jmp en
 check7:
 cmp al,7
 jne check8
-movePiece 7, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 7, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p28
 mov hasmoved,1
@@ -392,7 +392,7 @@ jmp en
 check8:
 cmp al,8
 jne check9
-movePiece 8, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2
+movePiece 8, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p29
 mov hasmoved,1
@@ -404,7 +404,7 @@ jmp en
 check9:
 cmp al,9
 jne check10
-movePiece 9, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 9, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p210
 mov hasmoved,1
@@ -416,7 +416,7 @@ jmp en
 check10:
 cmp al,10
 jne check11
-movePiece 10, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 10, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p211
 mov hasmoved,1
@@ -428,7 +428,7 @@ jmp en
 check11:
 cmp al,11
 jne check12
-movePiece 11, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 11, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p212
 mov hasmoved,1
@@ -440,7 +440,7 @@ jmp en
 check12:
 cmp al,12
 jne check13
-movePiece 12, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 12, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p213
 mov hasmoved,1
@@ -452,7 +452,7 @@ jmp en
 check13:
 cmp al,13
 jne check14
-movePiece 13, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 13, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p214
 mov hasmoved,1
@@ -464,7 +464,7 @@ jmp en
 check14:
 cmp al,14
 jne check15
-movePiece 14, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 14, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p215
 mov hasmoved,1
@@ -476,7 +476,7 @@ jmp en
 check15:
 cmp al,15
 jne check16
-movePiece 15, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 15, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p216
 mov hasmoved,1
@@ -488,7 +488,7 @@ jmp en
 check16:
 cmp al,16
 jne en
-movePiece 16, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2
+movePiece 16, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 cmp cl,1
 jne p217
 mov hasmoved,1
@@ -640,7 +640,7 @@ endm eraseHighlight
 
 resetavailmoves macro
 local lo,freset,skip
-
+pusha
 push bx
 push ax
 
@@ -661,10 +661,12 @@ freset:
 
 pop ax
 pop bx
+popa
 endm resetavailmoves
 
 resetavailmoves2 macro
 local lo,freset,skip
+pusha
 push bx
 push ax
 mov bx,0
@@ -684,6 +686,7 @@ freset:
 
 pop ax
 pop bx
+popa
 endm resetavailmoves2
 
 initializeGrid macro
@@ -785,12 +788,10 @@ mov cooldown[63], 0000
 mov availMoves[63], 00
 mov availMoves2[63], 00
 
-
-
 pop bx
 endm initializeGrid
 
-mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2
+mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, image1, image1Width, image1Height, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 
       
      mov ax, 0003h
@@ -1349,8 +1350,8 @@ jmp checkkeygm
 endm mainScreen  
 
 ;------------------------------------------------------------
-movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winMessageP1, winMessageP2
-    local noMove, gameWon1, gameWon2
+movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+    local noMove, gameWon1, gameWon2, notWin, checkGameWon
     pusha
     mov ah,00h
     int 1ah
@@ -1364,7 +1365,7 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winM
     mov ax, cooldown[bx]
     sub dx, ax
     cmp dx, 50
-    jl noMove
+    ; jl noMove
 
     eraseImage fromColumn, fromRow, greyCell, whiteCell
     ; lea si, grid
@@ -1383,10 +1384,25 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winM
     add al, toColumn
     mov bx, ax
     mov ah, grid[bx]
+    cmp ah, 0
+    je notWin 
+    push ax
+    push bx
+    mov dx, 1800h
+    mov bx, 0
+    mov ah, 2
+    int 10h
+    mov dx, offset eatWP
+    mov ah, 9
+    int 21h
+    pop bx
+    pop ax
+checkGameWon:    
     cmp ah, 6
     jz gameWon2
     cmp ah, 16
     jz gameWon1
+notWin:    
     mov grid[bx], code
     mov ah,00h
     int 1ah
@@ -1399,6 +1415,7 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winM
     mov cooldown[bx], dx
     jmp noMove
 gameWon1:
+    resetavailmoves2
     moveCursor 1800h
     mov dx, offset winMessageP1
     mov ah, 09h
@@ -1625,6 +1642,7 @@ ENDM getAvailForSelectedPiece
 .stack 64
 .data
 
+    eatWP db "Piece eaten$"
     seconds db ?         
     buf     db 6 dup (?)
 
@@ -2017,7 +2035,7 @@ main proc far
     ;TODO: go to main screen
 
       
-                                    mainScreen       hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2
+                                    mainScreen       hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 
                                     mov              ah,04ch
                                     int              21h
