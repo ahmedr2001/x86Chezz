@@ -365,21 +365,21 @@ pusha
 mov cl,player
 
 cmp cl,1
-jne p2
+jne startm
 checkAvailable
 cmp isAvailableCell,0
 je notmoved
 jmp startm
 
-p2:
-cmp cl,2
-jne notmoved
-; mov al,'0'
-; mov ah,0ah
-; int 10h
-checkAvailable2
-cmp isAvailableCell2,0
-je notmoved
+; p2:
+; cmp cl,2
+; jne notmoved
+; ; mov al,'0'
+; ; mov ah,0ah
+; ; int 10h
+; checkAvailable2
+; cmp isAvailableCell2,0
+; je notmoved
 
 startm:
 
@@ -1138,7 +1138,7 @@ sendInvitaion:
             cmp al,31h
             jz chatMode
             cmp al,32h
-            jz playgame
+            jz preplaygame
             notificationBar hello,exclamation,name1,GameInvitation
             cmp al,1bh
             jz checkkey
@@ -1146,9 +1146,14 @@ sendInvitaion:
 
 
 
-    
 
-    
+    preplaygame:
+
+    mov Player1_color,1
+    mov Player2_color,2
+    jmp playgame
+
+
      f1: 
      cmp al,31h
      jnz f2
@@ -1279,6 +1284,7 @@ playgame:
     
     initializeGrid
 
+
     drawSquareOnCell 0eh,currRow,currColumn
 
     ; drawSquareOnCell 0eh,currRow2,currColumn2
@@ -1307,6 +1313,73 @@ mov ah,1
 int 16h
 jnz w
 jz checkkeygm
+
+; jz p2_moved
+
+; p2_moved:
+;     ;1
+;     ;Check that Data Ready
+;             mov dx , 3FDH               ; Line Status Register
+;             in  al , dx
+;             AND al , 1
+;             JZ  checkkeygm                    ;if no data to reciverd) then check if i want to send
+;     ;If Ready read the VALUE in Receive data register
+;             mov dx , 03F8H
+;             in  al , dx
+;             mov player2_piece , al
+;             cmp al,1bh
+;             jz exitgame
+;     ;2
+;     recive_fr:
+;     ;Check that Data Ready
+;             mov dx , 3FDH               ; Line Status Register
+;             in  al , dx
+;             AND al , 1
+;             JZ  recive_fr                    ;if no data to reciverd) then check if i want to send
+;     ;If Ready read the VALUE in Receive data register
+;             mov dx , 03F8H
+;             in  al , dx
+;             mov player2_fromRow , al
+;     ;3
+;     recive_fc:
+;     ;Check that Data Ready
+;             mov dx , 3FDH               ; Line Status Register
+;             in  al , dx
+;             AND al , 1
+;             JZ  recive_fc                    ;if no data to reciverd) then check if i want to send
+;     ;If Ready read the VALUE in Receive data register
+;             mov dx , 03F8H
+;             in  al , dx
+;             mov player2_fromCol , al
+;     ;4
+;     recive_tr:
+;     ;Check that Data Ready
+;             mov dx , 3FDH               ; Line Status Register
+;             in  al , dx
+;             AND al , 1
+;             JZ  recive_tr                    ;if no data to reciverd) then check if i want to send
+;     ;If Ready read the VALUE in Receive data register
+;             mov dx , 03F8H
+;             in  al , dx
+;             mov player2_toRow , al
+;     ;5
+;     recive_tc:
+;     ;Check that Data Ready
+;             mov dx , 3FDH               ; Line Status Register
+;             in  al , dx
+;             AND al , 1
+;             JZ  recive_tc                    ;if no data to reciverd) then check if i want to send
+;     ;If Ready read the VALUE in Receive data register
+;             mov dx , 03F8H
+;             in  al , dx
+;             mov player2_toCol , al
+
+;     ;Here we excuted this data 
+;     callAppropriateMove Player2_color,player2_fromRow,player2_fromCol,player2_toRow,player2_toCol
+
+;     jmp checkkeygm
+
+
 
 w:
 ; push ax
@@ -1407,7 +1480,7 @@ mov cl,currRow
 mov selectedRow,cl
 drawSquareOnCell 03h,currRow,currColumn
 
-getAvailForSelectedPiece currRow,currColumn,1
+getAvailForSelectedPiece currRow,currColumn,Player1_color
 
 ;;;;;check available moves for the piece and draw them
 
@@ -1430,6 +1503,69 @@ drawSquareOnCell 07h,selectedRow,selectedCol
 mov selectedRow,0ffh
 mov selectedCol,0ffh
 resetavailmoves
+
+; ;   Send My Movement
+;     ;1
+;     send_code:
+;     ; Check that Transmitter Holding Register is Empty
+;             mov dx , 3FDH               ; Line Status Register
+
+;             In  al , dx                 ;Read Line Status
+;             AND al , 00100000b
+;             JZ  send_code
+;     ; If empty put the VALUE in Transmit data register
+;             mov dx , 3F8H               ; Transmit data register
+;             mov al,selectedPiece
+;             out dx , al
+;     ;2
+;     send_fr:
+;     ; Check that Transmitter Holding Register is Empty
+;             mov dx , 3FDH               ; Line Status Register
+
+;             In  al , dx                 ;Read Line Status
+;             AND al , 00100000b
+;             JZ  send_fr
+;     ; If empty put the VALUE in Transmit data register
+;             mov dx , 3F8H               ; Transmit data register
+;             mov al,selectedRow
+;             out dx , al
+;     ;3
+;     send_fc:
+;     ; Check that Transmitter Holding Register is Empty
+;             mov dx , 3FDH               ; Line Status Register
+
+;             In  al , dx                 ;Read Line Status
+;             AND al , 00100000b
+;             JZ  send_fc
+;     ; If empty put the VALUE in Transmit data register
+;             mov dx , 3F8H               ; Transmit data register
+;             mov al,selectedCol
+;             out dx , al
+;     ;4
+;     send_tr:
+;     ; Check that Transmitter Holding Register is Empty
+;             mov dx , 3FDH               ; Line Status Register
+
+;             In  al , dx                 ;Read Line Status
+;             AND al , 00100000b
+;             JZ  send_tr
+;     ; If empty put the VALUE in Transmit data register
+;             mov dx , 3F8H               ; Transmit data register
+;             mov al,currRow
+;             out dx , al
+;     ;5
+;     send_tc:
+;     ; Check that Transmitter Holding Register is Empty
+;             mov dx , 3FDH               ; Line Status Register
+
+;             In  al , dx                 ;Read Line Status
+;             AND al , 00100000b
+;             JZ  send_tc
+;     ; If empty put the VALUE in Transmit data register
+;             mov dx , 3F8H               ; Transmit data register
+;             mov al,currColumn
+;             out dx , al
+
 
 mov checkq,0
 noreset:
@@ -1594,7 +1730,14 @@ jmp checkkeygm
             cmp al,31h
             jz chatMode
             cmp al,32h
-            jz playgame
+            ; jz playgame
+
+            jnz sendInvitaion
+            ; ;p1 -> black
+            ; ;p2 -> blue
+            mov Player1_color,2
+            mov Player2_color,1
+            jmp playgame
 
             jmp sendInvitaion
 
@@ -1912,7 +2055,7 @@ ENDM getAvailForSelectedPiece
 .stack 64
 .data
 
-    khat db "--------------------------------------------------------------------------------$"
+    khat             db  "--------------------------------------------------------------------------------$"
 
     eatWP            db  "Piece eaten$"
     seconds          db  ?
@@ -2273,6 +2416,20 @@ ENDM getAvailForSelectedPiece
     fsend            db  0
     freceive         db  0
 
+    ; mynumb
+
+    ; ;---------------------------------------------------------------------------------------
+
+    Player1_color    db  0
+
+    ; player2_piece    db  0
+    ; player2_fromRow  db  0
+    ; player2_fromCol  db  0
+    ; player2_toRow    db  0
+    ; player2_toCol    db  0
+    Player2_color    db  0
+
+    ; ;---------------------------------------------------------------------------------------
 
 
 
@@ -2290,7 +2447,7 @@ ENDM getAvailForSelectedPiece
     messageF2        db  " - You pressed F2$"
     messageTemp      db  ' - Temporary notification bar for now. Happy Hacking!$'
     name1            db  30,?,30 dup('$')
-    name2            db  30,?,30 dup('$')             ;we received more bits than we expected;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;DANGER                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ;First byte is the size, second byte is the number of characters from the keyboard
+    name2            db  30,?,30 dup('$')                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ;we received more bits than we expected;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;DANGER                                        ;First byte is the size, second byte is the number of characters from the keyboard
     chatinvitation   db  'i want to enter chat $'
     GameInvitation   db  'i want to enter Game $'
 
@@ -2317,7 +2474,8 @@ main proc far
     ;    mov ah,0
     ;    mov al,13h
     ;    int 10h
-              
+
+
                                     usernameScreen   enterName, pressEnter
     ;Go to Main screen
     ;TODO: go to main screen
@@ -2374,13 +2532,13 @@ rookMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastRight
-                                    cmp              PNO,1
-                                    jne              p2
+                                    ; cmp              PNO,1
+                                    ; jne              p2
                                     mov              availMoves[bx],0ffh
-                                    jmp              e
-    p2:                             
-                                    mov              availMoves2[bx],0ffh
-    e:                              
+                                    ; jmp              e
+    ; p2:                             
+                                    ; mov              availMoves2[bx],0ffh
+    ; e:                              
                                     callDrawSquare   bx,04h
                                     inc              si                                                                                                                                                                                                                                                                         ;go to right boxes
                                     jmp              checkRight
@@ -2416,13 +2574,13 @@ rookMoves proc
                                     jl               preleft
     ; Friendly fire is disabled
     eatRight:                       
-                                    cmp              PNO,1
-                                    jne              p22
+                                    ; cmp              PNO,1
+                                    ; jne              p22
                                     mov              availMoves[bx],0ffh
-                                    jmp              e2
-    p22:                            
-                                    mov              availMoves2[bx],0ffh
-    e2:                             
+                                    ; jmp              e2
+    ; p22:                            
+                                    ; mov              availMoves2[bx],0ffh
+    ; e2:                             
                                     callDrawSquare   bx,04h
 
 
@@ -2454,13 +2612,13 @@ rookMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastLeft
-                                    cmp              PNO,1
-                                    jne              p23
+                                    ; cmp              PNO,1
+                                    ; jne              p23
                                     mov              availMoves[bx],0ffh
-                                    jmp              e3
-    p23:                            
-                                    mov              availMoves2[bx],0ffh
-    e3:                             
+                                    ; jmp              e3
+    ; p23:                            
+                                    ; mov              availMoves2[bx],0ffh
+    ; e3:                             
                                     callDrawSquare   bx,04h
                                     dec              si                                                                                                                                                                                                                                                                         ;go to right boxes
                                     jmp              checkLeft
@@ -2496,13 +2654,13 @@ rookMoves proc
                                     jl               preTop
     ; Friendly fire is disabled
     eatLeft:                        
-                                    cmp              PNO,1
-                                    jne              p24
+                                    ; cmp              PNO,1
+                                    ; jne              p24
                                     mov              availMoves[bx],0ffh
-                                    jmp              e4
-    p24:                            
-                                    mov              availMoves2[bx],0ffh
-    e4:                             
+                                    ; jmp              e4
+    ; p24:                            
+                                    ; mov              availMoves2[bx],0ffh
+    ; e4:                             
                                     callDrawSquare   bx,04h
 
     preTop:                         
@@ -2529,13 +2687,13 @@ rookMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastTop
-                                    cmp              PNO,1
-                                    jne              p25
+                                    ; cmp              PNO,1
+                                    ; jne              p25
                                     mov              availMoves[bx],0ffh
-                                    jmp              e5
-    p25:                            
-                                    mov              availMoves2[bx],0ffh
-    e5:                             
+                                    ; jmp              e5
+    ; p25:                            
+                                    ; mov              availMoves2[bx],0ffh
+    ; e5:                             
                                     callDrawSquare   bx,04h
                                     pop              bx
 
@@ -2575,13 +2733,13 @@ rookMoves proc
                                     jl               preBottom
     ; Friendly fire is disabled
     eatTop:                         
-                                    cmp              PNO,1
-                                    jne              p26
+                                    ; cmp              PNO,1
+                                    ; jne              p26
                                     mov              availMoves[bx],0ffh
-                                    jmp              e6
-    p26:                            
-                                    mov              availMoves2[bx],0ffh
-    e6:                             
+                                    ; jmp              e6
+    ; p26:                            
+                                    ; mov              availMoves2[bx],0ffh
+    ; e6:                             
                                     callDrawSquare   bx,04h
 
     preBottom:                      
@@ -2608,13 +2766,13 @@ rookMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastBottom
-                                    cmp              PNO,1
-                                    jne              p27
+                                    ; cmp              PNO,1
+                                    ; jne              p27
                                     mov              availMoves[bx],0ffh
-                                    jmp              e7
-    p27:                            
-                                    mov              availMoves2[bx],0ffh
-    e7:                             
+                                    ; jmp              e7
+    ; p27:                            
+                                    ; mov              availMoves2[bx],0ffh
+    ; e7:                             
                                     callDrawSquare   bx,04h
                                     pop              bx
 
@@ -2653,13 +2811,13 @@ rookMoves proc
                                     jl               rt91
     ; Friendly fire is disabled
     eatBottom:                      
-                                    cmp              PNO,1
-                                    jne              p28
+                                    ; cmp              PNO,1
+                                    ; jne              p28
                                     mov              availMoves[bx],0ffh
-                                    jmp              e8
-    p28:                            
-                                    mov              availMoves2[bx],0ffh
-    e8:                             
+                                    ; jmp              e8
+    ; p28:                            
+                                    ; mov              availMoves2[bx],0ffh
+    ; e8:                             
                                     callDrawSquare   bx,04h
 
 
@@ -2707,13 +2865,13 @@ bishopMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastBR
-                                    cmp              PNO,1
-                                    jne              p29
+                                    ; cmp              PNO,1
+                                    ; jne              p29
                                     mov              availMoves[bx],0ffh
-                                    jmp              e9
-    p29:                            
-                                    mov              availMoves2[bx],0ffh
-    e9:                             
+                                    ; jmp              e9
+    ; p29:                            
+                                    ; mov              availMoves2[bx],0ffh
+    ; e9:                             
                                     callDrawSquare   bx,04h
                                     pop              bx
                                     inc              bx
@@ -2753,13 +2911,13 @@ bishopMoves proc
     ; Friendly fire is disabled
     eatBR:                          
                                     callDrawSquare   bx,04h
-                                    cmp              PNO,1
-                                    jne              p210
+                                    ; cmp              PNO,1
+                                    ; jne              p210
                                     mov              availMoves[bx],0ffh
-                                    jmp              e10
-    p210:                           
-                                    mov              availMoves2[bx],0ffh
-    e10:                            
+                                    ; jmp              e10
+    ; p210:                           
+                                    ; mov              availMoves2[bx],0ffh
+    ; e10:                            
 
 
     precheckTL:                     
@@ -2790,13 +2948,13 @@ bishopMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastTL
-                                    cmp              PNO,1
-                                    jne              p211
+                                    ; cmp              PNO,1
+                                    ; jne              p211
                                     mov              availMoves[bx],0ffh
-                                    jmp              e11
-    p211:                           
-                                    mov              availMoves2[bx],0ffh
-    e11:                            
+                                    ; jmp              e11
+    ; p211:                           
+                                    ; mov              availMoves2[bx],0ffh
+    ; e11:                            
                                     callDrawSquare   bx,04h
                                     pop              bx
                                     dec              bx
@@ -2835,13 +2993,13 @@ bishopMoves proc
                                     jl               precheckTR
     ; Friendly fire is disabled
     eatTL:                          
-                                    cmp              PNO,1
-                                    jne              p212
+                                    ; cmp              PNO,1
+                                    ; jne              p212
                                     mov              availMoves[bx],0ffh
-                                    jmp              e12
-    p212:                           
-                                    mov              availMoves2[bx],0ffh
-    e12:                            
+                                    ; jmp              e12
+    ; p212:                           
+                                    ; mov              availMoves2[bx],0ffh
+    ; e12:                            
                                     callDrawSquare   bx,04h
 
 
@@ -2872,13 +3030,13 @@ bishopMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastTR
-                                    cmp              PNO,1
-                                    jne              p213
+                                    ; cmp              PNO,1
+                                    ; jne              p213
                                     mov              availMoves[bx],0ffh
-                                    jmp              e13
-    p213:                           
-                                    mov              availMoves2[bx],0ffh
-    e13:                            
+                                    ; jmp              e13
+    ; p213:                           
+                                    ; mov              availMoves2[bx],0ffh
+    ; e13:                            
                                     callDrawSquare   bx,04h
                                     pop              bx
                                     dec              bx
@@ -2917,13 +3075,13 @@ bishopMoves proc
                                     jl               precheckBL
     ; Friendly fire is disabled
     eatTR:                          
-                                    cmp              PNO,1
-                                    jne              p214
+                                    ; cmp              PNO,1
+                                    ; jne              p214
                                     mov              availMoves[bx],0ffh
-                                    jmp              e14
-    p214:                           
-                                    mov              availMoves2[bx],0ffh
-    e14:                            
+                                    ; jmp              e14
+    ; p214:                           
+                                    ; mov              availMoves2[bx],0ffh
+    ; e14:                            
                                     callDrawSquare   bx,04h
 
     precheckBL:                     
@@ -2953,13 +3111,13 @@ bishopMoves proc
                                     mov              al,grid[bx]
                                     cmp              al,00
                                     jnz              lastBL
-                                    cmp              PNO,1
-                                    jne              p215
+                                    ; cmp              PNO,1
+                                    ; jne              p215
                                     mov              availMoves[bx],0ffh
-                                    jmp              e15
-    p215:                           
-                                    mov              availMoves2[bx],0ffh
-    e15:                            
+                                    ; jmp              e15
+    ; p215:                           
+                                    ; mov              availMoves2[bx],0ffh
+    ; e15:                            
                                     callDrawSquare   bx,04h
                                     pop              bx
                                     inc              bx
@@ -2998,13 +3156,13 @@ bishopMoves proc
                                     jl               rt1
     ; Friendly fire is disabled
     eatBL:                          
-                                    cmp              PNO,1
-                                    jne              p216
+                                    ; cmp              PNO,1
+                                    ; jne              p216
                                     mov              availMoves[bx],0ffh
-                                    jmp              e16
-    p216:                           
-                                    mov              availMoves2[bx],0ffh
-    e16:                            
+                                    ; jmp              e16
+    ; p216:                           
+                                    ; mov              availMoves2[bx],0ffh
+    ; e16:                            
                                     callDrawSquare   bx,04h
 
     rt1:                            
@@ -3041,7 +3199,9 @@ HighlightAvailableForBKing proc
                                     mov              bh,0
                                     mov              cl,8
                                     lea              di,grid
-                                    lea              si,availMoves2
+                                    ; lea              si,availMoves2
+                                    lea              si,availMoves
+
                                     mul              cl
                                     add              di,ax                                                                                                                                                                                                                                                                      ;on current cell
                                     add              di,bx
@@ -3605,7 +3765,9 @@ HighlightAvailableForBKnight proc
                                     mov              bh,0
                                     mov              cl,8
                                     lea              di,grid
-                                    lea              si,availMoves2
+                                    ; lea              si,availMoves2
+                                    lea              si,availMoves
+
                                     mul              cl
                                     add              di,ax
                                     add              di,bx
@@ -3959,7 +4121,9 @@ HighlightAvailableForBPawnTwo proc
                                     mov              bl,col
                                     mov              bh,0
                                     mov              cl,8
-                                    lea              si,availMoves2
+                                    ; lea              si,availMoves2
+                                    lea              si,availMoves
+
                                     lea              di,grid
                                     cmp              ax,1
                                     JNE              notFirstStepP2
@@ -4037,7 +4201,9 @@ HighlightAvailableForBPawnToEat proc
                                     mov              bl,col
                                     mov              bh,0
                                     mov              cl,8
-                                    lea              si,availMoves2
+                                    ; lea              si,availMoves2
+                                    lea              si,availMoves
+
                                     lea              di,grid
                                     mul              cl
                                     add              di,ax                                                                                                                                                                                                                                                                      ;on cell
@@ -4239,9 +4405,9 @@ dollars proc
 
 chat proc
 
-    pusha
-         mov ax,0003
-    int 10h
+                                    pusha
+                                    mov              ax,0003
+                                    int              10h
 
     ; mov dx,3fbh                 ; Line Control Register
     ; mov al,10000000b            ;Set Divisor Latch Access Bit
@@ -4259,200 +4425,200 @@ chat proc
     ; mov al,00011011b
     ; out dx,al
 
-    mov dx, offset name1+2
-    mov ah, 9
-    int 21h
+                                    mov              dx, offset name1+2
+                                    mov              ah, 9
+                                    int              21h
 
-    mov ah, 2
-    mov dx, 0B00h
-    int 10h
+                                    mov              ah, 2
+                                    mov              dx, 0B00h
+                                    int              10h
 
-    mov dx,offset khat
-    mov ah,9
-    int 21h
+                                    mov              dx,offset khat
+                                    mov              ah,9
+                                    int              21h
 
-    mov ah,2
-    mov dx,0C00h
-    int 10h
+                                    mov              ah,2
+                                    mov              dx,0C00h
+                                    int              10h
 
-    mov dx,offset name2+2
-    mov ah,9
-    int 21h
+                                    mov              dx,offset name2+2
+                                    mov              ah,9
+                                    int              21h
 
-    mov ah,2
-    mov dx,0100h
-    int 10h
+                                    mov              ah,2
+                                    mov              dx,0100h
+                                    int              10h
 
-    mov bx, 0100h
-    mov cx, 0E00h
+                                    mov              bx, 0100h
+                                    mov              cx, 0E00h
 
-;--------------------------------------------------------------------
-    cht:
+    ;--------------------------------------------------------------------
+    cht:                            
 
-    mov dx , 3FDH ; Line Status Register
-   ; AGAIN:
-    In al , dx ;Read Line Status
-    AND al , 00100000b
-    JZ sent   
+                                    mov              dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+    ; AGAIN:
+                                    In               al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND              al , 00100000b
+                                    JZ               sent
 
-    send:
-    cmp ch, 25
-    jl con2 
-    push ax
-    push bx
-    push cx
-    push dx
-    mov ax, 070Bh
-    mov bh, 07
-    mov cx, 0E00h
-    mov dx, 184Fh
-    int 10h
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    mov cx, 0E00h
-    con2:
+    send:                           
+                                    cmp              ch, 25
+                                    jl               con2
+                                    push             ax
+                                    push             bx
+                                    push             cx
+                                    push             dx
+                                    mov              ax, 070Bh
+                                    mov              bh, 07
+                                    mov              cx, 0E00h
+                                    mov              dx, 184Fh
+                                    int              10h
+                                    pop              dx
+                                    pop              cx
+                                    pop              bx
+                                    pop              ax
+                                    mov              cx, 0E00h
+    con2:                           
 
     ; mov ah,0ch
     ; mov al, 0
     ; int 21h
-    mov al, '$'
-    mov ah,1
-    int 16h   
+                                    mov              al, '$'
+                                    mov              ah,1
+                                    int              16h
     
-    mov dx , 3F8H ; Transmit data register
+                                    mov              dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
 
-    cmp al, 1bh
-    jne nort
-    jmp rt
+                                    cmp              al, 1bh
+                                    jne              nort
+                                    jmp              rt
 
-    nort:
-    cmp ah,1ch
-    jz sentr
-    jnz schar
+    nort:                           
+                                    cmp              ah,1ch
+                                    jz               sentr
+                                    jnz              schar
 
-    sentr:
-    inc bh
-    mov bl,0
-    mov al,ah
-    out dx, al
-    mov ah,0ch
-    mov al,0
-    int 21h 
-    jmp sent
+    sentr:                          
+                                    inc              bh
+                                    mov              bl,0
+                                    mov              al,ah
+                                    out              dx, al
+                                    mov              ah,0ch
+                                    mov              al,0
+                                    int              21h
+                                    jmp              sent
 
-    schar:
-    cmp al, '$'
-    jz sent 
-    push dx
-    mov ah,2
-    mov dx,bx 
-    push bx
-    mov bh,0
-    int 10h     ; move cursor
-    pop bx
-    mov ah,2
-    mov dl,al
-    int 21h     ; display char
-    pop dx
+    schar:                          
+                                    cmp              al, '$'
+                                    jz               sent
+                                    push             dx
+                                    mov              ah,2
+                                    mov              dx,bx
+                                    push             bx
+                                    mov              bh,0
+                                    int              10h                                                                                                                                                                                                                                                                        ; move cursor
+                                    pop              bx
+                                    mov              ah,2
+                                    mov              dl,al
+                                    int              21h                                                                                                                                                                                                                                                                        ; display char
+                                    pop              dx
     ; mov al, '$'
-    inc bl
-    cmp bl,80
-    jnz notendl 
-    mov bl,0
-    inc bh
+                                    inc              bl
+                                    cmp              bl,80
+                                    jnz              notendl
+                                    mov              bl,0
+                                    inc              bh
     
-    notendl:
-    out dx , al
-    mov ah,0ch
-    mov al,0
-    int 21h      ; clear buffer only after sending
+    notendl:                        
+                                    out              dx , al
+                                    mov              ah,0ch
+                                    mov              al,0
+                                    int              21h; clear buffer only after sending
 
 
 
-    sent:
-    cmp bh, 12
-    jl con 
-    push ax
-    push bx
-    push cx
-    push dx
-    mov ax, 060Bh
-    mov bh, 07
-    mov cx, 0100h
-    mov dx, 0B4Fh
-    int 10h
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    mov bx, 0100h
+    sent:                           
+                                    cmp              bh, 12
+                                    jl               con
+                                    push             ax
+                                    push             bx
+                                    push             cx
+                                    push             dx
+                                    mov              ax, 060Bh
+                                    mov              bh, 07
+                                    mov              cx, 0100h
+                                    mov              dx, 0B4Fh
+                                    int              10h
+                                    pop              dx
+                                    pop              cx
+                                    pop              bx
+                                    pop              ax
+                                    mov              bx, 0100h
 
-    con:
-    mov dx , 3FDH ; Line Status Register
-    CHK:
-    in al , dx
-    AND al , 1
-    JNZ rec
-    jmp cht       ; check if ready
+    con:                            
+                                    mov              dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+    CHK:                            
+                                    in               al , dx
+                                    AND              al , 1
+                                    JNZ              rec
+                                    jmp              cht                                                                                                                                                                                                                                                                        ; check if ready
 
-    rec:
-    mov dx , 03F8H
-    in al , dx
+    rec:                            
+                                    mov              dx , 03F8H
+                                    in               al , dx
     ; mov VALUE , al
-    cmp al,1ch
-    jz nwline
-    jnz pchar
+                                    cmp              al,1ch
+                                    jz               nwline
+                                    jnz              pchar
 
 
-    nwline:
-    push dx
-    inc ch
-    mov cl,0
+    nwline:                         
+                                    push             dx
+                                    inc              ch
+                                    mov              cl,0
     ; mov dx,offset newline
     ; mov ah,9
     ; int 21h
     ; mov ah,2
-    ; mov dx,bx 
+    ; mov dx,bx
     ; int 10h     ; move cursor
-    pop dx
-    jmp recd
+                                    pop              dx
+                                    jmp              recd
 
-    pchar:
-    push dx
-    mov ah,2
-    push bx
-    mov bh,0
-    mov dx,cx
-    int 10h    ; move cursor
-    pop bx
+    pchar:                          
+                                    push             dx
+                                    mov              ah,2
+                                    push             bx
+                                    mov              bh,0
+                                    mov              dx,cx
+                                    int              10h                                                                                                                                                                                                                                                                        ; move cursor
+                                    pop              bx
 
-    mov dl,al
-    mov ah,2
-    int 21h    ; display char
-    pop dx
+                                    mov              dl,al
+                                    mov              ah,2
+                                    int              21h                                                                                                                                                                                                                                                                        ; display char
+                                    pop              dx
     ; mov ah,2
-    ; mov dx,bx 
+    ; mov dx,bx
     ; int 10h    ; move cursor
-    inc cl
-    cmp cl,80
-    jnz notendl2 
-    mov cl,0
-    inc ch
-    notendl2:
+                                    inc              cl
+                                    cmp              cl,80
+                                    jnz              notendl2
+                                    mov              cl,0
+                                    inc              ch
+    notendl2:                       
 
 
    
     ; jmp recd
 
-    recd:
-    jmp cht
+    recd:                           
+                                    jmp              cht
 
-rt:
-    popa
-    ret
+    rt:                             
+                                    popa
+                                    ret
 
-                    endp
+                                    endp
 
 end main 
