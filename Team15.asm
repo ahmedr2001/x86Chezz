@@ -1136,7 +1136,7 @@ sendInvitaion:
             jnz checkkey
 
             cmp al,31h
-            jz f1
+            jz chatMode
             cmp al,32h
             jz playgame
             notificationBar hello,exclamation,name1,GameInvitation
@@ -1152,9 +1152,10 @@ sendInvitaion:
      f1: 
      cmp al,31h
      jnz f2
+     chatMode:
      ;code here for entring chatting mode
+     call chat
      mov keypressed,al
-
      ;to consume the buffer
      jmp consumebufferms
 
@@ -1591,7 +1592,7 @@ jmp checkkeygm
 
             mov al,charSend
             cmp al,31h
-            jz f1
+            jz chatMode
             cmp al,32h
             jz playgame
 
@@ -1910,6 +1911,8 @@ ENDM getAvailForSelectedPiece
 .386
 .stack 64
 .data
+
+    khat db "--------------------------------------------------------------------------------$"
 
     eatWP            db  "Piece eaten$"
     seconds          db  ?
@@ -4233,5 +4236,223 @@ dollars proc
 
                                     ret
                                     endp
+
+chat proc
+
+    pusha
+         mov ax,0003
+    int 10h
+
+    ; mov dx,3fbh                 ; Line Control Register
+    ; mov al,10000000b            ;Set Divisor Latch Access Bit
+    ; out dx,al                   ;Out it
+   
+    ; mov dx,3f8h
+    ; mov al,0ch
+    ; out dx,al
+   
+    ; mov dx,3f9h
+    ; mov al,00h
+    ; out dx,al
+   
+    ; mov dx,3fbh
+    ; mov al,00011011b
+    ; out dx,al
+
+    mov dx, offset name1+2
+    mov ah, 9
+    int 21h
+
+    mov ah, 2
+    mov dx, 0B00h
+    int 10h
+
+    mov dx,offset khat
+    mov ah,9
+    int 21h
+
+    mov ah,2
+    mov dx,0C00h
+    int 10h
+
+    mov dx,offset name2+2
+    mov ah,9
+    int 21h
+
+    mov ah,2
+    mov dx,0100h
+    int 10h
+
+    mov bx, 0100h
+    mov cx, 0E00h
+
+;--------------------------------------------------------------------
+    cht:
+
+    mov dx , 3FDH ; Line Status Register
+   ; AGAIN:
+    In al , dx ;Read Line Status
+    AND al , 00100000b
+    JZ sent   
+
+    send:
+    cmp ch, 25
+    jl con2 
+    push ax
+    push bx
+    push cx
+    push dx
+    mov ax, 070Bh
+    mov bh, 07
+    mov cx, 0E00h
+    mov dx, 184Fh
+    int 10h
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    mov cx, 0E00h
+    con2:
+
+    ; mov ah,0ch
+    ; mov al, 0
+    ; int 21h
+    mov al, '$'
+    mov ah,1
+    int 16h   
+    
+    mov dx , 3F8H ; Transmit data register
+
+    cmp al, 1bh
+    jne nort
+    jmp rt
+
+    nort:
+    cmp ah,1ch
+    jz sentr
+    jnz schar
+
+    sentr:
+    inc bh
+    mov bl,0
+    mov al,ah
+    out dx, al
+    mov ah,0ch
+    mov al,0
+    int 21h 
+    jmp sent
+
+    schar:
+    cmp al, '$'
+    jz sent 
+    push dx
+    mov ah,2
+    mov dx,bx 
+    push bx
+    mov bh,0
+    int 10h     ; move cursor
+    pop bx
+    mov ah,2
+    mov dl,al
+    int 21h     ; display char
+    pop dx
+    ; mov al, '$'
+    inc bl
+    cmp bl,80
+    jnz notendl 
+    mov bl,0
+    inc bh
+    
+    notendl:
+    out dx , al
+    mov ah,0ch
+    mov al,0
+    int 21h      ; clear buffer only after sending
+
+
+
+    sent:
+    cmp bh, 12
+    jl con 
+    push ax
+    push bx
+    push cx
+    push dx
+    mov ax, 060Bh
+    mov bh, 07
+    mov cx, 0100h
+    mov dx, 0B4Fh
+    int 10h
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    mov bx, 0100h
+
+    con:
+    mov dx , 3FDH ; Line Status Register
+    CHK:
+    in al , dx
+    AND al , 1
+    JNZ rec
+    jmp cht       ; check if ready
+
+    rec:
+    mov dx , 03F8H
+    in al , dx
+    ; mov VALUE , al
+    cmp al,1ch
+    jz nwline
+    jnz pchar
+
+
+    nwline:
+    push dx
+    inc ch
+    mov cl,0
+    ; mov dx,offset newline
+    ; mov ah,9
+    ; int 21h
+    ; mov ah,2
+    ; mov dx,bx 
+    ; int 10h     ; move cursor
+    pop dx
+    jmp recd
+
+    pchar:
+    push dx
+    mov ah,2
+    push bx
+    mov bh,0
+    mov dx,cx
+    int 10h    ; move cursor
+    pop bx
+
+    mov dl,al
+    mov ah,2
+    int 21h    ; display char
+    pop dx
+    ; mov ah,2
+    ; mov dx,bx 
+    ; int 10h    ; move cursor
+    inc cl
+    cmp cl,80
+    jnz notendl2 
+    mov cl,0
+    inc ch
+    notendl2:
+
+
+   
+    ; jmp recd
+
+    recd:
+    jmp cht
+
+rt:
+    popa
+    ret
+
+                    endp
 
 end main 
