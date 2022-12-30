@@ -605,33 +605,33 @@ checkAvailable
 cmp isAvailableCell,0
 jz checks
 drawSquareOnCell 04h,currRow,currColumn
-jmp checkp2
+jmp end
 
 checks:
 checkSelected currRow,currColumn
 cmp isSelectedCell,0
 jz removeh
 drawSquareOnCell 03h,currRow,currColumn
-jmp checkp2
+jmp end
 
 removeh:
 drawSquareOnCell 07h,currRow,currColumn
 
 
-checkp2:
+; checkp2:
 
-checkAvailable2
-cmp isAvailableCell2,0
-jz checks2
-drawSquareOnCell 04h,currRow2,currColumn2
-jmp end
+; checkAvailable2
+; cmp isAvailableCell2,0
+; jz checks2
+; drawSquareOnCell 04h,currRow2,currColumn2
+; jmp end
 
-checks2:
-checkSelected2 currRow2,currColumn2
-cmp isSelectedCell2,0
-jz removeh2
-drawSquareOnCell 03h,currRow2,currColumn2
-jmp end
+; checks2:
+; checkSelected2 currRow2,currColumn2
+; cmp isSelectedCell2,0
+; jz removeh2
+; drawSquareOnCell 03h,currRow2,currColumn2
+; jmp end
 
 removeh2:
 drawSquareOnCell 07h,currRow2,currColumn2
@@ -803,6 +803,7 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
      ;mov ah,1
 ;     int 21h        
 ;     
+     
      
 enterms:
      mov ah,5
@@ -986,7 +987,7 @@ enterms:
 
     drawSquareOnCell 0eh,currRow,currColumn
 
-    drawSquareOnCell 0eh,currRow2,currColumn2
+    ; drawSquareOnCell 0eh,currRow2,currColumn2
 
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
@@ -1018,7 +1019,7 @@ w:
 ; pop ax
 
 cmp al,77h
-jnz arrowup
+jnz s
 
 ;navigate up
 cmp currRow,0
@@ -1030,7 +1031,7 @@ eraseHighlight
 ; drawSquareOnCell 07h,currRow,currColumn
 dec currRow
 drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
+; drawSquareOnCell 0eh,currRow2,currColumn2
 
 skipnavu:
 
@@ -1038,25 +1039,10 @@ skipnavu:
 
 jmp consumebuffergm
 
-arrowup:
-cmp ah,48h
-jne s
-
-;navigate up
-cmp currRow2,0
-je skipnavu2
-
-eraseHighlight
-dec currRow2
-drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
-skipnavu2:
-
-jmp consumebuffergm
 
 s:
 cmp al,73h
-jnz arrowdown
+jnz a
 
 cmp currRow,7
 je skipnavd
@@ -1066,30 +1052,14 @@ eraseHighlight
 
 inc currRow
 drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
+; drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavd:
-jmp consumebuffergm
-
-arrowdown:
-cmp ah,50h
-jne a
-
-cmp currRow2,7
-je skipnavd2
-
-
-eraseHighlight
-
-inc currRow2
-drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
-skipnavd2:
 jmp consumebuffergm
 
 
 a:
 cmp al,61h
-jnz arrowleft 
+jnz d 
 
 cmp currColumn,0
 je skipnavl
@@ -1098,28 +1068,14 @@ eraseHighlight
 
 dec currColumn
 drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
+; drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavl:
 jmp consumebuffergm
 
-arrowleft:
-cmp ah,4bh
-jne d
-
-cmp currColumn2,0
-je skipnavl2
-
-eraseHighlight
-
-dec currColumn2
-drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
-skipnavl2:
-jmp consumebuffergm
 
 d:
 cmp al,64h
-jnz arrowright
+jnz preq
 
 cmp currColumn,7
 je skipnavr
@@ -1128,23 +1084,10 @@ eraseHighlight
 
 inc currColumn
 drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
+; drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavr:
 jmp consumebuffergm
 
-arrowright:
-cmp ah,4dh
-jne preq
-cmp currColumn2,7
-je skipnavr2
-eraseHighlight
-inc currColumn2
-
-drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
-skipnavr2:
-
-jmp consumebuffergm
 
 preq:
 cmp checkq,0
@@ -1200,7 +1143,7 @@ jmp consumebuffergm
 
 esc2:
 cmp al,1bh
-jnz presel2
+jnz consumebuffergm
 
 
 ; mov keypressed,al
@@ -1217,82 +1160,10 @@ drawSquareOnCell 0eh,currRow,currColumn
 mov checkq,0
 jmp consumebuffergm
 
-presel2:
-cmp checkq2,0
-je sel2
-jne sel22
 
-sel2:
-cmp al,2fh
-jne exitgame2
-checkEmptyCell currRow2,currColumn2
-cmp isEmptyCell,0
-jne preventSelection2
-mov cl,currColumn2
-mov selectedCol2,cl
-mov cl,currRow2
-mov selectedRow2,cl
-drawSquareOnCell 03h,currRow2,currColumn2
-
-getAvailForSelectedPiece currRow2,currColumn2,2
-mov checkq2,1
-preventSelection2:
-jmp consumebuffergm
-
-sel22:
-cmp al,2fh
-jne esc22
-
-; mov al,'0'
-; mov ah,0ah
-; int 10h
-
-; callAppropriateMove 2,selectedRow2,selectedCol2,currRow2,currColumn2
-; ; 
-; cmp hasmoved2,0
-; je noreset2
-; drawSquareOnCell 07h,selectedRow2,selectedCol2
-; mov selectedRow2,0ffh
-; mov selectedCol2,0ffh
-; resetavailmoves2
-; ; 
-; mov checkq2,0
-; noreset2:
-
-jmp consumebuffergm
-
-esc22:
-cmp al,2eh
-jnz consumebuffergm
-
-
-
-drawSquareOnCell 07,selectedRow2,selectedCol2
-mov selectedRow2,0ffh
-mov selectedCol2,0ffh
-
-
-resetavailmoves2
-
-drawSquareOnCell 0eh,currRow2,currColumn2
-mov checkq2,0
-jmp consumebuffergm
-
-exitgame2:
-cmp al,2eh
-jne consumebuffergm
-
-mov ah,0
-int 16h
-
- mov ax, 0003h
-     int 10h
-
-jmp st
-; jmp consumebuffergm
 exitgame:
 cmp al,1bh
-jnz presel2
+jnz consumebuffergm
 
 ;consume buffet then go to main screen
 
@@ -1303,10 +1174,6 @@ int 16h
      int 10h
 
 jmp st
-
-
-jmp consumebuffergm
-
 
 consumebuffergm:
 mov ah,0
@@ -1365,7 +1232,7 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winM
     mov ax, cooldown[bx]
     sub dx, ax
     cmp dx, 50
-    jl noMove
+    ; jl noMove
 
     eraseImage fromColumn, fromRow, greyCell, whiteCell
     ; lea si, grid
@@ -2020,6 +1887,13 @@ ENDM getAvailForSelectedPiece
     IsmailRow        db  ?
     IsmailCol        db  ?
     PNO              db  ?
+
+
+
+    value    db ?,"$"                                                     ;Data to recive in
+    charSend db ?,"$"  
+
+
 .code
 
         
