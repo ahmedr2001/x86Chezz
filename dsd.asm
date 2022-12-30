@@ -1185,17 +1185,17 @@ q2:
 cmp al,71h
 jne esc2
 
-; callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
+callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
 
-; cmp hasmoved,0
-; je noreset
-; drawSquareOnCell 07h,selectedRow,selectedCol
-; mov selectedRow,0ffh
-; mov selectedCol,0ffh
-; resetavailmoves
+cmp hasmoved,0
+je noreset
+drawSquareOnCell 07h,selectedRow,selectedCol
+mov selectedRow,0ffh
+mov selectedCol,0ffh
+resetavailmoves
 
-; mov checkq,0
-; noreset:
+mov checkq,0
+noreset:
 jmp consumebuffergm
 
 esc2:
@@ -1247,17 +1247,17 @@ jne esc22
 ; mov ah,0ah
 ; int 10h
 
-callAppropriateMove 2,selectedRow2,selectedCol2,currRow2,currColumn2
-; 
-cmp hasmoved2,0
-je noreset2
-drawSquareOnCell 07h,selectedRow2,selectedCol2
-mov selectedRow2,0ffh
-mov selectedCol2,0ffh
-resetavailmoves2
-; 
-mov checkq2,0
-noreset2:
+; callAppropriateMove 2,selectedRow2,selectedCol2,currRow2,currColumn2
+; ; 
+; cmp hasmoved2,0
+; je noreset2
+; drawSquareOnCell 07h,selectedRow2,selectedCol2
+; mov selectedRow2,0ffh
+; mov selectedCol2,0ffh
+; resetavailmoves2
+; ; 
+; mov checkq2,0
+; noreset2:
 
 jmp consumebuffergm
 
