@@ -1,8 +1,89 @@
 ;Authors:
 ;CHESS GAME
 ;---------------------------
-include mymacros.inc
+;--------------------------------
+; Macro to move cursor to certain position
+; Takes position as parameter
+moveCursor MACRO position
+    pusha    
+    mov ah, 2
+    mov dx, position
+    int 10h             ; use interrupt 10/2, dx contains position
+    popa
+ENDM moveCursor
+;----------------------------------
 
+;--------------------------------------
+; Macro to print string
+; Takes message as parameter
+printString MACRO message
+    mov ah, 9
+    mov dx, offset message
+    int 21h
+ENDM printString 
+;--------------------------------------   
+
+;----------------------------------
+; Macro to print given char given number of times
+; with given colors
+; Takes char, count, back color front color
+printCharColorTimes MACRO char, count, backfront
+    mov ah, 9
+    mov bh, 0
+    mov al, char
+    mov cx, count
+    mov bl, backfront
+    int 10h                 ; interrupt 10/9
+ENDM printCharColorTimes    
+;----------------------------------
+
+;----------------------------------
+; Macro to draw notification bar
+; Takes nothing so far
+notificationBar MACRO hello, exclamation, name1, messageTemp
+    moveCursor 1700h        ; move the cursor to row 22 column 0
+    
+    printCharColorTimes '-', 80, 0fh  ; Print '-' with white foreground black background 80 times (whole screen width)
+    
+    moveCursor 1800h
+
+    printString hello
+    printString name1+2
+    printString exclamation
+    printString messageTemp
+; CHECK: 
+;     mov ah,0ch
+;     mov al,0
+;     int 21h
+;     mov ah, 1
+;     int 16h
+;     jz CHECK
+;     cmp ah, 3bh
+;     je PRINTMESSAGEF1
+;     cmp ah, 3ch
+;     je PRINTMESSAGEF2
+;     jmp CHECK
+
+; PRINTMESSAGEF1:
+;     moveCursor 1800h
+;     printCharColorTimes ' ', 80, 0fh
+;     moveCursor 1800h
+;     mov ah, 9
+;     mov dx, offset messageF1
+;     int 21h
+;     jmp CHECK
+
+; PRINTMESSAGEF2:
+;     moveCursor 1800h
+;     printCharColorTimes ' ', 80, 0fh
+;     moveCursor 1800h
+;     mov ah, 9
+;     mov dx, offset messageF2
+;     int 21h
+;     jmp CHECK
+ENDM notificationBar
+;-----------------------------------
+; extrn ism:byte
 callDrawSquare macro cellNumber,color
 pusha
 
@@ -605,33 +686,33 @@ checkAvailable
 cmp isAvailableCell,0
 jz checks
 drawSquareOnCell 04h,currRow,currColumn
-jmp checkp2
+jmp end
 
 checks:
 checkSelected currRow,currColumn
 cmp isSelectedCell,0
 jz removeh
 drawSquareOnCell 03h,currRow,currColumn
-jmp checkp2
+jmp end
 
 removeh:
 drawSquareOnCell 07h,currRow,currColumn
 
 
-checkp2:
+; checkp2:
 
-checkAvailable2
-cmp isAvailableCell2,0
-jz checks2
-drawSquareOnCell 04h,currRow2,currColumn2
-jmp end
+; checkAvailable2
+; cmp isAvailableCell2,0
+; jz checks2
+; drawSquareOnCell 04h,currRow2,currColumn2
+; jmp end
 
-checks2:
-checkSelected2 currRow2,currColumn2
-cmp isSelectedCell2,0
-jz removeh2
-drawSquareOnCell 03h,currRow2,currColumn2
-jmp end
+; checks2:
+; checkSelected2 currRow2,currColumn2
+; cmp isSelectedCell2,0
+; jz removeh2
+; drawSquareOnCell 03h,currRow2,currColumn2
+; jmp end
 
 removeh2:
 drawSquareOnCell 07h,currRow2,currColumn2
@@ -804,9 +885,35 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
 ;     int 21h        
 ;     
      
+     ; initinalize COM
+    ;Set Divisor Latch Access Bit
+            mov dx,3fbh               ; Line Control Register
+            mov al,10000000b          ;Set Divisor Latch Access Bit
+            out dx,al                 ;Out it
+    ;Set LSB byte of the Baud Rate Divisor Latch register.
+            mov dx,3f8h
+            mov al,0ch
+            out dx,al
+
+    ;Set MSB byte of the Baud Rate Divisor Latch register.
+            mov dx,3f9h
+            mov al,00h
+            out dx,al
+
+    ;Set port configuration
+            mov dx,3fbh
+            mov al,00011011b
+            out dx,al
+
+
+
+
+
+
+; notificationBar hello,exclamation,name2,winMessageP1
 enterms:
      mov ah,5
-     mov al,0
+     mov al,0o
      int 10h
             
      ;set cursor position       
@@ -849,15 +956,198 @@ enterms:
      int 21h     
              
     notificationBar hello, exclamation, name1, messageTemp
+   
+presend:
+ mov dx , 3FDH             ; Line Status Register
+
+            In  al , dx               ;Read Line Status
+            AND al , 00100000b
+            JZ  presend
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H             ; Transmit data register
+            mov al,1
+            out dx , al
+
+preReceive:
+
+
+ mov dx , 3FDH             ; Line Status Register
+            in  al , dx
+            AND al , 1
+            JZ  preReceive                  ;if no data(reciverd) then check if i want to send
+    ;yes, data recived
+    ;Here we get this data
+    ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in  al , dx
+            mov VALUE , al
+
+
+
+
+   ; getnamelp:
+lea  si,name1
+lea di,name2
+
+nameExchange:
+            mov dx , 3FDH             ; Line Status Register
+
+            In  al , dx               ;Read Line Status
+            AND al , 00100000b
+            JZ  ReceiveName
+            cmp fsend,1
+            jz ReceiveName
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H             ; Transmit data register
+            mov al,[si]
+            out dx , al
+
+            cmp [si],'$'
+            jz FinishSend
+
+            inc si
+            jmp ReceiveName
+
+FinishSend:
+mov fsend,1
+cmp freceive,1
+jz sendInvitaion
+
+ReceiveName:
+            mov dx , 3FDH             ; Line Status Register
+            in  al , dx
+            AND al , 1
+            JZ  nameExchange                  ;if no data(reciverd) then check if i want to send
+    ;yes, data recived
+    ;Here we get this data
+    ;If Ready read the VALUE in Receive data register
+        cmp freceive,1
+        jz nameExchange
+            mov dx , 03F8H
+            in  al , dx
+            mov VALUE , al
+            mov [di],al
+
+            cmp al,'$'
+            jz finishreceive
+
+            inc di
+            jmp nameExchange
+
+finishreceive:
+mov freceive,1
+cmp fsend,1
+jz sendInvitaion
+jnz nameExchange
+
+
             
+sendInvitaion:
      ;checks if kay pressed and check which key       
      checkkey:
      mov ah,1
      int 16h   
-     jnz f1
-     jz checkkey
+     jnz ckeckf1
+     jz ReceiveInv
+
+     
+    ckeckf1:
+    cmp al,31h
+    jnz checkf2
+    mov charSend,al
+    notificationBar hello, exclamation, name1, chatinvitation
     
+    sendf1:
+    ; Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH             ; Line Status Register
+            In  al , dx               ;Read Line Status
+            AND al , 00100000b
+            JZ  ReceiveInv
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H             ; Transmit data register
+            mov al,charSend
+            out dx , al
+            ;consume buffer
+            mov ah,0h
+            int 16h
+            jmp ReceiveResponse
+
+
+
+    checkf2:
+    cmp al,32h
+    jnz checkexit
+    mov charSend,al
+    notificationBar hello, exclamation, name1, GameInvitation;;;
     
+    sendf2:
+    ; Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH             ; Line Status Register
+            In  al , dx               ;Read Line Status
+            AND al , 00100000b
+            JZ  ReceiveInv
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H             ; Transmit data register
+            mov al,charSend
+            out dx , al
+            ;consume buffer
+            mov ah,0h
+            int 16h
+            jmp ReceiveResponse
+
+
+    checkexit:
+    cmp al,1bh
+    jnz checkkey
+    mov charSend,al
+
+    sendExit:
+    ; Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH             ; Line Status Register
+            In  al , dx               ;Read Line Status
+            AND al , 00100000b
+            JZ  ReceiveInv
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H             ; Transmit data register
+            mov al,charSend
+            out dx , al
+            ;consume buffer
+            mov ah,0h
+            int 16h
+            jmp exitgame
+
+
+
+    ReceiveResponse:
+    ;Here we chack if there is data (send from user2)
+    ;Check that Data Ready
+            mov dx , 3FDH             ; Line Status Register
+            in  al , dx
+            AND al , 1
+            JZ  ReceiveResponse                  ;if no data(reciverd) then check if i want to send
+    ;yes, data recived
+    ;Here we get this data
+    ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in  al , dx
+            mov VALUE , al
+
+            cmp al,charSend
+            jnz checkkey
+
+            cmp al,31h
+            jz f1
+            cmp al,32h
+            jz playgame
+            notificationBar hello,exclamation,name1,GameInvitation
+            cmp al,1bh
+            jz checkkey
+            jmp ReceiveInv
+
+
+
+    
+
     
      f1: 
      cmp al,31h
@@ -872,7 +1162,11 @@ enterms:
      f2:
      cmp al,32h
      jnz escape
-     ;code here for entring game mode
+
+;########################### Start Game Mode (We assume that)
+;code here for entring game mode
+playgame:
+
      MOV AH, 0
     MOV AL, 13h
     INT 10h
@@ -986,7 +1280,7 @@ enterms:
 
     drawSquareOnCell 0eh,currRow,currColumn
 
-    drawSquareOnCell 0eh,currRow2,currColumn2
+    ; drawSquareOnCell 0eh,currRow2,currColumn2
 
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
 
@@ -1018,7 +1312,7 @@ w:
 ; pop ax
 
 cmp al,77h
-jnz arrowup
+jnz s
 
 ;navigate up
 cmp currRow,0
@@ -1030,7 +1324,7 @@ eraseHighlight
 ; drawSquareOnCell 07h,currRow,currColumn
 dec currRow
 drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
+; drawSquareOnCell 0eh,currRow2,currColumn2
 
 skipnavu:
 
@@ -1038,25 +1332,10 @@ skipnavu:
 
 jmp consumebuffergm
 
-arrowup:
-cmp ah,48h
-jne s
-
-;navigate up
-cmp currRow2,0
-je skipnavu2
-
-eraseHighlight
-dec currRow2
-drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
-skipnavu2:
-
-jmp consumebuffergm
 
 s:
 cmp al,73h
-jnz arrowdown
+jnz a
 
 cmp currRow,7
 je skipnavd
@@ -1066,30 +1345,14 @@ eraseHighlight
 
 inc currRow
 drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
+; drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavd:
-jmp consumebuffergm
-
-arrowdown:
-cmp ah,50h
-jne a
-
-cmp currRow2,7
-je skipnavd2
-
-
-eraseHighlight
-
-inc currRow2
-drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
-skipnavd2:
 jmp consumebuffergm
 
 
 a:
 cmp al,61h
-jnz arrowleft 
+jnz d 
 
 cmp currColumn,0
 je skipnavl
@@ -1098,28 +1361,14 @@ eraseHighlight
 
 dec currColumn
 drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
+; drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavl:
 jmp consumebuffergm
 
-arrowleft:
-cmp ah,4bh
-jne d
-
-cmp currColumn2,0
-je skipnavl2
-
-eraseHighlight
-
-dec currColumn2
-drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
-skipnavl2:
-jmp consumebuffergm
 
 d:
 cmp al,64h
-jnz arrowright
+jnz preq
 
 cmp currColumn,7
 je skipnavr
@@ -1128,23 +1377,10 @@ eraseHighlight
 
 inc currColumn
 drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
+; drawSquareOnCell 0eh,currRow2,currColumn2
 skipnavr:
 jmp consumebuffergm
 
-arrowright:
-cmp ah,4dh
-jne preq
-cmp currColumn2,7
-je skipnavr2
-eraseHighlight
-inc currColumn2
-
-drawSquareOnCell 0eh,currRow,currColumn
-drawSquareOnCell 0eh,currRow2,currColumn2
-skipnavr2:
-
-jmp consumebuffergm
 
 preq:
 cmp checkq,0
@@ -1185,22 +1421,22 @@ q2:
 cmp al,71h
 jne esc2
 
-; callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
+callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
 
-; cmp hasmoved,0
-; je noreset
-; drawSquareOnCell 07h,selectedRow,selectedCol
-; mov selectedRow,0ffh
-; mov selectedCol,0ffh
-; resetavailmoves
+cmp hasmoved,0
+je noreset
+drawSquareOnCell 07h,selectedRow,selectedCol
+mov selectedRow,0ffh
+mov selectedCol,0ffh
+resetavailmoves
 
-; mov checkq,0
-; noreset:
+mov checkq,0
+noreset:
 jmp consumebuffergm
 
 esc2:
 cmp al,1bh
-jnz presel2
+jnz consumebuffergm
 
 
 ; mov keypressed,al
@@ -1217,82 +1453,10 @@ drawSquareOnCell 0eh,currRow,currColumn
 mov checkq,0
 jmp consumebuffergm
 
-presel2:
-cmp checkq2,0
-je sel2
-jne sel22
 
-sel2:
-cmp al,2fh
-jne exitgame2
-checkEmptyCell currRow2,currColumn2
-cmp isEmptyCell,0
-jne preventSelection2
-mov cl,currColumn2
-mov selectedCol2,cl
-mov cl,currRow2
-mov selectedRow2,cl
-drawSquareOnCell 03h,currRow2,currColumn2
-
-getAvailForSelectedPiece currRow2,currColumn2,2
-mov checkq2,1
-preventSelection2:
-jmp consumebuffergm
-
-sel22:
-cmp al,2fh
-jne esc22
-
-; mov al,'0'
-; mov ah,0ah
-; int 10h
-
-callAppropriateMove 2,selectedRow2,selectedCol2,currRow2,currColumn2
-; 
-cmp hasmoved2,0
-je noreset2
-drawSquareOnCell 07h,selectedRow2,selectedCol2
-mov selectedRow2,0ffh
-mov selectedCol2,0ffh
-resetavailmoves2
-; 
-mov checkq2,0
-noreset2:
-
-jmp consumebuffergm
-
-esc22:
-cmp al,2eh
-jnz consumebuffergm
-
-
-
-drawSquareOnCell 07,selectedRow2,selectedCol2
-mov selectedRow2,0ffh
-mov selectedCol2,0ffh
-
-
-resetavailmoves2
-
-drawSquareOnCell 0eh,currRow2,currColumn2
-mov checkq2,0
-jmp consumebuffergm
-
-exitgame2:
-cmp al,2eh
-jne consumebuffergm
-
-mov ah,0
-int 16h
-
- mov ax, 0003h
-     int 10h
-
-jmp st
-; jmp consumebuffergm
 exitgame:
 cmp al,1bh
-jnz presel2
+jnz consumebuffergm
 
 ;consume buffet then go to main screen
 
@@ -1304,9 +1468,7 @@ int 16h
 
 jmp st
 
-
-jmp consumebuffergm
-
+;########################### End Game Mode (We assume that)
 
 consumebuffergm:
 mov ah,0
@@ -1347,6 +1509,96 @@ jmp checkkeygm
      int 16h
      jmp checkkey
 
+
+;***********************************************************************
+;***********************************************************************
+;***********************************************************************
+
+     ReceiveInv:
+     ;Here we chack if there is data (send from user2)
+    ;Check that Data Ready
+            mov dx , 3FDH             ; Line Status Register
+            in  al , dx
+            AND al , 1
+            JZ  sendInvitaion                  ;if no data(reciverd) then check if i want to send
+    ;yes, data recived
+    ;Here we get this data
+    ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in  al , dx
+            mov VALUE , al
+
+            ; mov ah,0AH
+            ; mov cx,1
+            ; int 10h
+            ; notificationBar hello,exclamation,name1,GameInvitation
+
+            ; jmp playgame
+            cmp al,31h
+            jnz checkGameInvitaion
+            notificationBar hello,exclamation,name2,chatinvitation
+            jmp SendResponse
+
+            checkGameInvitaion:
+            cmp al,32h
+            jnz checkExitInvitaion
+            notificationBar hello,exclamation,name2,GameInvitation
+            jmp SendResponse
+            
+            checkExitInvitaion:
+            cmp al,1bh
+            jnz sendInvitaion
+            jmp exitgame
+
+
+    ;Accept/refuse the other player invitation
+    SendResponse:
+
+        checkkeyRes:
+        mov ah,1
+        int 16h   
+        jz checkkeyRes
+        
+        mov charSend,al
+        mov cl ,value
+
+        cmp al,1bh
+        jz validSendResponse
+
+        cmp cl,al
+        jz validSendResponse
+
+        ;Consume Buffer
+        mov ah,0h
+        int 16h
+        jmp checkkeyRes
+
+    validSendResponse:
+        ;Consume Buffer
+            mov ah,0h
+            int 16h
+        ; Check that Transmitter Holding Register is Empty
+                mov dx , 3FDH             ; Line Status Register
+
+                In  al , dx               ;Read Line Status
+                AND al , 00100000b
+                JZ  SendResponse
+        ; If empty put the VALUE in Transmit data register
+                mov dx , 3F8H             ; Transmit data register
+                mov al,charSend
+                out dx , al
+
+
+            mov al,charSend
+            cmp al,31h
+            jz f1
+            cmp al,32h
+            jz playgame
+
+            jmp sendInvitaion
+
+
+
 endm mainScreen  
 
 ;------------------------------------------------------------
@@ -1365,7 +1617,7 @@ movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winM
     mov ax, cooldown[bx]
     sub dx, ax
     cmp dx, 50
-    jl noMove
+    ; jl noMove
 
     eraseImage fromColumn, fromRow, greyCell, whiteCell
     ; lea si, grid
@@ -1636,15 +1888,32 @@ popa
 ENDM getAvailForSelectedPiece
 ;-------------------------------------------------------------- 
 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
+;-------------------------------------------------------------------------  MAIN  --------------------------------------------------------------------------------------- 
+;-------------------------------------------------------------------------  MAIN  --------------------------------------------------------------------------------------- 
+;-------------------------------------------------------------------------  MAIN  --------------------------------------------------------------------------------------- 
+;-------------------------------------------------------------------------  MAIN  --------------------------------------------------------------------------------------- 
+;-------------------------------------------------------------------------  MAIN  --------------------------------------------------------------------------------------- 
+;-------------------------------------------------------------------------  MAIN  --------------------------------------------------------------------------------------- 
+;-------------------------------------------------------------------------  MAIN  --------------------------------------------------------------------------------------- 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+
 ; include resZahran.inc
 .model small
 .386
 .stack 64
 .data
 
-    eatWP db "Piece eaten$"
-    seconds db ?         
-    buf     db 6 dup (?)
+    eatWP            db  "Piece eaten$"
+    seconds          db  ?
+    buf              db  6 dup (?)
 
     winMessageP1     db  "Game ended! Player 1 wins!$"
     winMessageP2     db  "Game ended! Player 2 wins!$"
@@ -1998,13 +2267,17 @@ ENDM getAvailForSelectedPiece
     checkq2          db  0
 
 
+    fsend            db  0
+    freceive         db  0
+
+
 
 
     hello            db  "Hello, $"
     exclamation      db  "!$"
     enterName        db  'Please enter your name:','$'
     pressEnter       db  'Press Enter Key to continue','$'
-    name1            db  30,?,30 dup('$')                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ;First byte is the size, second byte is the number of characters from the keyboard
+    ;First byte is the size, second byte is the number of characters from the keyboard
     chIn             db  'a'
     keypressed       db  ?
     mes1             db  "To Start Chatting Press 1$"
@@ -2013,6 +2286,11 @@ ENDM getAvailForSelectedPiece
     messageF1        db  " - You pressed F1$"
     messageF2        db  " - You pressed F2$"
     messageTemp      db  ' - Temporary notification bar for now. Happy Hacking!$'
+    name1            db  30,?,30 dup('$')
+    name2            db  30,?,30 dup('$')             ;we received more bits than we expected;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;DANGER                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ;First byte is the size, second byte is the number of characters from the keyboard
+    chatinvitation   db  'i want to enter chat $'
+    GameInvitation   db  'i want to enter Game $'
+
     boardWidth       equ 160
     boardHeight      equ 160
     row              db  ?
@@ -2020,6 +2298,13 @@ ENDM getAvailForSelectedPiece
     IsmailRow        db  ?
     IsmailCol        db  ?
     PNO              db  ?
+
+
+
+    value            db  ?,"$"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ;Data to recive in
+    charSend         db  ?,"$"
+
+
 .code
 
         
@@ -2041,6 +2326,16 @@ main proc far
                                     int              21h
 main ENDP
 
+    ;*********************************************************************************************************************
+    ;*********************************************************************************************************************
+    ;************************************************ Avail moves Proc ***************************************************
+    ;*********************************************************************************************************************
+    ;*********************************************************************************************************************
+
+    ;*******************************************************************************************
+    ;****************************************** Rook *******************************************
+    ;*******************************************************************************************
+    
 rookMoves proc
                                     pusha
     ; ;------------------------- TESTING
@@ -2052,22 +2347,22 @@ rookMoves proc
 
                                     mov              bl,col
                                     mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
 
     ;******************************************
     ;***************** Right Cells ************
     ;******************************************
 
                                     inc              si
-    checkRight:                                                                                                                                                                                                                                   ;right cols
+    checkRight:                                                                                                                                                                                                                                                                                                                 ;right cols
                                     cmp              si,08h
                                     jz               preLeft
                                     mov              cl,8
                                     mov              al,row
                                     imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
     ; -------------------------- TESTING (delete)
     ; drawSquareOnCell 04h,row,col
     ; callDrawSquare bx
@@ -2084,7 +2379,7 @@ rookMoves proc
                                     mov              availMoves2[bx],0ffh
     e:                              
                                     callDrawSquare   bx,04h
-                                    inc              si                                                                                                                                                                                           ;go to right boxes
+                                    inc              si                                                                                                                                                                                                                                                                         ;go to right boxes
                                     jmp              checkRight
     lastRight:                      
     ; Disable friendly fire...
@@ -2096,18 +2391,18 @@ rookMoves proc
     ;reset bx
                                     mov              bl,col
                                     mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
                                     mov              cl,8
                                     mov              al,row
                                     imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
                                     mov              dh,grid[bx]
                                     pop              bx
     ;is same Color? "dl:away piece / dh:home piece"
                                     cmp              dh,10
-                                    jl               whiteAttackerR                                                                                                                                                                               ;white Attacker
+                                    jl               whiteAttackerR                                                                                                                                                                                                                                                             ;white Attacker
     ;black Attacker
                                     cmp              dl,10
                                     jg               preleft
@@ -2133,22 +2428,22 @@ rookMoves proc
     ;reset indexes
                                     mov              bl,col
                                     mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
 
     ;****************************************
     ;***************** left Cells ***********
     ;****************************************
 
                                     dec              si
-    checkLeft:                                                                                                                                                                                                                                    ;right cols
+    checkLeft:                                                                                                                                                                                                                                                                                                                  ;right cols
                                     cmp              si,0ffffh
                                     jz               preTop
                                     mov              cl,8
                                     mov              al,row
                                     imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
     ; -------------------------- TESTING (delete)
     ; drawSquareOnCell 04h,row,col
     ; callDrawSquare bx
@@ -2164,7 +2459,7 @@ rookMoves proc
                                     mov              availMoves2[bx],0ffh
     e3:                             
                                     callDrawSquare   bx,04h
-                                    dec              si                                                                                                                                                                                           ;go to right boxes
+                                    dec              si                                                                                                                                                                                                                                                                         ;go to right boxes
                                     jmp              checkLeft
     lastLeft:                       
     ; Disable friendly fire...
@@ -2176,18 +2471,18 @@ rookMoves proc
     ;reset bx
                                     mov              bl,col
                                     mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
                                     mov              cl,8
                                     mov              al,row
                                     imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
                                     mov              dh,grid[bx]
                                     pop              bx
     ;is same Color? "dl:away piece / dh:home piece"
                                     cmp              dh,10
-                                    jl               whiteAttackerL                                                                                                                                                                               ;white Attacker
+                                    jl               whiteAttackerL                                                                                                                                                                                                                                                             ;white Attacker
     ;black Attacker
                                     cmp              dl,10
                                     jg               preTop
@@ -2241,7 +2536,7 @@ rookMoves proc
                                     callDrawSquare   bx,04h
                                     pop              bx
 
-                                    dec              bx                                                                                                                                                                                           ;go to top boxes
+                                    dec              bx                                                                                                                                                                                                                                                                         ;go to top boxes
                                     jmp              checkTop
     lastTop:                        
     ; Disable friendly fire...
@@ -2255,18 +2550,18 @@ rookMoves proc
     ;reset bx
                                     mov              bl,col
                                     mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
                                     mov              cl,8
                                     mov              al,row
                                     imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
                                     mov              dh,grid[bx]
                                     pop              bx
     ;is same Color? "dl:away piece / dh:home piece"
                                     cmp              dh,10
-                                    jl               whiteAttackerT                                                                                                                                                                               ;white Attacker
+                                    jl               whiteAttackerT                                                                                                                                                                                                                                                             ;white Attacker
     ;black Attacker
                                     cmp              dl,10
                                     jg               preBottom
@@ -2320,7 +2615,7 @@ rookMoves proc
                                     callDrawSquare   bx,04h
                                     pop              bx
 
-                                    inc              bx                                                                                                                                                                                           ;go to top boxes
+                                    inc              bx                                                                                                                                                                                                                                                                         ;go to top boxes
                                     jmp              checkBottom
     lastBottom:                     
     ; Disable friendly fire...
@@ -2333,18 +2628,18 @@ rookMoves proc
     ;reset bx
                                     mov              bl,col
                                     mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
                                     mov              cl,8
                                     mov              al,row
                                     imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
                                     mov              dh,grid[bx]
                                     pop              bx
     ;is same Color? "dl:away piece / dh:home piece"
                                     cmp              dh,10
-                                    jl               whiteAttackerB                                                                                                                                                                               ;white Attacker
+                                    jl               whiteAttackerB                                                                                                                                                                                                                                                             ;white Attacker
     ;black Attacker
                                     cmp              dl,10
                                     jg               rt91
@@ -2371,6 +2666,536 @@ rookMoves proc
                                     ret
                                     ENDp             rookMoves
 
+    ;*******************************************************************************************
+    ;****************************************** Bishop *****************************************
+    ;*******************************************************************************************
+
+bishopMoves proc
+                                    PUSHA
+
+    ; ; ------------------------- TESTING
+    ;                                 drawSquareOnCell 03h,row,col
+    ; ; callDrawSquare bx
+    ; ; --------------------------
+    
+    ; intialize indexes
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx
+                                    mov              bl,row
+    
+    ;**********************************************
+    ;***************** 4 o'clock Cells ************
+    ;**********************************************
+
+                                    inc              bx
+                                    inc              si
+    checkBR:                                                                                                                                                                                                                                                                                                                    ;bottom right
+                                    cmp              bx,08h
+                                    jz               precheckTL
+                                    cmp              si,08h
+                                    jz               precheckTL
+                                    mov              cl,8
+                                    mov              al,bl
+                                    imul             cl
+                                    push             bx
+                                    mov              bx,ax
+                                    add              bx,si
+                                    mov              al,grid[bx]
+                                    cmp              al,00
+                                    jnz              lastBR
+                                    cmp              PNO,1
+                                    jne              p29
+                                    mov              availMoves[bx],0ffh
+                                    jmp              e9
+    p29:                            
+                                    mov              availMoves2[bx],0ffh
+    e9:                             
+                                    callDrawSquare   bx,04h
+                                    pop              bx
+                                    inc              bx
+                                    inc              si
+                                    jmp              checkBR
+    lastBR:                         
+                                    pop              ax
+    ; Disable friendly fire...
+    ;check same team?
+    ;get away piece code
+                                    mov              dl,grid[bx]
+                                    push             bx
+    ;get attacker piece code
+    ;reset bx
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
+                                    mov              dh,grid[bx]
+                                    pop              bx
+    ;is same Color? "dl:away piece / dh:home piece"
+                                    cmp              dh,10
+                                    jl               whiteAttackerBR                                                                                                                                                                                                                                                            ;white Attacker
+    ;black Attacker
+                                    cmp              dl,10
+                                    jg               precheckTL
+                                    jmp              eatBR
+    ;white Attacker
+    whiteAttackerBR:                
+                                    cmp              dl,10
+                                    jl               precheckTL
+    ; Friendly fire is disabled
+    eatBR:                          
+                                    callDrawSquare   bx,04h
+                                    cmp              PNO,1
+                                    jne              p210
+                                    mov              availMoves[bx],0ffh
+                                    jmp              e10
+    p210:                           
+                                    mov              availMoves2[bx],0ffh
+    e10:                            
+
+
+    precheckTL:                     
+    ;reset indexes
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx
+                                    mov              bl,row
+
+
+    ;***********************************************
+    ;***************** 10 o'clock Cells ************
+    ;***********************************************
+
+                                    dec              bx
+                                    dec              si
+    checkTL:                                                                                                                                                                                                                                                                                                                    ;top left
+                                    cmp              bx,0ffffh
+                                    jz               precheckTR
+                                    cmp              si,0ffffh
+                                    jz               precheckTR
+                                    mov              cl,8
+                                    mov              al,bl
+                                    imul             cl
+                                    push             bx
+                                    mov              bx,ax
+                                    add              bx,si
+                                    mov              al,grid[bx]
+                                    cmp              al,00
+                                    jnz              lastTL
+                                    cmp              PNO,1
+                                    jne              p211
+                                    mov              availMoves[bx],0ffh
+                                    jmp              e11
+    p211:                           
+                                    mov              availMoves2[bx],0ffh
+    e11:                            
+                                    callDrawSquare   bx,04h
+                                    pop              bx
+                                    dec              bx
+                                    dec              si
+                                    jmp              checkTL
+    lastTL:                         
+                                    pop              ax
+    ; Disable friendly fire...
+    ;check same team?
+    ;get away piece code
+                                    mov              dl,grid[bx]
+                                    push             bx
+    ;get attacker piece code
+    ;reset bx
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
+                                    mov              dh,grid[bx]
+                                    pop              bx
+    ;is same Color? "dl:away piece / dh:home piece"
+                                    cmp              dh,10
+                                    jl               whiteAttackerTL                                                                                                                                                                                                                                                            ;white Attacker
+    ;black Attacker
+                                    cmp              dl,10
+                                    jg               precheckTR
+                                    jmp              eatTL
+    ;white Attacker
+    whiteAttackerTL:                
+                                    cmp              dl,10
+                                    jl               precheckTR
+    ; Friendly fire is disabled
+    eatTL:                          
+                                    cmp              PNO,1
+                                    jne              p212
+                                    mov              availMoves[bx],0ffh
+                                    jmp              e12
+    p212:                           
+                                    mov              availMoves2[bx],0ffh
+    e12:                            
+                                    callDrawSquare   bx,04h
+
+
+    precheckTR:                     
+    ;reset indexes
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx
+                                    mov              bl,row
+
+    ; ;**********************************************
+    ; ;***************** 2 o'clock Cells ************
+    ; ;**********************************************
+
+                                    dec              bx
+                                    inc              si
+    checkTR:                                                                                                                                                                                                                                                                                                                    ;top right
+                                    cmp              bx,0ffffh
+                                    jz               precheckBL
+                                    cmp              si,08h
+                                    jz               precheckBL
+                                    mov              cl,8
+                                    mov              al,bl
+                                    imul             cl
+                                    push             bx
+                                    mov              bx,ax
+                                    add              bx,si
+                                    mov              al,grid[bx]
+                                    cmp              al,00
+                                    jnz              lastTR
+                                    cmp              PNO,1
+                                    jne              p213
+                                    mov              availMoves[bx],0ffh
+                                    jmp              e13
+    p213:                           
+                                    mov              availMoves2[bx],0ffh
+    e13:                            
+                                    callDrawSquare   bx,04h
+                                    pop              bx
+                                    dec              bx
+                                    inc              si
+                                    jmp              checkTR
+    lastTR:                         
+                                    pop              ax
+    ; Disable friendly fire...
+    ;check same team?
+    ;get away piece code
+                                    mov              dl,grid[bx]
+                                    push             bx
+    ;get attacker piece code
+    ;reset bx
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
+                                    mov              dh,grid[bx]
+                                    pop              bx
+    ;is same Color? "dl:away piece / dh:home piece"
+                                    cmp              dh,10
+                                    jl               whiteAttackerTR                                                                                                                                                                                                                                                            ;white Attacker
+    ;black Attacker
+                                    cmp              dl,10
+                                    jg               precheckBL
+                                    jmp              eatTR
+    ;white Attacker
+    whiteAttackerTR:                
+                                    cmp              dl,10
+                                    jl               precheckBL
+    ; Friendly fire is disabled
+    eatTR:                          
+                                    cmp              PNO,1
+                                    jne              p214
+                                    mov              availMoves[bx],0ffh
+                                    jmp              e14
+    p214:                           
+                                    mov              availMoves2[bx],0ffh
+    e14:                            
+                                    callDrawSquare   bx,04h
+
+    precheckBL:                     
+    ;reset indexes
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx
+                                    mov              bl,row
+
+    ; ;**********************************************
+    ; ;***************** 8 o'clock Cells ************
+    ; ;**********************************************
+
+                                    inc              bx
+                                    dec              si
+    checkBL:                                                                                                                                                                                                                                                                                                                    ;bottom left
+                                    cmp              bx,08h
+                                    jz               rt1
+                                    cmp              si,0ffffh
+                                    jz               rt1
+                                    mov              cl,8
+                                    mov              al,bl
+                                    imul             cl
+                                    push             bx
+                                    mov              bx,ax
+                                    add              bx,si
+                                    mov              al,grid[bx]
+                                    cmp              al,00
+                                    jnz              lastBL
+                                    cmp              PNO,1
+                                    jne              p215
+                                    mov              availMoves[bx],0ffh
+                                    jmp              e15
+    p215:                           
+                                    mov              availMoves2[bx],0ffh
+    e15:                            
+                                    callDrawSquare   bx,04h
+                                    pop              bx
+                                    inc              bx
+                                    dec              si
+                                    jmp              checkBL
+    lastBL:                         
+                                    pop              ax
+    ; Disable friendly fire...
+    ;check same team?
+    ;get away piece code
+                                    mov              dl,grid[bx]
+                                    push             bx
+    ;get attacker piece code
+    ;reset bx
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              si,bx                                                                                                                                                                                                                                                                      ;store col number in si
+                                    mov              bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
+                                    mov              cl,8
+                                    mov              al,row
+                                    imul             cl
+                                    mov              bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
+                                    add              bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
+                                    mov              dh,grid[bx]
+                                    pop              bx
+    ;is same Color? "dl:away piece / dh:home piece"
+                                    cmp              dh,10
+                                    jl               whiteAttackerBL                                                                                                                                                                                                                                                            ;white Attacker
+    ;black Attacker
+                                    cmp              dl,10
+                                    jg               rt1
+                                    jmp              eatBL
+    ;white Attacker
+    whiteAttackerBL:                
+                                    cmp              dl,10
+                                    jl               rt1
+    ; Friendly fire is disabled
+    eatBL:                          
+                                    cmp              PNO,1
+                                    jne              p216
+                                    mov              availMoves[bx],0ffh
+                                    jmp              e16
+    p216:                           
+                                    mov              availMoves2[bx],0ffh
+    e16:                            
+                                    callDrawSquare   bx,04h
+
+    rt1:                            
+                                    popa
+                                    ret
+                                    ENDp             bishopMoves
+
+    ;*******************************************************************************************
+    ;****************************************** Queen *******************************************
+    ;*******************************************************************************************
+
+queenMoves proc
+                                    pusha                                                                                                                                                                                                                                                                                       ;no need to it as you push in rook and bishop and queen doesn't change rigisters (for optimization)
+    
+                                    call             bishopMoves
+                                    call             rookMoves
+      
+                                    popa
+                                    ret
+                                    ENDp             queenMoves
+
+
+    ;*******************************************************************************************
+    ;****************************************** BKing ******************************************
+    ;*******************************************************************************************
+
+HighlightAvailableForBKing proc
+    ;local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
+                                    pusha
+    ;highlight 3 above it
+                                    mov              al,row
+                                    mov              ah,0
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              cl,8
+                                    lea              di,grid
+                                    lea              si,availMoves2
+                                    mul              cl
+                                    add              di,ax                                                                                                                                                                                                                                                                      ;on current cell
+                                    add              di,bx
+                                    add              si,ax
+                                    add              si,bx
+
+                                    cmp              row,1
+                                    jl               noAbove2
+                                    mov              al,row
+                                    dec              al
+                                    mov              IsmailRow,al
+                                    sub              di,8                                                                                                                                                                                                                                                                       ;above cell
+                                    sub              si,8
+                                    cmp              byte ptr [di],07h
+                                    jl               EmptyAbove2
+                                    jmp              noEnemyAbove2
+    EmptyAbove2:                    
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
+                                    mov              byte ptr [si],0ffh
+    noEnemyAbove2:                  
+                                    dec              di
+                                    dec              si
+                                    dec              bl
+                                    cmp              col,1
+                                    jl               noAboveLeft2
+                                    cmp              byte ptr [di],07h
+                                    jl               EmptyAboveLeft2
+                                    jmp              noEnemyAboveLeft2
+    EmptyAboveLeft2:                
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
+                                    mov              byte ptr [si],0ffh
+    noEnemyAboveLeft2:              
+    noAboveLeft2:                   
+                                    add              di,2
+                                    add              si,2
+                                    add              bl,2
+                                    cmp              col,6
+                                    jg               noAboveRight2
+                                    cmp              byte ptr [di],07h
+                                    jl               EmptyAboveRight2
+                                    jmp              noEnemyAboveRight2
+    EmptyAboveRight2:               
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
+                                    mov              byte ptr [si],0ffh
+    noEnemyAboveRight2:             
+    noAboveRight2:                  
+                                    dec              bl
+                                    add              di,7                                                                                                                                                                                                                                                                       ;back to current cell
+                                    add              si,7
+    noAbove2:                       
+
+    ;highlight 3 below it
+
+                                    cmp              row,6
+                                    jg               noBelow2
+                                    mov              al,row                                                                                                                                                                                                                                                                     ;and bl => equal now col
+                                    add              di,8                                                                                                                                                                                                                                                                       ;below it
+                                    add              si,8                                                                                                                                                                                                                                                                       ;below it
+                                    inc              al                                                                                                                                                                                                                                                                         ;below it
+                                    mov              IsmailRow,al
+                                    cmp              byte ptr [di],07h
+                                    jl               EmptyBelow2
+                                    jmp              noEnemyBelow2
+    EmptyBelow2:                    
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
+                                    mov              byte ptr [si],0ffh
+    noEnemyBelow2:                  
+                                    cmp              col,1
+                                    jl               noBelowLeft2
+                                    dec              di
+                                    dec              si
+                                    cmp              byte ptr [di],07h
+                                    jl               EmptyBelowLeft2
+                                    jmp              noEnemyBelowLeft2
+    EmptyBelowLeft2:                
+                                    dec              bl
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04,IsmailRow,IsmailCol
+                                    mov              byte ptr [si],0ffh
+                                    inc              bl
+    noEnemyBelowLeft2:              
+                                    inc              di
+                                    inc              si
+    noBelowLeft2:                   
+                                    cmp              col,6
+                                    jg               noBelowRight2
+                                    inc              di
+                                    inc              si
+                                    cmp              byte ptr [di],07h
+                                    jl               EmptyBelowRight2
+                                    jmp              noEnemyBelowRight2
+    EmptyBelowRight2:               
+                                    inc              bl
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
+                                    mov              byte ptr [si],0ffh
+                                    dec              bl
+    noEnemyBelowRight2:             
+                                    dec              di
+                                    dec              si
+    noBelowRight2:                  
+                                    dec              al                                                                                                                                                                                                                                                                         ;on cell and bl too
+                                    sub              di,8
+                                    sub              si,8
+    noBelow2:                       
+
+    ;di,si are on cell
+                                    mov              al,row                                                                                                                                                                                                                                                                     ;and bl => equal now col
+                                    mov              IsmailRow,al
+    ;highlight right
+                                    cmp              col,6
+                                    jg               noRight2
+                                    inc              di
+                                    inc              si
+                                    cmp              byte ptr [di],07h
+                                    jl               EmptyRight2
+                                    jmp              noEnemyRight2
+    EmptyRight2:                    
+                                    inc              bl
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
+                                    dec              bl
+                                    mov              byte ptr [si],0ffh
+    noEnemyRight2:                  
+                                    dec              di                                                                                                                                                                                                                                                                         ;on cell now
+                                    dec              si                                                                                                                                                                                                                                                                         ;too
+    noRight2:                       
+
+    ;highlight left
+                                    cmp              col,1
+                                    jl               noLeft2
+                                    dec              di
+                                    dec              si
+                                    cmp              byte ptr [di],07h
+                                    jl               EmptyLeft2
+                                    jmp              noEnemyLeft2
+    EmptyLeft2:                     
+                                    dec              bl
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
+                                    mov              byte ptr [si],0ffh
+                                    inc              bl
+    noEnemyLeft2:                   
+                                    inc              di
+                                    inc              si
+    noLeft2:                        
+                                    popa
+                                    ret
+                                    endp             HighlightAvailableForBKing
+
+    ;*******************************************************************************************
+    ;****************************************** WKing ******************************************
+    ;*******************************************************************************************
 
 HighlightAvailableForWKing proc
     ;local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
@@ -2384,7 +3209,7 @@ HighlightAvailableForWKing proc
                                     lea              di,grid
                                     lea              si,availMoves
                                     mul              cl
-                                    add              di,ax                                                                                                                                                                                        ;on current cell
+                                    add              di,ax                                                                                                                                                                                                                                                                      ;on current cell
                                     add              di,bx
                                     add              si,ax
                                     add              si,bx
@@ -2394,7 +3219,7 @@ HighlightAvailableForWKing proc
                                     mov              al,row
                                     dec              al
                                     mov              IsmailRow,al
-                                    sub              di,8                                                                                                                                                                                         ;above cell
+                                    sub              di,8                                                                                                                                                                                                                                                                       ;above cell
                                     sub              si,8
                                     cmp              byte ptr [di],00h
                                     je               EmptyAbove11
@@ -2437,7 +3262,7 @@ HighlightAvailableForWKing proc
     noEnemyAboveRight11:            
     noAboveRight11:                 
                                     dec              bl
-                                    add              di,7                                                                                                                                                                                         ;back to current cell
+                                    add              di,7                                                                                                                                                                                                                                                                       ;back to current cell
                                     add              si,7
     noAbove11:                      
 
@@ -2445,10 +3270,10 @@ HighlightAvailableForWKing proc
 
                                     cmp              row,6
                                     jg               noBelow11
-                                    mov              al,row                                                                                                                                                                                       ;and bl => equal now col
-                                    add              di,8                                                                                                                                                                                         ;below it
-                                    add              si,8                                                                                                                                                                                         ;below it
-                                    inc              al                                                                                                                                                                                           ;below it
+                                    mov              al,row                                                                                                                                                                                                                                                                     ;and bl => equal now col
+                                    add              di,8                                                                                                                                                                                                                                                                       ;below it
+                                    add              si,8                                                                                                                                                                                                                                                                       ;below it
+                                    inc              al                                                                                                                                                                                                                                                                         ;below it
                                     mov              IsmailRow,al
                                     cmp              byte ptr [di],00h
                                     je               EmptyBelow11
@@ -2495,13 +3320,13 @@ HighlightAvailableForWKing proc
                                     dec              di
                                     dec              si
     noBelowRight11:                 
-                                    dec              al                                                                                                                                                                                           ;on cell and bl too
+                                    dec              al                                                                                                                                                                                                                                                                         ;on cell and bl too
                                     sub              di,8
                                     sub              si,8
     noBelow11:                      
 
     ;di,si are on cell
-                                    mov              al,row                                                                                                                                                                                       ;and bl => equal now col
+                                    mov              al,row                                                                                                                                                                                                                                                                     ;and bl => equal now col
                                     mov              IsmailRow,al
     ;highlight right
                                     cmp              col,6
@@ -2519,8 +3344,8 @@ HighlightAvailableForWKing proc
                                     dec              bl
                                     mov              byte ptr [si],0ffh
     noEnemyRight11:                 
-                                    dec              di                                                                                                                                                                                           ;on cell now
-                                    dec              si                                                                                                                                                                                           ;too
+                                    dec              di                                                                                                                                                                                                                                                                         ;on cell now
+                                    dec              si                                                                                                                                                                                                                                                                         ;too
     noRight11:                      
 
     ;highlight left
@@ -2542,173 +3367,11 @@ HighlightAvailableForWKing proc
                                     popa
                                     ret
                                     endp             HighlightAvailableForWKing
-    ;==;==
-HighlightAvailableForBKing proc
-    ;local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
-                                    pusha
-    ;highlight 3 above it
-                                    mov              al,row
-                                    mov              ah,0
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              cl,8
-                                    lea              di,grid
-                                    lea              si,availMoves2
-                                    mul              cl
-                                    add              di,ax                                                                                                                                                                                        ;on current cell
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
 
-                                    cmp              row,1
-                                    jl               noAbove2
-                                    mov              al,row
-                                    dec              al
-                                    mov              IsmailRow,al
-                                    sub              di,8                                                                                                                                                                                         ;above cell
-                                    sub              si,8
-                                    cmp              byte ptr [di],07h
-                                    jl               EmptyAbove2
-                                    jmp              noEnemyAbove2
-    EmptyAbove2:                    
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh
-    noEnemyAbove2:                  
-                                    dec              di
-                                    dec              si
-                                    dec              bl
-                                    cmp              col,1
-                                    jl               noAboveLeft2
-                                    cmp              byte ptr [di],07h
-                                    jl               EmptyAboveLeft2
-                                    jmp              noEnemyAboveLeft2
-    EmptyAboveLeft2:                
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh
-    noEnemyAboveLeft2:              
-    noAboveLeft2:                   
-                                    add              di,2
-                                    add              si,2
-                                    add              bl,2
-                                    cmp              col,6
-                                    jg               noAboveRight2
-                                    cmp              byte ptr [di],07h
-                                    jl               EmptyAboveRight2
-                                    jmp              noEnemyAboveRight2
-    EmptyAboveRight2:               
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh
-    noEnemyAboveRight2:             
-    noAboveRight2:                  
-                                    dec              bl
-                                    add              di,7                                                                                                                                                                                         ;back to current cell
-                                    add              si,7
-    noAbove2:                       
+    ;*******************************************************************************************
+    ;****************************************** WKnight ****************************************
+    ;*******************************************************************************************
 
-    ;highlight 3 below it
-
-                                    cmp              row,6
-                                    jg               noBelow2
-                                    mov              al,row                                                                                                                                                                                       ;and bl => equal now col
-                                    add              di,8                                                                                                                                                                                         ;below it
-                                    add              si,8                                                                                                                                                                                         ;below it
-                                    inc              al                                                                                                                                                                                           ;below it
-                                    mov              IsmailRow,al
-                                    cmp              byte ptr [di],07h
-                                    jl               EmptyBelow2
-                                    jmp              noEnemyBelow2
-    EmptyBelow2:                    
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh
-    noEnemyBelow2:                  
-                                    cmp              col,1
-                                    jl               noBelowLeft2
-                                    dec              di
-                                    dec              si
-                                    cmp              byte ptr [di],07h
-                                    jl               EmptyBelowLeft2
-                                    jmp              noEnemyBelowLeft2
-    EmptyBelowLeft2:                
-                                    dec              bl
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04,IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh
-                                    inc              bl
-    noEnemyBelowLeft2:              
-                                    inc              di
-                                    inc              si
-    noBelowLeft2:                   
-                                    cmp              col,6
-                                    jg               noBelowRight2
-                                    inc              di
-                                    inc              si
-                                    cmp              byte ptr [di],07h
-                                    jl               EmptyBelowRight2
-                                    jmp              noEnemyBelowRight2
-    EmptyBelowRight2:               
-                                    inc              bl
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh
-                                    dec              bl
-    noEnemyBelowRight2:             
-                                    dec              di
-                                    dec              si
-    noBelowRight2:                  
-                                    dec              al                                                                                                                                                                                           ;on cell and bl too
-                                    sub              di,8
-                                    sub              si,8
-    noBelow2:                       
-
-    ;di,si are on cell
-                                    mov              al,row                                                                                                                                                                                       ;and bl => equal now col
-                                    mov              IsmailRow,al
-    ;highlight right
-                                    cmp              col,6
-                                    jg               noRight2
-                                    inc              di
-                                    inc              si
-                                    cmp              byte ptr [di],07h
-                                    jl               EmptyRight2
-                                    jmp              noEnemyRight2
-    EmptyRight2:                    
-                                    inc              bl
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
-                                    dec              bl
-                                    mov              byte ptr [si],0ffh
-    noEnemyRight2:                  
-                                    dec              di                                                                                                                                                                                           ;on cell now
-                                    dec              si                                                                                                                                                                                           ;too
-    noRight2:                       
-
-    ;highlight left
-                                    cmp              col,1
-                                    jl               noLeft2
-                                    dec              di
-                                    dec              si
-                                    cmp              byte ptr [di],07h
-                                    jl               EmptyLeft2
-                                    jmp              noEnemyLeft2
-    EmptyLeft2:                     
-                                    dec              bl
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh
-                                    inc              bl
-    noEnemyLeft2:                   
-                                    inc              di
-                                    inc              si
-    noLeft2:                        
-                                    popa
-                                    ret
-                                    endp             HighlightAvailableForBKing
-
-    ;=========================================================
 HighlightAvailableForWKnight proc
     ;local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight,noUpLeft,noDownLeft,noDownRight,noUpRight,noEnemyBelowLeft
                                     pusha
@@ -2728,10 +3391,10 @@ HighlightAvailableForWKnight proc
     ;highlight above
                                     cmp              row,2
                                     jl               noAbove1
-                                    sub              di,16                                                                                                                                                                                        ;above
+                                    sub              di,16                                                                                                                                                                                                                                                                      ;above
                                     sub              si,16
                                     mov              al,row
-                                    sub              al,2                                                                                                                                                                                         ;above 2 steps
+                                    sub              al,2                                                                                                                                                                                                                                                                       ;above 2 steps
                                     mov              IsmailRow,al
                                     cmp              col,1
                                     jl               noLeftAbove1
@@ -2778,8 +3441,8 @@ HighlightAvailableForWKnight proc
                                     jg               noBelow1
                                     add              di,16
                                     add              si,16
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
-                                    add              al,2                                                                                                                                                                                         ;below 2 steps
+                                    mov              al,row                                                                                                                                                                                                                                                                     ;on cell and bl too
+                                    add              al,2                                                                                                                                                                                                                                                                       ;below 2 steps
                                     mov              IsmailRow,al
                                     cmp              col,1
                                     jl               noLeftBelow1
@@ -2826,8 +3489,8 @@ HighlightAvailableForWKnight proc
                                     cmp              col,5
                                     jg               noRight1
                                     add              di,2
-                                    add              si,2                                                                                                                                                                                         ;on cell and bl too
-                                    add              bl,2                                                                                                                                                                                         ;right 2 steps
+                                    add              si,2                                                                                                                                                                                                                                                                       ;on cell and bl too
+                                    add              bl,2                                                                                                                                                                                                                                                                       ;right 2 steps
                                     mov              IsmailCol,bl
                                     mov              al,row
                                     cmp              row,1
@@ -2877,7 +3540,7 @@ HighlightAvailableForWKnight proc
                                     sub              di,2
                                     sub              si,2
     ;on cell and bl too
-                                    sub              bl,2                                                                                                                                                                                         ;left 2 steps
+                                    sub              bl,2                                                                                                                                                                                                                                                                       ;left 2 steps
                                     mov              IsmailCol,bl
                                    
                                     mov              al,row
@@ -2924,7 +3587,12 @@ HighlightAvailableForWKnight proc
                                     popa
                                     ret
                                     endp             HighlightAvailableForWKnight
-    ;==;==
+ 
+
+    ;*******************************************************************************************
+    ;****************************************** BKnight ****************************************
+    ;*******************************************************************************************
+
 HighlightAvailableForBKnight proc
     ;local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight,noUpLeft,noDownLeft,noDownRight,noUpRight,noEnemyBelowLeft
                                     pusha
@@ -2994,8 +3662,8 @@ HighlightAvailableForBKnight proc
                                     jg               noBelow
                                     add              di,16
                                     add              si,16
-                                    mov              al,row                                                                                                                                                                                       ;on cell and bl too
-                                    add              al,2                                                                                                                                                                                         ;below 2 steps
+                                    mov              al,row                                                                                                                                                                                                                                                                     ;on cell and bl too
+                                    add              al,2                                                                                                                                                                                                                                                                       ;below 2 steps
                                     mov              IsmailRow,al
                                     cmp              col,1
                                     jl               noLeftBelow
@@ -3042,8 +3710,8 @@ HighlightAvailableForBKnight proc
                                     cmp              col,5
                                     jg               noRight
                                     add              di,2
-                                    add              si,2                                                                                                                                                                                         ;on cell and bl too
-                                    add              bl,2                                                                                                                                                                                         ;right 2 steps
+                                    add              si,2                                                                                                                                                                                                                                                                       ;on cell and bl too
+                                    add              bl,2                                                                                                                                                                                                                                                                       ;right 2 steps
                                     mov              IsmailCol,bl
                                     mov              al,row
                                     cmp              row,1
@@ -3091,8 +3759,8 @@ HighlightAvailableForBKnight proc
                                     cmp              col,2
                                     jl               noLeft
                                     sub              di,2
-                                    sub              si,2                                                                                                                                                                                         ;on cell and bl too
-                                    sub              bl,2                                                                                                                                                                                         ;left 2 steps
+                                    sub              si,2                                                                                                                                                                                                                                                                       ;on cell and bl too
+                                    sub              bl,2                                                                                                                                                                                                                                                                       ;left 2 steps
                                     mov              IsmailCol,bl
                                     mov              al,row
                                     cmp              row,1
@@ -3134,8 +3802,10 @@ HighlightAvailableForBKnight proc
                                     ret
                                     endp             HighlightAvailableForBKnight
 
-    ; ;===============================================================
-
+    ;*******************************************************************************************
+    ;****************************************** WPawn ******************************************
+    ;*******************************************************************************************
+    
     ;;for two computers
 HighlightAvailableForWPawnTwo proc
     ;local notFirstStepP2, endOfBoardP2, done,canNotMove1,canNotMove2,OK1,OK11,notFirstStepP22,OK2
@@ -3212,7 +3882,71 @@ HighlightAvailableForWPawnTwo proc
                                     popa
                                     ret
                                     endp             HighlightAvailableForWPawnTwo
-    ;===;===
+
+
+    ;;need different color
+HighlightAvailableForWPawnToEat proc
+    ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
+                                    pusha
+                                    cmp              row,0
+                                    jne              notGridEnd1
+                                    jmp              gridEnd1
+    notGridEnd1:                    
+                                    mov              al,row
+                                    mov              ah,0
+                                    mov              bl,col
+                                    mov              bh,0
+                                    mov              cl,8
+                                    lea              si,availMoves
+                                    lea              di,grid
+                                    mul              cl
+                                    add              di,ax                                                                                                                                                                                                                                                                      ;on cell
+                                    add              di,bx
+                                    add              si,ax
+                                    add              si,bx
+                                    cmp              col,0
+                                    je               EndLeft
+                                    sub              di,9
+                                    sub              si,9
+                                    cmp              byte ptr [di],07h
+                                    jl               DoNotHighlightToEat1
+                                    mov              al,row
+                                    dec              al
+                                    dec              bl
+                                    mov              IsmailRow,al
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04h, IsmailRow,IsmailCol
+                                    mov              byte ptr [si],0ffh                                                                                                                                                                                                                                                         ;;eat
+                                    inc              bl
+    DoNotHighlightToEat1:           
+                                    add              di,9
+                                    add              si,9
+    EndLeft:                        
+                                    cmp              col,7
+                                    je               EndRight
+                                    sub              di,7
+                                    sub              si,7
+                                    cmp              byte ptr [di],07h
+                                    jl               DoNotHighlightToEat2
+                                    mov              al,row
+                                    dec              al
+                                    inc              bl
+                                    mov              IsmailRow,al
+                                    mov              IsmailCol,bl
+                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
+                                    mov              byte ptr [si],0ffh                                                                                                                                                                                                                                                         ;;eat
+                                    dec              bl
+    DoNotHighlightToEat2:           
+    EndRight:                       
+    gridEnd1:                       
+                                    popa
+                                    ret
+                                    endp             HighlightAvailableForWPawnToEat
+
+    ;*******************************************************************************************
+    ;****************************************** BPawn ******************************************
+    ;*******************************************************************************************
+
 HighlightAvailableForBPawnTwo proc
     ;local notFirstStepP2, endOfBoardP2, done,canNotMove1,canNotMove2,OK1,OK11,notFirstStepP22,OK2
     ;if first step (one or two)
@@ -3287,65 +4021,6 @@ HighlightAvailableForBPawnTwo proc
                                     ret
                                     endp             HighlightAvailableForBPawnTwo
 
-    ;;;;===============================================================
-    ;;need different color
-HighlightAvailableForWPawnToEat proc
-    ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
-                                    pusha
-                                    cmp              row,0
-                                    jne              notGridEnd1
-                                    jmp              gridEnd1
-    notGridEnd1:                    
-                                    mov              al,row
-                                    mov              ah,0
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              cl,8
-                                    lea              si,availMoves
-                                    lea              di,grid
-                                    mul              cl
-                                    add              di,ax                                                                                                                                                                                        ;on cell
-                                    add              di,bx
-                                    add              si,ax
-                                    add              si,bx
-                                    cmp              col,0
-                                    je               EndLeft
-                                    sub              di,9
-                                    sub              si,9
-                                    cmp              byte ptr [di],07h
-                                    jl               DoNotHighlightToEat1
-                                    mov              al,row
-                                    dec              al
-                                    dec              bl
-                                    mov              IsmailRow,al
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04h, IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh                                                                                                                                                                           ;;eat
-                                    inc              bl
-    DoNotHighlightToEat1:           
-                                    add              di,9
-                                    add              si,9
-    EndLeft:                        
-                                    cmp              col,7
-                                    je               EndRight
-                                    sub              di,7
-                                    sub              si,7
-                                    cmp              byte ptr [di],07h
-                                    jl               DoNotHighlightToEat2
-                                    mov              al,row
-                                    dec              al
-                                    inc              bl
-                                    mov              IsmailRow,al
-                                    mov              IsmailCol,bl
-                                    drawSquareOnCell 04h,IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh                                                                                                                                                                           ;;eat
-                                    dec              bl
-    DoNotHighlightToEat2:           
-    EndRight:                       
-    gridEnd1:                       
-                                    popa
-                                    ret
-                                    endp             HighlightAvailableForWPawnToEat
 
 HighlightAvailableForBPawnToEat proc
     ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
@@ -3362,7 +4037,7 @@ HighlightAvailableForBPawnToEat proc
                                     lea              si,availMoves2
                                     lea              di,grid
                                     mul              cl
-                                    add              di,ax                                                                                                                                                                                        ;on cell
+                                    add              di,ax                                                                                                                                                                                                                                                                      ;on cell
                                     add              di,bx
                                     add              si,ax
                                     add              si,bx
@@ -3380,7 +4055,7 @@ HighlightAvailableForBPawnToEat proc
                                     mov              IsmailRow,al
                                     mov              IsmailCol,bl
                                     drawSquareOnCell 04h, IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh                                                                                                                                                                           ;;eat
+                                    mov              byte ptr [si],0ffh                                                                                                                                                                                                                                                         ;;eat
                                     inc              bl
     DoNotHighlightToEat121:         
                                     sub              di,7
@@ -3400,7 +4075,7 @@ HighlightAvailableForBPawnToEat proc
                                     mov              IsmailRow,al
                                     mov              IsmailCol,bl
                                     drawSquareOnCell 04h,IsmailRow,IsmailCol
-                                    mov              byte ptr [si],0ffh                                                                                                                                                                           ;;eat
+                                    mov              byte ptr [si],0ffh                                                                                                                                                                                                                                                         ;;eat
                                     dec              bl
     DoNotHighlightToEat221:         
     EndRight21:                     
@@ -3408,363 +4083,13 @@ HighlightAvailableForBPawnToEat proc
                                     popa
                                     ret
                                     endp             HighlightAvailableForBPawnToEat
-    ;;;;;;===============================================================
 
 
-
-bishopMoves proc
-                                    PUSHA
-
-    ; ; ------------------------- TESTING
-    ;                                 drawSquareOnCell 03h,row,col
-    ; ; callDrawSquare bx
-    ; ; --------------------------
-    
-    ; intialize indexes
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx
-                                    mov              bl,row
-    
-    ;**********************************************
-    ;***************** 4 o'clock Cells ************
-    ;**********************************************
-
-                                    inc              bx
-                                    inc              si
-    checkBR:                                                                                                                                                                                                                                      ;bottom right
-                                    cmp              bx,08h
-                                    jz               precheckTL
-                                    cmp              si,08h
-                                    jz               precheckTL
-                                    mov              cl,8
-                                    mov              al,bl
-                                    imul             cl
-                                    push             bx
-                                    mov              bx,ax
-                                    add              bx,si
-                                    mov              al,grid[bx]
-                                    cmp              al,00
-                                    jnz              lastBR
-                                    cmp              PNO,1
-                                    jne              p29
-                                    mov              availMoves[bx],0ffh
-                                    jmp              e9
-    p29:                            
-                                    mov              availMoves2[bx],0ffh
-    e9:                             
-                                    callDrawSquare   bx,04h
-                                    pop              bx
-                                    inc              bx
-                                    inc              si
-                                    jmp              checkBR
-    lastBR:                         
-                                    pop              ax
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov              dl,grid[bx]
-                                    push             bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
-                                    mov              cl,8
-                                    mov              al,row
-                                    imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-                                    mov              dh,grid[bx]
-                                    pop              bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp              dh,10
-                                    jl               whiteAttackerBR                                                                                                                                                                              ;white Attacker
-    ;black Attacker
-                                    cmp              dl,10
-                                    jg               precheckTL
-                                    jmp              eatBR
-    ;white Attacker
-    whiteAttackerBR:                
-                                    cmp              dl,10
-                                    jl               precheckTL
-    ; Friendly fire is disabled
-    eatBR:                          
-                                    callDrawSquare   bx,04h
-                                    cmp              PNO,1
-                                    jne              p210
-                                    mov              availMoves[bx],0ffh
-                                    jmp              e10
-    p210:                           
-                                    mov              availMoves2[bx],0ffh
-    e10:                            
-
-
-    precheckTL:                     
-    ;reset indexes
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx
-                                    mov              bl,row
-
-
-    ;***********************************************
-    ;***************** 10 o'clock Cells ************
-    ;***********************************************
-
-                                    dec              bx
-                                    dec              si
-    checkTL:                                                                                                                                                                                                                                      ;top left
-                                    cmp              bx,0ffffh
-                                    jz               precheckTR
-                                    cmp              si,0ffffh
-                                    jz               precheckTR
-                                    mov              cl,8
-                                    mov              al,bl
-                                    imul             cl
-                                    push             bx
-                                    mov              bx,ax
-                                    add              bx,si
-                                    mov              al,grid[bx]
-                                    cmp              al,00
-                                    jnz              lastTL
-                                    cmp              PNO,1
-                                    jne              p211
-                                    mov              availMoves[bx],0ffh
-                                    jmp              e11
-    p211:                           
-                                    mov              availMoves2[bx],0ffh
-    e11:                            
-                                    callDrawSquare   bx,04h
-                                    pop              bx
-                                    dec              bx
-                                    dec              si
-                                    jmp              checkTL
-    lastTL:                         
-                                    pop              ax
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov              dl,grid[bx]
-                                    push             bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
-                                    mov              cl,8
-                                    mov              al,row
-                                    imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-                                    mov              dh,grid[bx]
-                                    pop              bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp              dh,10
-                                    jl               whiteAttackerTL                                                                                                                                                                              ;white Attacker
-    ;black Attacker
-                                    cmp              dl,10
-                                    jg               precheckTR
-                                    jmp              eatTL
-    ;white Attacker
-    whiteAttackerTL:                
-                                    cmp              dl,10
-                                    jl               precheckTR
-    ; Friendly fire is disabled
-    eatTL:                          
-                                    cmp              PNO,1
-                                    jne              p212
-                                    mov              availMoves[bx],0ffh
-                                    jmp              e12
-    p212:                           
-                                    mov              availMoves2[bx],0ffh
-    e12:                            
-                                    callDrawSquare   bx,04h
-
-
-    precheckTR:                     
-    ;reset indexes
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx
-                                    mov              bl,row
-
-    ; ;**********************************************
-    ; ;***************** 2 o'clock Cells ************
-    ; ;**********************************************
-
-                                    dec              bx
-                                    inc              si
-    checkTR:                                                                                                                                                                                                                                      ;top right
-                                    cmp              bx,0ffffh
-                                    jz               precheckBL
-                                    cmp              si,08h
-                                    jz               precheckBL
-                                    mov              cl,8
-                                    mov              al,bl
-                                    imul             cl
-                                    push             bx
-                                    mov              bx,ax
-                                    add              bx,si
-                                    mov              al,grid[bx]
-                                    cmp              al,00
-                                    jnz              lastTR
-                                    cmp              PNO,1
-                                    jne              p213
-                                    mov              availMoves[bx],0ffh
-                                    jmp              e13
-    p213:                           
-                                    mov              availMoves2[bx],0ffh
-    e13:                            
-                                    callDrawSquare   bx,04h
-                                    pop              bx
-                                    dec              bx
-                                    inc              si
-                                    jmp              checkTR
-    lastTR:                         
-                                    pop              ax
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov              dl,grid[bx]
-                                    push             bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
-                                    mov              cl,8
-                                    mov              al,row
-                                    imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-                                    mov              dh,grid[bx]
-                                    pop              bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp              dh,10
-                                    jl               whiteAttackerTR                                                                                                                                                                              ;white Attacker
-    ;black Attacker
-                                    cmp              dl,10
-                                    jg               precheckBL
-                                    jmp              eatTR
-    ;white Attacker
-    whiteAttackerTR:                
-                                    cmp              dl,10
-                                    jl               precheckBL
-    ; Friendly fire is disabled
-    eatTR:                          
-                                    cmp              PNO,1
-                                    jne              p214
-                                    mov              availMoves[bx],0ffh
-                                    jmp              e14
-    p214:                           
-                                    mov              availMoves2[bx],0ffh
-    e14:                            
-                                    callDrawSquare   bx,04h
-
-    precheckBL:                     
-    ;reset indexes
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx
-                                    mov              bl,row
-
-    ; ;**********************************************
-    ; ;***************** 8 o'clock Cells ************
-    ; ;**********************************************
-
-                                    inc              bx
-                                    dec              si
-    checkBL:                                                                                                                                                                                                                                      ;bottom left
-                                    cmp              bx,08h
-                                    jz               rt1
-                                    cmp              si,0ffffh
-                                    jz               rt1
-                                    mov              cl,8
-                                    mov              al,bl
-                                    imul             cl
-                                    push             bx
-                                    mov              bx,ax
-                                    add              bx,si
-                                    mov              al,grid[bx]
-                                    cmp              al,00
-                                    jnz              lastBL
-                                    cmp              PNO,1
-                                    jne              p215
-                                    mov              availMoves[bx],0ffh
-                                    jmp              e15
-    p215:                           
-                                    mov              availMoves2[bx],0ffh
-    e15:                            
-                                    callDrawSquare   bx,04h
-                                    pop              bx
-                                    inc              bx
-                                    dec              si
-                                    jmp              checkBL
-    lastBL:                         
-                                    pop              ax
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov              dl,grid[bx]
-                                    push             bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov              bl,col
-                                    mov              bh,0
-                                    mov              si,bx                                                                                                                                                                                        ;store col number in si
-                                    mov              bl,row                                                                                                                                                                                       ;store row number in bl
-                                    mov              cl,8
-                                    mov              al,row
-                                    imul             cl
-                                    mov              bx,ax                                                                                                                                                                                        ;bx = bl(row number)*8
-                                    add              bx,si                                                                                                                                                                                        ;bx = bl(row number)*8 +si(col number)
-                                    mov              dh,grid[bx]
-                                    pop              bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp              dh,10
-                                    jl               whiteAttackerBL                                                                                                                                                                              ;white Attacker
-    ;black Attacker
-                                    cmp              dl,10
-                                    jg               rt1
-                                    jmp              eatBL
-    ;white Attacker
-    whiteAttackerBL:                
-                                    cmp              dl,10
-                                    jl               rt1
-    ; Friendly fire is disabled
-    eatBL:                          
-                                    cmp              PNO,1
-                                    jne              p216
-                                    mov              availMoves[bx],0ffh
-                                    jmp              e16
-    p216:                           
-                                    mov              availMoves2[bx],0ffh
-    e16:                            
-                                    callDrawSquare   bx,04h
-
-    rt1:                            
-                                    popa
-                                    ret
-                                    ENDp             bishopMoves
-
-queenMoves proc
-                                    pusha                                                                                                                                                                                                         ;no need to it as you push in rook and bishop and queen doesn't change rigisters (for optimization)
-    
-                                    call             bishopMoves
-                                    call             rookMoves
-      
-                                    popa
-                                    ret
-                                    ENDp             queenMoves
-
-    ;------------------------------------------------
-
-
-
+    ;*********************************************************************************************************************
+    ;*********************************************************************************************************************
+    ;************************************************ Name Page Proc *****************************************************
+    ;*********************************************************************************************************************
+    ;*********************************************************************************************************************
 
 getName proc
             
@@ -3781,7 +4106,7 @@ getName proc
                                     mov              ah,0
                                     int              16h
         
-    getCh:                                                                                                                                                                                                                                        ;read 1 ch
+    getCh:                                                                                                                                                                                                                                                                                                                      ;read 1 ch
                                     mov              ah,1
                                     int              16h
                                     jnz              validation
@@ -3814,13 +4139,13 @@ getName proc
     ;store in data
                                     mov              si,cx
                                     mov              Name1[si+1],al
-                                    cmp              cl,15                                                                                                                                                                                        ;no more ch needed
+                                    cmp              cl,15                                                                                                                                                                                                                                                                      ;no more ch needed
                                     jl               consumeBuffer
     
-    lastButton:                                                                                                                                                                                                                                   ;if name reached size limit
+    lastButton:                                                                                                                                                                                                                                                                                                                 ;if name reached size limit
                                     call             waitEnter
     
-    endGetName:                                                                                                                                                                                                                                   ;store in data
+    endGetName:                                                                                                                                                                                                                                                                                                                 ;store in data
                                     mov              Name1[1],cl
             
                                     ret
@@ -3837,12 +4162,12 @@ waitEnter proc
     getButton:                      
                                     mov              ah,1
                                     int              16h
-                                    jnz              Enter                                                                                                                                                                                        ;if user entered button it will jmp
-                                    jmp              getButton                                                                                                                                                                                    ;no button entered try again
+                                    jnz              Enter                                                                                                                                                                                                                                                                      ;if user entered button it will jmp
+                                    jmp              getButton                                                                                                                                                                                                                                                                  ;no button entered try again
     
     Enter:                          
                                     cmp              ah,1ch
-                                    jnz              popButton                                                                                                                                                                                    ; if button is not Enter, repeat
+                                    jnz              popButton                                                                                                                                                                                                                                                                  ; if button is not Enter, repeat
     ;button is Enter
     ;pop it from buffer
                                     mov              ah,0
@@ -3850,6 +4175,13 @@ waitEnter proc
         
                                     ret
                                     endp             waitEnter
+
+
+    ;*********************************************************************************************************************
+    ;*********************************************************************************************************************
+    ;************************************************ I Don't Know Proc *****************************************************
+    ;*********************************************************************************************************************
+    ;*********************************************************************************************************************
 
     ;------------------------------------------
     ;CONVERT A NUMBER IN STRING.
@@ -3865,19 +4197,19 @@ number2string proc
                                     call             dollars
                                     pop              si
 
-                                    mov              bx, 10                                                                                                                                                                                       ;DIGITS ARE EXTRACTED DIVIDING BY 10.
-                                    mov              cx, 0                                                                                                                                                                                        ;COUNTER FOR EXTRACTED DIGITS.
+                                    mov              bx, 10                                                                                                                                                                                                                                                                     ;DIGITS ARE EXTRACTED DIVIDING BY 10.
+                                    mov              cx, 0                                                                                                                                                                                                                                                                      ;COUNTER FOR EXTRACTED DIGITS.
     cycle1:                         
-                                    mov              dx, 0                                                                                                                                                                                        ;NECESSARY TO DIVIDE BY BX.
-                                    div              bx                                                                                                                                                                                           ;DX:AX / 10 = AX:QUOTIENT DX:REMAINDER.
-                                    push             dx                                                                                                                                                                                           ;PRESERVE DIGIT EXTRACTED FOR LATER.
-                                    inc              cx                                                                                                                                                                                           ;INCREASE COUNTER FOR EVERY DIGIT EXTRACTED.
-                                    cmp              ax, 0                                                                                                                                                                                        ;IF NUMBER IS
-                                    jne              cycle1                                                                                                                                                                                       ;NOT ZERO, LOOP.
+                                    mov              dx, 0                                                                                                                                                                                                                                                                      ;NECESSARY TO DIVIDE BY BX.
+                                    div              bx                                                                                                                                                                                                                                                                         ;DX:AX / 10 = AX:QUOTIENT DX:REMAINDER.
+                                    push             dx                                                                                                                                                                                                                                                                         ;PRESERVE DIGIT EXTRACTED FOR LATER.
+                                    inc              cx                                                                                                                                                                                                                                                                         ;INCREASE COUNTER FOR EVERY DIGIT EXTRACTED.
+                                    cmp              ax, 0                                                                                                                                                                                                                                                                      ;IF NUMBER IS
+                                    jne              cycle1                                                                                                                                                                                                                                                                     ;NOT ZERO, LOOP.
     ;NOW RETRIEVE PUSHED DIGITS.
     cycle2:                         
                                     pop              dx
-                                    add              dl, 48                                                                                                                                                                                       ;CONVERT DIGIT TO CHARACTER.
+                                    add              dl, 48                                                                                                                                                                                                                                                                     ;CONVERT DIGIT TO CHARACTER.
                                     mov              [ si ], dl
                                     inc              si
                                     loop             cycle2
