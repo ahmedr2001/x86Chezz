@@ -51,9 +51,11 @@ notificationBar MACRO hello, exclamation, name1, messageTemp
     printCharColorTimes '-', 80, 0fh  ; Print '-' with white foreground black background 80 times (whole screen width)
     
     moveCursor 1800h
+    printString emptyNotification
+    moveCursor 1800h
     printString hello
-    printString name1+2
     printString exclamation
+    printString name1+2
     printString messageTemp
 ; CHECK: 
 ;     mov ah,0ch
@@ -1104,7 +1106,7 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
       
      mov ax, 0003h
      int 10h
-     notificationBar hello, exclamation, name1, messageTemp                                              
+     notificationBar hello, name1, exclamation,ignoreMes                                              
      ;mov ah,1
 ;     int 21h        
 ;     
@@ -1182,7 +1184,7 @@ enterms:
      mov dx,offset mes3
      int 21h     
              
-    notificationBar hello, exclamation, name1, messageTemp
+     notificationBar hello, name1, exclamation,ignoreMes                                              
 
 
     cmp NameExchangeDone,0
@@ -1290,7 +1292,7 @@ sendInvitaion:
     cmp al,31h
     jnz checkf2
     mov charSend,al
-    notificationBar hello, exclamation, name1, chatinvitation
+    notificationBar chatInvitationMes, sentMes, name2, exclamation
     
     sendf1:
     ; Check that Transmitter Holding Register is Empty
@@ -1313,7 +1315,8 @@ sendInvitaion:
     cmp al,32h
     jnz checkexit
     mov charSend,al
-    notificationBar hello, exclamation, name1, GameInvitation;;;
+    notificationBar gameInvitationMes, sentMes, name2, exclamation
+
     
     sendf2:
     ; Check that Transmitter Holding Register is Empty
@@ -1374,7 +1377,7 @@ sendInvitaion:
             jz chatMode
             cmp al,32h
             jz preplaygame
-            notificationBar hello,exclamation,name1,GameInvitation
+            notificationBar name2,refuseMes,invitationMes,exclamation
             cmp al,1bh
             jz checkkey
             jmp ReceiveInv
@@ -1954,13 +1957,13 @@ jmp checkkeygm
             ; jmp playgame
             cmp al,31h
             jnz checkGameInvitaion
-            notificationBar hello,exclamation,name2,chatinvitation
+            notificationBar chatInvitationMes,recivedMes,name2,exclamation
             jmp SendResponse
 
             checkGameInvitaion:
             cmp al,32h
             jnz checkExitInvitaion
-            notificationBar hello,exclamation,name2,GameInvitation
+            notificationBar gameInvitationMes,recivedMes,name2,exclamation
             jmp SendResponse
             
             checkExitInvitaion:
@@ -2737,8 +2740,14 @@ ENDM getAvailForSelectedPiece
     messageTemp         db  ' - Temporary notification bar for now. Happy Hacking!$'
     name1               db  30,?,30 dup('$')
     name2               db  30,?,30 dup('$')                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ;we received more bits than we expected;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;DANGER                                        ;First byte is the size, second byte is the number of characters from the keyboard
-    chatinvitation      db  'i want to enter chat                                       $'
-    GameInvitation      db  'i want to enter Game                                       $'
+    chatInvitationMes   db  'chat invitation $'
+    GameInvitationMes   db  'game invitation $'
+    sentMes             db  'sent to $'
+    recivedMes          db  'recived from $'
+    refuseMes           db  'refused the $'
+    invitationMes       db  'invitation $'
+    ignoreMes           db  ' $'
+    Emptynotification   db  '                                                                          $'
 
     boardWidth          equ 160
     boardHeight         equ 160
