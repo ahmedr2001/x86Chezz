@@ -1562,7 +1562,7 @@ p2_moved:
             in  al , dx
             AND al , 1
             JZ  checkkeygm                    ;if no data to reciverd) then check if i want to send
-    ;If Ready read the VALUE in Receive data register
+    ;If Ready read the VALUE in Receive data register                      ;wonderful comments!
             mov dx , 03F8H
             in  al , dx
             mov player2_piece , al
@@ -1844,6 +1844,7 @@ cmp al,1bh
 jnz consumebuffergm
 
 
+
 ; mov keypressed,al
 
 drawSquareOnCell 07,selectedRow,selectedCol
@@ -1888,6 +1889,8 @@ e:
      int 10h
 
 jmp st
+
+
 
 
 consumebuffergm:
@@ -4733,7 +4736,7 @@ chat proc
                                     int                 21h
 
                                     mov                 ah, 2
-                                    mov                 dx, 0B00h
+                                    mov                 dx, 0C00h
                                     int                 10h
 
                                     mov                 dx,offset khat
@@ -4741,7 +4744,7 @@ chat proc
                                     int                 21h
 
                                     mov                 ah,2
-                                    mov                 dx,0C00h
+                                    mov                 dx,0D00h
                                     int                 10h
 
                                     mov                 dx,offset name2+2
@@ -4972,7 +4975,7 @@ movePiece proc
                                     je                  notWin
                                     push                ax
                                     push                bx
-                                    mov                 dx, 1800h
+                                    mov                 dx, 1400h
                                     mov                 bx, 0
                                     mov                 ah, 2
                                     int                 10h     ;move cursor    
@@ -5003,7 +5006,7 @@ movePiece proc
                                     jmp                 noMove
     gameWon1:                       
     ; resetavailmoves2
-                                    moveCursor          1800h
+                                    moveCursor          1400h
                                     mov                 dx, offset winMessageP1
                                     mov                 ah, 09h
                                     int                 21h
@@ -5089,6 +5092,7 @@ movePiece proc
                                     jmp                 st
                                     jmp                 noMove
     gameWon2:                       
+                                    moveCursor          1400h
                                     mov                 dx, offset winMessageP2
                                     mov                 ah, 09
                                     int                 21h
