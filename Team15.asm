@@ -364,7 +364,7 @@ ENDM checkEmptyCell
 
 callAppropriateMove macro player,sr,sc,cr,cc
 local en,notmoved,check2,check3,check4,check5,check6,check7,check8,check9,check10,check11,check12,check13,check14,check15,check16,p2,startm
-local enm,p22,enm3,p23,enm4,p24,enm5,enm6,enm7,enm8,enm9,enm10,enm11,enm12,enm13,enm14,enm15,enm16,enm17,p25,p26,p27,p28,p29,p210,p211,p212,p213,p214,p215,p216,p217
+local nm2,enm,p22,enm3,p23,enm4,p24,enm5,enm6,enm7,enm8,enm9,enm10,enm11,enm12,enm13,enm14,enm15,enm16,enm17,p25,p26,p27,p28,p29,p210,p211,p212,p213,p214,p215,p216,p217
 pusha
 mov cl,player
 
@@ -1578,28 +1578,29 @@ p2_moved:
             in  al , dx
             mov player2_toCol , al
 
+    ; callAppropriateMove Player2_color,player2_fromRow,player2_fromCol,player2_toRow,player2_toCol
 
 ;     ;Here we excuted this data 
-mov cl,player2_fromRow
-mov ch,0
-callDrawSquare cx,03h
-mov cl,player2_fromCol
-mov ch,0
-callDrawSquare cx,05h
-mov cl,player2_toRow
-mov ch,0
-callDrawSquare cx,06h
-mov cl,player2_toCol
-mov ch,0
-callDrawSquare cx,02h
-mov cl,player2_piece
-mov ch,0
-callDrawSquare cx,01h
+;;;;;;;;;;;;;;;;;;;TEST;;;;;;;;;;;;;;;;;;;;;;;
+; mov cl,player2_fromRow
+; mov ch,0
+; callDrawSquare cx,03h
+; mov cl,player2_fromCol
+; mov ch,0
+; callDrawSquare cx,05h
+; mov cl,player2_toRow
+; mov ch,0
+; callDrawSquare cx,06h
+; mov cl,player2_toCol
+; mov ch,0
+; callDrawSquare cx,02h
+; mov cl,player2_piece
+; mov ch,0
+; callDrawSquare cx,01h
 
-; drawSquareOnCell 03,player2_fromRow,player2_fromCol
-; drawSquareOnCell 03,player2_toRow,player2_toCol
+drawSquareOnCell 03,player2_fromRow,player2_fromCol
+drawSquareOnCell 03,player2_toRow,player2_toCol
 
-    ; callAppropriateMove Player2_color,player2_fromRow,player2_fromCol,player2_toRow,player2_toCol
 
     jmp checkkeygm
 
@@ -1700,8 +1701,10 @@ jne preventSelection
 
 mov cl,currColumn
 mov selectedCol,cl
+mov PreviousSelectedCol,cl
 mov cl,currRow
 mov selectedRow,cl
+mov PreviousSelectedRow,cl
 drawSquareOnCell 03h,currRow,currColumn
 
 getAvailForSelectedPiece currRow,currColumn,Player1_color
@@ -1739,7 +1742,7 @@ resetavailmoves
             JZ  send_code
     ; If empty put the VALUE in Transmit data register
             mov dx , 3F8H               ; Transmit data register
-            mov al,32
+            mov al,selectedPiece
             out dx , al
     ;2
     send_fr:
@@ -1751,7 +1754,7 @@ resetavailmoves
             JZ  send_fr
     ; If empty put the VALUE in Transmit data register
             mov dx , 3F8H               ; Transmit data register
-            mov al,34
+            mov al,PreviousSelectedRow
             out dx , al
     ;3
     send_fc:
@@ -1763,7 +1766,7 @@ resetavailmoves
             JZ  send_fc
     ; If empty put the VALUE in Transmit data register
             mov dx , 3F8H               ; Transmit data register
-            mov al,36
+            mov al,PreviousSelectedCol
             out dx , al
     ;4
     send_tr:
@@ -1775,7 +1778,7 @@ resetavailmoves
             JZ  send_tr
     ; If empty put the VALUE in Transmit data register
             mov dx , 3F8H               ; Transmit data register
-            mov al,38
+            mov al,currRow
             out dx , al
     ;5
     send_tc:
@@ -1787,7 +1790,7 @@ resetavailmoves
             JZ  send_tc
     ; If empty put the VALUE in Transmit data register
             mov dx , 3F8H               ; Transmit data register
-            mov al,40
+            mov al,currColumn
             out dx , al
 
 
@@ -2672,6 +2675,10 @@ ENDM getAvailForSelectedPiece
 
 
     NameExchangeDone db  0
+
+    PreviousSelectedRow     db  0ffh
+    PreviousSelectedCol     db  0ffh
+
 
     ; ;---------------------------------------------------------------------------------------
 
