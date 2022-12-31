@@ -7,6 +7,7 @@
 moveCursor MACRO position
     pusha    
     mov ah, 2
+    mov bh, 0
     mov dx, position
     int 10h             ; use interrupt 10/2, dx contains position
     popa
@@ -17,9 +18,11 @@ ENDM moveCursor
 ; Macro to print string
 ; Takes message as parameter
 printString MACRO message
+pusha
     mov ah, 9
     mov dx, offset message
     int 21h
+popa
 ENDM printString 
 ;--------------------------------------   
 
@@ -28,12 +31,14 @@ ENDM printString
 ; with given colors
 ; Takes char, count, back color front color
 printCharColorTimes MACRO char, count, backfront
+pusha
     mov ah, 9
     mov bh, 0
     mov al, char
     mov cx, count
     mov bl, backfront
     int 10h                 ; interrupt 10/9
+popa
 ENDM printCharColorTimes    
 ;----------------------------------
 
@@ -46,7 +51,6 @@ notificationBar MACRO hello, exclamation, name1, messageTemp
     printCharColorTimes '-', 80, 0fh  ; Print '-' with white foreground black background 80 times (whole screen width)
     
     moveCursor 1800h
-
     printString hello
     printString name1+2
     printString exclamation
@@ -2658,8 +2662,8 @@ ENDM getAvailForSelectedPiece
     messageTemp      db  ' - Temporary notification bar for now. Happy Hacking!$'
     name1            db  30,?,30 dup('$')
     name2            db  30,?,30 dup('$')                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ;we received more bits than we expected;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;DANGER                                        ;First byte is the size, second byte is the number of characters from the keyboard
-    chatinvitation   db  'i want to enter chat $'
-    GameInvitation   db  'i want to enter Game $'
+    chatinvitation   db  'i want to enter chat                                       $'
+    GameInvitation   db  'i want to enter Game                                       $'
 
     boardWidth       equ 160
     boardHeight      equ 160
