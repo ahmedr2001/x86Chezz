@@ -1107,7 +1107,10 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
 ; notificationBar hello,exclamation,name2,winMessageP1
 enterms:
      mov ah,5
-     mov al,0o
+     mov al,0h            ; غمزة
+     int 10h
+
+     mov ax,0003h
      int 10h
             
      ;set cursor position       
@@ -1354,6 +1357,7 @@ sendInvitaion:
      chatMode:
      ;code here for entring chatting mode
      call chat
+     jmp enterms
      mov keypressed,al
      ;to consume the buffer
      jmp consumebufferms
@@ -4704,12 +4708,16 @@ chat proc
     ; int 21h
                                     mov              al, '$'
                                     mov              ah,1
-                                    int              16h
+                                    int              16h      ; get char w/o wait
     
                                     mov              dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
 
                                     cmp              al, 1bh
                                     jne              nort
+                                    out              dx, al
+                                    mov              ah,0ch
+                                    mov              al,0
+                                    int              21h; clear buffer only after sending
                                     jmp              rt
 
     nort:                           
@@ -4780,12 +4788,18 @@ chat proc
                                     in               al , dx
                                     AND              al , 1
                                     JNZ              rec
-                                    jmp              cht                                                                                                                                                                                                                                                                        ; check if ready
+                                    jmp              cht                  ;check ready                                                                                                                                                                                                                                                               ; check if ready
 
     rec:                            
                                     mov              dx , 03F8H
                                     in               al , dx
     ; mov VALUE , al
+                                        
+                                    cmp              al, 1bh
+                                    jne              nort2
+                                    jmp rt
+
+                                nort2:
                                     cmp              al,1ch
                                     jz               nwline
                                     jnz              pchar
