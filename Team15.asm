@@ -391,7 +391,18 @@ mov bx,ax
 mov al,grid[bx]
 cmp al,1
 jne check2
-movePiece 1, sr, sc,cr, cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 1
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p22
 mov hasmoved,1
@@ -403,7 +414,19 @@ jmp en
 check2:
 cmp al,2
 jne check3
-movePiece 2, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 2, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 2
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p23
 mov hasmoved,1
@@ -415,7 +438,19 @@ jmp en
 check3:
 cmp al,3
 jne check4
-movePiece 3, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 3, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 3
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p24
 mov hasmoved,1
@@ -427,7 +462,19 @@ jmp en
 check4:
 cmp al,4
 jne check5
-movePiece 4, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 4, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 4
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p25
 mov hasmoved,1
@@ -439,7 +486,19 @@ jmp en
 check5:
 cmp al,5
 jne check6
-movePiece 5, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 5, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 5
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p26
 mov hasmoved,1
@@ -451,7 +510,19 @@ jmp en
 check6:
 cmp al,6
 jne check7
-movePiece 6, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 6, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 6
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p27
 mov hasmoved,1
@@ -463,7 +534,19 @@ jmp en
 check7:
 cmp al,7
 jne check8
-movePiece 7, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 7, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 7
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p28
 mov hasmoved,1
@@ -475,7 +558,19 @@ jmp en
 check8:
 cmp al,8
 jne check9
-movePiece 8, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 8, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 8
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p29
 mov hasmoved,1
@@ -487,7 +582,19 @@ jmp en
 check9:
 cmp al,9
 jne check10
-movePiece 9, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 9, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 9
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p210
 mov hasmoved,1
@@ -499,7 +606,19 @@ jmp en
 check10:
 cmp al,10
 jne check11
-movePiece 10, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 10, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 10
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p211
 mov hasmoved,1
@@ -511,7 +630,19 @@ jmp en
 check11:
 cmp al,11
 jne check12
-movePiece 11, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 11, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 11
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p212
 mov hasmoved,1
@@ -523,7 +654,19 @@ jmp en
 check12:
 cmp al,12
 jne check13
-movePiece 12, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 12, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 12
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p213
 mov hasmoved,1
@@ -535,7 +678,19 @@ jmp en
 check13:
 cmp al,13
 jne check14
-movePiece 13, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 13, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 13
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p214
 mov hasmoved,1
@@ -547,7 +702,19 @@ jmp en
 check14:
 cmp al,14
 jne check15
-movePiece 14, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 14, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 14
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p215
 mov hasmoved,1
@@ -559,7 +726,19 @@ jmp en
 check15:
 cmp al,15
 jne check16
-movePiece 15, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 15, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 15
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p216
 mov hasmoved,1
@@ -571,7 +750,19 @@ jmp en
 check16:
 cmp al,16
 jne en
-movePiece 16, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+; movePiece 16, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+mov code, 16
+push ax
+mov al, sr
+mov fromRow, al
+mov al, sc
+mov fromColumn, al
+mov al, cr
+mov toRow, al
+mov al, cc
+mov toColumn, al
+pop ax
+call movePiece
 cmp cl,1
 jne p217
 mov hasmoved,1
@@ -1764,105 +1955,105 @@ jmp checkkeygm
 
 endm mainScreen  
 
-;------------------------------------------------------------
-movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
-    local noMove, gameWon1, gameWon2, notWin, checkGameWon
-    pusha
-    mov ah,00h
-    int 1ah
-    mov ah, 0
-    mov al, fromRow
-    mov bl, 8
-    imul bl
-    add al, fromColumn
-    mov bx, ax
-    ; lea di, cooldown
-    mov ax, cooldown[bx]
-    sub dx, ax
-    cmp dx, 50
-    ; jl noMove
+; ;------------------------------------------------------------
+; movePiece MACRO code, fromRow, fromColumn, toRow, toColumn, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+;     local noMove, gameWon1, gameWon2, notWin, checkGameWon
+;     pusha
+;     mov ah,00h
+;     int 1ah
+;     mov ah, 0
+;     mov al, fromRow
+;     mov bl, 8
+;     imul bl
+;     add al, fromColumn
+;     mov bx, ax
+;     ; lea di, cooldown
+;     mov ax, cooldown[bx]
+;     sub dx, ax
+;     cmp dx, 50
+;     ; jl noMove
 
-    eraseImage fromColumn, fromRow, greyCell, whiteCell
-    ; lea si, grid
-    mov al, fromRow
-    mov bl, 8
-    imul bl
-    add al, fromColumn
-    mov bx, ax
-    mov grid[bx], 0
-    eraseImage toColumn, toRow, greyCell, whiteCell
-    drawEncodingOnBoard code, toColumn, toRow
-    ; lea si, grid
-    mov al, toRow
-    mov bl, 8
-    imul bl
-    add al, toColumn
-    mov bx, ax
-    mov ah, grid[bx]
-    cmp ah, 0
-    je notWin 
-    push ax
-    push bx
-    mov dx, 1800h
-    mov bx, 0
-    mov ah, 2
-    int 10h
-    mov dx, offset eatWP
-    mov ah, 9
-    int 21h
-    pop bx
-    pop ax
-checkGameWon:    
-    cmp ah, 6
-    jz gameWon2
-    cmp ah, 16
-    jz gameWon1
-notWin:    
-    mov grid[bx], code
-    mov ah,00h
-    int 1ah
-    ; lea di, cooldown
-    mov al, toRow
-    mov bl, 8
-    imul bl
-    add al, toColumn
-    mov bx, ax
-    mov cooldown[bx], dx
-    jmp noMove
-gameWon1:
-    resetavailmoves2
-    moveCursor 1800h
-    mov dx, offset winMessageP1
-    mov ah, 09h
-    int 21h
-    mov cx, 0fh
-    mov dx, 4240h
-    mov ah, 86h
-    int 15h
-    mov ah,0
-int 16h
+;     eraseImage fromColumn, fromRow, greyCell, whiteCell
+;     ; lea si, grid
+;     mov al, fromRow
+;     mov bl, 8
+;     imul bl
+;     add al, fromColumn
+;     mov bx, ax
+;     mov grid[bx], 0
+;     eraseImage toColumn, toRow, greyCell, whiteCell
+;     drawEncodingOnBoard code, toColumn, toRow
+;     ; lea si, grid
+;     mov al, toRow
+;     mov bl, 8
+;     imul bl
+;     add al, toColumn
+;     mov bx, ax
+;     mov ah, grid[bx]
+;     cmp ah, 0
+;     je notWin 
+;     push ax
+;     push bx
+;     mov dx, 1800h
+;     mov bx, 0
+;     mov ah, 2
+;     int 10h
+;     mov dx, offset eatWP
+;     mov ah, 9
+;     int 21h
+;     pop bx
+;     pop ax
+; checkGameWon:    
+;     cmp ah, 6
+;     jz gameWon2
+;     cmp ah, 16
+;     jz gameWon1
+; notWin:    
+;     mov grid[bx], code
+;     mov ah,00h
+;     int 1ah
+;     ; lea di, cooldown
+;     mov al, toRow
+;     mov bl, 8
+;     imul bl
+;     add al, toColumn
+;     mov bx, ax
+;     mov cooldown[bx], dx
+;     jmp noMove
+; gameWon1:
+;     resetavailmoves2
+;     moveCursor 1800h
+;     mov dx, offset winMessageP1
+;     mov ah, 09h
+;     int 21h
+;     mov cx, 0fh
+;     mov dx, 4240h
+;     mov ah, 86h
+;     int 15h
+;     mov ah,0
+; int 16h
 
- mov ax, 0003h
-     int 10h
-    jmp st
-    jmp noMove
-gameWon2:
-    mov dx, offset winMessageP2
-    mov ah, 09
-    int 21h
-    mov cx, 0fh
-    mov dx, 4240h
-    mov ah, 86h
-    int 15h
-    mov ah,0
-int 16h
+;  mov ax, 0003h
+;      int 10h
+;     jmp st
+;     jmp noMove
+; gameWon2:
+;     mov dx, offset winMessageP2
+;     mov ah, 09
+;     int 21h
+;     mov cx, 0fh
+;     mov dx, 4240h
+;     mov ah, 86h
+;     int 15h
+;     mov ah,0
+; int 16h
 
- mov ax, 0003h
-     int 10h
-    jmp st
-noMove:
-    popa
-ENDM movePiece
+;  mov ax, 0003h
+;      int 10h
+;     jmp st
+; noMove:
+;     popa
+; ENDM movePiece
 
 getAvailForSelectedPiece MACRO r,c,player
     local rt,blackrock,whitebishop,blackbishop,whitequeen,blackqueen,king1,king2,whitepawn,blackpawn,blackknight,whiteknight,preking,prepawn,preknight
@@ -2478,6 +2669,11 @@ ENDM getAvailForSelectedPiece
     IsmailCol        db  ?
     PNO              db  ?
 
+    code             db  ?
+    fromRow          db  ?
+    fromColumn       db  ?
+    toRow            db  ?
+    toColumn         db  ?
 
 
     value            db  ?,"$"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ;Data to recive in
@@ -4639,5 +4835,111 @@ chat proc
                                     ret
 
                                     endp
+
+movePiece proc
+        pusha
+
+        mov ah,00h
+        int 1ah
+        mov ah, 0
+        mov al, fromRow
+        mov bl, 8
+        imul bl
+        add al, fromColumn
+        mov bx, ax
+        ; lea di, cooldown
+        mov ax, cooldown[bx]
+        sub dx, ax
+        cmp dx, 50
+        ; jl noMove
+
+        eraseImage fromColumn, fromRow, greyCell, whiteCell
+        ; lea si, grid
+        mov al, fromRow
+        mov bl, 8
+        imul bl
+        add al, fromColumn
+        mov bx, ax
+        mov grid[bx], 0
+        eraseImage toColumn, toRow, greyCell, whiteCell
+        drawEncodingOnBoard code, toColumn, toRow
+        ; lea si, grid
+        mov al, toRow
+        mov bl, 8
+        imul bl
+        add al, toColumn
+        mov bx, ax
+        mov ah, grid[bx]
+        cmp ah, 0
+        je notWin 
+        push ax
+        push bx
+        mov dx, 1800h
+        mov bx, 0
+        mov ah, 2
+        int 10h
+        mov dx, offset eatWP
+        mov ah, 9
+        int 21h
+        pop bx
+        pop ax
+    checkGameWon:    
+        cmp ah, 6
+        jz gameWon2
+        cmp ah, 16
+        jz gameWon1
+    notWin:
+        push ax
+        mov al, code    
+        mov grid[bx], al
+        pop ax
+        mov ah,00h
+        int 1ah
+        ; lea di, cooldown
+        mov al, toRow
+        mov bl, 8
+        imul bl
+        add al, toColumn
+        mov bx, ax
+        mov cooldown[bx], dx
+        jmp noMove
+    gameWon1:
+        resetavailmoves2
+        moveCursor 1800h
+        mov dx, offset winMessageP1
+        mov ah, 09h
+        int 21h
+        mov cx, 0fh
+        mov dx, 4240h
+        mov ah, 86h
+        int 15h
+        mov ah,0
+    int 16h
+
+    mov ax, 0003h
+        int 10h
+        jmp st
+        jmp noMove
+    gameWon2:
+        mov dx, offset winMessageP2
+        mov ah, 09
+        int 21h
+        mov cx, 0fh
+        mov dx, 4240h
+        mov ah, 86h
+        int 15h
+        mov ah,0
+    int 16h
+
+    mov ax, 0003h
+        int 10h
+        jmp st
+    noMove:
+        
+
+        popa
+        ret
+
+        endp                                    
 
 end main 
