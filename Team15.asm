@@ -394,6 +394,8 @@ cmp al,1
 jne check2
 mov code, 1
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -418,6 +420,8 @@ jne check3
 ; movePiece 2, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 2
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -442,6 +446,8 @@ jne check4
 ; movePiece 3, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 3
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -466,6 +472,8 @@ jne check5
 ; movePiece 4, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 4
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -490,6 +498,8 @@ jne check6
 ; movePiece 5, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 5
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -514,6 +524,8 @@ jne check7
 ; movePiece 6, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 6
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -538,6 +550,8 @@ jne check8
 ; movePiece 7, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 7
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -562,6 +576,8 @@ jne check9
 ; movePiece 8, sr, sc,  cr,cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 8
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -586,6 +602,8 @@ jne check10
 ; movePiece 9, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 9
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -610,6 +628,8 @@ jne check11
 ; movePiece 10, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 10
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -634,6 +654,8 @@ jne check12
 ; movePiece 11, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 11
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -658,6 +680,8 @@ jne check13
 ; movePiece 12, sr, sc, cr,cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 12
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -682,6 +706,8 @@ jne check14
 ; movePiece 13, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 13
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -706,6 +732,8 @@ jne check15
 ; movePiece 14, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 14
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -730,6 +758,8 @@ jne check16
 ; movePiece 15, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 15
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -754,6 +784,8 @@ jne en
 ; movePiece 16, sr, sc,cr, cc,  grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 mov code, 16
 push ax
+mov al, player
+mov PNO, al
 mov al, sr
 mov fromRow, al
 mov al, sc
@@ -4955,9 +4987,12 @@ movePiece proc
                                     int                 16h
 
                                     pusha
+                                    mov                 cl,PNO
+                                    cmp                 cl,Player1_color
+                                    jne                 skipSendWon1
     ;   Send My Movement
     ;1
-    send_code1:                      
+    send_code1:                     
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -4969,7 +5004,7 @@ movePiece proc
                                     mov                 al,selectedPiece
                                     out                 dx , al
     ;2
-    send_fr1:                        
+    send_fr1:                       
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -4981,7 +5016,7 @@ movePiece proc
                                     mov                 al,PreviousSelectedRow
                                     out                 dx , al
     ;3
-    send_fc1:                        
+    send_fc1:                       
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -4993,7 +5028,7 @@ movePiece proc
                                     mov                 al,PreviousSelectedCol
                                     out                 dx , al
     ;4
-    send_tr1:                        
+    send_tr1:                       
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -5005,7 +5040,7 @@ movePiece proc
                                     mov                 al,currRow
                                     out                 dx , al
     ;5
-    send_tc1:                        
+    send_tc1:                       
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -5017,6 +5052,7 @@ movePiece proc
                                     mov                 al,currColumn
                                     out                 dx , al
 
+    skipSendWon1:                   
                                     popa
 
 
@@ -5036,10 +5072,13 @@ movePiece proc
                                     int                 16h
 
 
-                                                                      pusha
+                                    pusha
+                                    mov                 cl,PNO
+                                    cmp                 cl,Player1_color
+                                    jne                 skipSendWon2
     ;   Send My Movement
     ;1
-    send_code2:                      
+    send_code2:                     
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -5051,7 +5090,7 @@ movePiece proc
                                     mov                 al,selectedPiece
                                     out                 dx , al
     ;2
-    send_fr2:                        
+    send_fr2:                       
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -5063,7 +5102,7 @@ movePiece proc
                                     mov                 al,PreviousSelectedRow
                                     out                 dx , al
     ;3
-    send_fc2:                        
+    send_fc2:                       
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -5075,7 +5114,7 @@ movePiece proc
                                     mov                 al,PreviousSelectedCol
                                     out                 dx , al
     ;4
-    send_tr2:                        
+    send_tr2:                       
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -5087,7 +5126,7 @@ movePiece proc
                                     mov                 al,currRow
                                     out                 dx , al
     ;5
-    send_tc2:                        
+    send_tc2:                       
     ; Check that Transmitter Holding Register is Empty
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
@@ -5099,6 +5138,7 @@ movePiece proc
                                     mov                 al,currColumn
                                     out                 dx , al
 
+    skipSendWon2:                   
                                     popa
 
                                     mov                 ax, 0003h
