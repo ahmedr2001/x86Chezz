@@ -1150,6 +1150,10 @@ enterms:
      int 21h     
              
     notificationBar hello, exclamation, name1, messageTemp
+
+
+    cmp NameExchangeDone,0
+    jnz sendInvitaion
    
 presend:
  mov dx , 3FDH             ; Line Status Register
@@ -1205,6 +1209,7 @@ nameExchange:
 FinishSend:
 mov fsend,1
 cmp freceive,1
+mov NameExchangeDone,1
 jz sendInvitaion
 
 ReceiveName:
@@ -1231,8 +1236,11 @@ ReceiveName:
 finishreceive:
 mov freceive,1
 cmp fsend,1
+mov NameExchangeDone,1
 jz sendInvitaion
 jnz nameExchange
+
+
 
 
             
@@ -1521,8 +1529,10 @@ p2_moved:
             mov dx , 03F8H
             in  al , dx
             mov player2_piece , al
+            ; mov ah,0
+            ; callDrawSquare ax,04
             cmp al,1bh
-            jz exitgame
+            jz e
     ;2
     recive_fr:
     ;Check that Data Ready
@@ -1809,23 +1819,39 @@ exitgame:
 cmp al,1bh
 jnz consumebuffergm
 
-;consume buffet then go to main screen
 
+ sendExitGame:
+    ; Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH               ; Line Status Register
+
+            In  al , dx                 ;Read Line Status
+            AND al , 00100000b
+            JZ  sendExitGame
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H               ; Transmit data register
+            mov al,1bh
+            out dx , al
+
+;consume buffet then go to main screen
 mov ah,0
 int 16h
+
+mov ah,0
+e:
+; callDrawSquare ax,04h
 
  mov ax, 0003h
      int 10h
 
 jmp st
 
-;########################### End Game Mode (We assume that)
 
 consumebuffergm:
 mov ah,0
 int 16h
 jmp checkkeygm
 
+;########################### End Game Mode (We assume that)
     
     ;Change to Text MODE
     
@@ -1914,6 +1940,7 @@ jmp checkkeygm
         mov cl ,value
 
         cmp al,1bh
+        ; notificationBar hello,exclamation,name1
         jz validSendResponse
 
         cmp cl,al
@@ -2642,6 +2669,9 @@ ENDM getAvailForSelectedPiece
     player2_fromCol  db  0
     player2_toRow    db  0
     player2_toCol    db  0
+
+
+    NameExchangeDone db  0
 
     ; ;---------------------------------------------------------------------------------------
 
