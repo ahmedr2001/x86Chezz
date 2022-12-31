@@ -4942,7 +4942,7 @@ movePiece proc
                                     mov                 cooldown[bx], dx
                                     jmp                 noMove
     gameWon1:                       
-                                    ; resetavailmoves2
+    ; resetavailmoves2
                                     moveCursor          1800h
                                     mov                 dx, offset winMessageP1
                                     mov                 ah, 09h
@@ -4954,8 +4954,71 @@ movePiece proc
                                     mov                 ah,0
                                     int                 16h
 
+                                    pusha
+    ;   Send My Movement
+    ;1
+    send_code1:                      
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
-                                    
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_code1
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,selectedPiece
+                                    out                 dx , al
+    ;2
+    send_fr1:                        
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_fr1
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,PreviousSelectedRow
+                                    out                 dx , al
+    ;3
+    send_fc1:                        
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_fc1
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,PreviousSelectedCol
+                                    out                 dx , al
+    ;4
+    send_tr1:                        
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_tr1
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,currRow
+                                    out                 dx , al
+    ;5
+    send_tc1:                        
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_tc1
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,currColumn
+                                    out                 dx , al
+
+                                    popa
+
 
                                     mov                 ax, 0003h
                                     int                 10h
@@ -4971,6 +5034,72 @@ movePiece proc
                                     int                 15h
                                     mov                 ah,0
                                     int                 16h
+
+
+                                                                      pusha
+    ;   Send My Movement
+    ;1
+    send_code2:                      
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_code2
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,selectedPiece
+                                    out                 dx , al
+    ;2
+    send_fr2:                        
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_fr2
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,PreviousSelectedRow
+                                    out                 dx , al
+    ;3
+    send_fc2:                        
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_fc2
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,PreviousSelectedCol
+                                    out                 dx , al
+    ;4
+    send_tr2:                        
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_tr2
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,currRow
+                                    out                 dx , al
+    ;5
+    send_tc2:                        
+    ; Check that Transmitter Holding Register is Empty
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  send_tc2
+    ; If empty put the VALUE in Transmit data register
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                    mov                 al,currColumn
+                                    out                 dx , al
+
+                                    popa
 
                                     mov                 ax, 0003h
                                     int                 10h
