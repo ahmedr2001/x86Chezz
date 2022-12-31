@@ -389,7 +389,6 @@ imul bl
 add al,sc
 mov bx,ax
 mov al,grid[bx]
-
 cmp al,1
 jne check2
 movePiece 1, sr, sc,cr, cc, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
@@ -1312,72 +1311,92 @@ int 21h
 mov ah,1
 int 16h
 jnz w
-jz checkkeygm
+; jz checkkeygm
+jz p2_moved
 
-; jz p2_moved
 
-; p2_moved:
-;     ;1
-;     ;Check that Data Ready
-;             mov dx , 3FDH               ; Line Status Register
-;             in  al , dx
-;             AND al , 1
-;             JZ  checkkeygm                    ;if no data to reciverd) then check if i want to send
-;     ;If Ready read the VALUE in Receive data register
-;             mov dx , 03F8H
-;             in  al , dx
-;             mov player2_piece , al
-;             cmp al,1bh
-;             jz exitgame
-;     ;2
-;     recive_fr:
-;     ;Check that Data Ready
-;             mov dx , 3FDH               ; Line Status Register
-;             in  al , dx
-;             AND al , 1
-;             JZ  recive_fr                    ;if no data to reciverd) then check if i want to send
-;     ;If Ready read the VALUE in Receive data register
-;             mov dx , 03F8H
-;             in  al , dx
-;             mov player2_fromRow , al
-;     ;3
-;     recive_fc:
-;     ;Check that Data Ready
-;             mov dx , 3FDH               ; Line Status Register
-;             in  al , dx
-;             AND al , 1
-;             JZ  recive_fc                    ;if no data to reciverd) then check if i want to send
-;     ;If Ready read the VALUE in Receive data register
-;             mov dx , 03F8H
-;             in  al , dx
-;             mov player2_fromCol , al
-;     ;4
-;     recive_tr:
-;     ;Check that Data Ready
-;             mov dx , 3FDH               ; Line Status Register
-;             in  al , dx
-;             AND al , 1
-;             JZ  recive_tr                    ;if no data to reciverd) then check if i want to send
-;     ;If Ready read the VALUE in Receive data register
-;             mov dx , 03F8H
-;             in  al , dx
-;             mov player2_toRow , al
-;     ;5
-;     recive_tc:
-;     ;Check that Data Ready
-;             mov dx , 3FDH               ; Line Status Register
-;             in  al , dx
-;             AND al , 1
-;             JZ  recive_tc                    ;if no data to reciverd) then check if i want to send
-;     ;If Ready read the VALUE in Receive data register
-;             mov dx , 03F8H
-;             in  al , dx
-;             mov player2_toCol , al
+p2_moved:
+    ;1
+    ;Check that Data Ready
+            mov dx , 3FDH               ; Line Status Register
+            in  al , dx
+            AND al , 1
+            JZ  checkkeygm                    ;if no data to reciverd) then check if i want to send
+    ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in  al , dx
+            mov player2_piece , al
+            cmp al,1bh
+            jz exitgame
+    ;2
+    recive_fr:
+    ;Check that Data Ready
+            mov dx , 3FDH               ; Line Status Register
+            in  al , dx
+            AND al , 1
+            JZ  recive_fr                    ;if no data to reciverd) then check if i want to send
+    ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in  al , dx
+            mov player2_fromRow , al
+    ;3
+    recive_fc:
+    ;Check that Data Ready
+            mov dx , 3FDH               ; Line Status Register
+            in  al , dx
+            AND al , 1
+            JZ  recive_fc                    ;if no data to reciverd) then check if i want to send
+    ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in  al , dx
+            mov player2_fromCol , al
+    ;4
+    recive_tr:
+    ;Check that Data Ready
+            mov dx , 3FDH               ; Line Status Register
+            in  al , dx
+            AND al , 1
+            JZ  recive_tr                    ;if no data to reciverd) then check if i want to send
+    ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in  al , dx
+            mov player2_toRow , al
+    ;5
+    recive_tc:
+    ;Check that Data Ready
+            mov dx , 3FDH               ; Line Status Register
+            in  al , dx
+            AND al , 1
+            JZ  recive_tc                    ;if no data to reciverd) then check if i want to send
+    ;If Ready read the VALUE in Receive data register
+            mov dx , 03F8H
+            in  al , dx
+            mov player2_toCol , al
+
 
 ;     ;Here we excuted this data 
-;     callAppropriateMove Player2_color,player2_fromRow,player2_fromCol,player2_toRow,player2_toCol
+mov cl,player2_fromRow
+mov ch,0
+callDrawSquare cx,03h
+mov cl,player2_fromCol
+mov ch,0
+callDrawSquare cx,05h
+mov cl,player2_toRow
+mov ch,0
+callDrawSquare cx,06h
+mov cl,player2_toCol
+mov ch,0
+callDrawSquare cx,02h
+mov cl,player2_piece
+mov ch,0
+callDrawSquare cx,01h
 
-;     jmp checkkeygm
+; drawSquareOnCell 03,player2_fromRow,player2_fromCol
+; drawSquareOnCell 03,player2_toRow,player2_toCol
+
+    ; callAppropriateMove Player2_color,player2_fromRow,player2_fromCol,player2_toRow,player2_toCol
+
+    jmp checkkeygm
 
 
 
@@ -1504,67 +1523,67 @@ mov selectedRow,0ffh
 mov selectedCol,0ffh
 resetavailmoves
 
-; ;   Send My Movement
-;     ;1
-;     send_code:
-;     ; Check that Transmitter Holding Register is Empty
-;             mov dx , 3FDH               ; Line Status Register
+;   Send My Movement
+    ;1
+    send_code:
+    ; Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH               ; Line Status Register
 
-;             In  al , dx                 ;Read Line Status
-;             AND al , 00100000b
-;             JZ  send_code
-;     ; If empty put the VALUE in Transmit data register
-;             mov dx , 3F8H               ; Transmit data register
-;             mov al,selectedPiece
-;             out dx , al
-;     ;2
-;     send_fr:
-;     ; Check that Transmitter Holding Register is Empty
-;             mov dx , 3FDH               ; Line Status Register
+            In  al , dx                 ;Read Line Status
+            AND al , 00100000b
+            JZ  send_code
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H               ; Transmit data register
+            mov al,32
+            out dx , al
+    ;2
+    send_fr:
+    ; Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH               ; Line Status Register
 
-;             In  al , dx                 ;Read Line Status
-;             AND al , 00100000b
-;             JZ  send_fr
-;     ; If empty put the VALUE in Transmit data register
-;             mov dx , 3F8H               ; Transmit data register
-;             mov al,selectedRow
-;             out dx , al
-;     ;3
-;     send_fc:
-;     ; Check that Transmitter Holding Register is Empty
-;             mov dx , 3FDH               ; Line Status Register
+            In  al , dx                 ;Read Line Status
+            AND al , 00100000b
+            JZ  send_fr
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H               ; Transmit data register
+            mov al,34
+            out dx , al
+    ;3
+    send_fc:
+    ; Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH               ; Line Status Register
 
-;             In  al , dx                 ;Read Line Status
-;             AND al , 00100000b
-;             JZ  send_fc
-;     ; If empty put the VALUE in Transmit data register
-;             mov dx , 3F8H               ; Transmit data register
-;             mov al,selectedCol
-;             out dx , al
-;     ;4
-;     send_tr:
-;     ; Check that Transmitter Holding Register is Empty
-;             mov dx , 3FDH               ; Line Status Register
+            In  al , dx                 ;Read Line Status
+            AND al , 00100000b
+            JZ  send_fc
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H               ; Transmit data register
+            mov al,36
+            out dx , al
+    ;4
+    send_tr:
+    ; Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH               ; Line Status Register
 
-;             In  al , dx                 ;Read Line Status
-;             AND al , 00100000b
-;             JZ  send_tr
-;     ; If empty put the VALUE in Transmit data register
-;             mov dx , 3F8H               ; Transmit data register
-;             mov al,currRow
-;             out dx , al
-;     ;5
-;     send_tc:
-;     ; Check that Transmitter Holding Register is Empty
-;             mov dx , 3FDH               ; Line Status Register
+            In  al , dx                 ;Read Line Status
+            AND al , 00100000b
+            JZ  send_tr
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H               ; Transmit data register
+            mov al,38
+            out dx , al
+    ;5
+    send_tc:
+    ; Check that Transmitter Holding Register is Empty
+            mov dx , 3FDH               ; Line Status Register
 
-;             In  al , dx                 ;Read Line Status
-;             AND al , 00100000b
-;             JZ  send_tc
-;     ; If empty put the VALUE in Transmit data register
-;             mov dx , 3F8H               ; Transmit data register
-;             mov al,currColumn
-;             out dx , al
+            In  al , dx                 ;Read Line Status
+            AND al , 00100000b
+            JZ  send_tc
+    ; If empty put the VALUE in Transmit data register
+            mov dx , 3F8H               ; Transmit data register
+            mov al,40
+            out dx , al
 
 
 mov checkq,0
@@ -2421,13 +2440,13 @@ ENDM getAvailForSelectedPiece
     ; ;---------------------------------------------------------------------------------------
 
     Player1_color    db  0
-
-    ; player2_piece    db  0
-    ; player2_fromRow  db  0
-    ; player2_fromCol  db  0
-    ; player2_toRow    db  0
-    ; player2_toCol    db  0
     Player2_color    db  0
+
+    player2_piece    db  0
+    player2_fromRow  db  0
+    player2_fromCol  db  0
+    player2_toRow    db  0
+    player2_toCol    db  0
 
     ; ;---------------------------------------------------------------------------------------
 
