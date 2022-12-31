@@ -364,7 +364,8 @@ ENDM checkEmptyCell
 
 callAppropriateMove macro player,sr,sc,cr,cc
 local en,notmoved,check2,check3,check4,check5,check6,check7,check8,check9,check10,check11,check12,check13,check14,check15,check16,p2,startm
-local nm2,enm,p22,enm3,p23,enm4,p24,enm5,enm6,enm7,enm8,enm9,enm10,enm11,enm12,enm13,enm14,enm15,enm16,enm17,p25,p26,p27,p28,p29,p210,p211,p212,p213,p214,p215,p216,p217
+local enm,enm3,enm4,enm5,enm6,enm7,enm8,enm9,enm10,enm11,enm12,enm13,enm14,enm15,enm16,enm17
+
 pusha
 mov cl,player
 
@@ -406,12 +407,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p22
+cmp cl,Player1_color
+jne enm
 mov hasmoved,1
-jmp enm
-p22:
-mov hasmoved2,1
+; jmp enm
+; p22:
+; mov hasmoved2,1
 enm:
 jmp en
 check2:
@@ -432,12 +433,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p23
+cmp cl,Player1_color
+jne enm3
 mov hasmoved,1
-jmp enm3
-p23:
-mov hasmoved2,1
+; jmp enm3
+; p23:
+; mov hasmoved2,1
 enm3:
 jmp en
 check3:
@@ -458,12 +459,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p24
+cmp cl,Player1_color
+jne enm4
 mov hasmoved,1
-jmp enm4
-p24:
-mov hasmoved2,1
+; jmp enm4
+; p24:
+; mov hasmoved2,1
 enm4:
 jmp en
 check4:
@@ -484,12 +485,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p25
+cmp cl,Player1_color
+jne enm5
 mov hasmoved,1
-jmp enm5
-p25:
-mov hasmoved2,1
+; jmp enm5
+; p25:
+; mov hasmoved2,1
 enm5:
 jmp en
 check5:
@@ -510,12 +511,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p26
+cmp cl,Player1_color
+jne enm6
 mov hasmoved,1
-jmp enm6
-p26:
-mov hasmoved2,1
+; jmp enm6
+; p26:
+; mov hasmoved2,1
 enm6:
 jmp en
 check6:
@@ -536,12 +537,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p27
+cmp cl,Player1_color
+jne enm7
 mov hasmoved,1
-jmp enm7
-p27:
-mov hasmoved2,1
+; jmp enm7
+; p27:
+; mov hasmoved2,1
 enm7:
 jmp en
 check7:
@@ -562,12 +563,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p28
+cmp cl,Player1_color
+jne enm8
 mov hasmoved,1
-jmp enm8
-p28:
-mov hasmoved2,1
+; jmp enm8
+; p28:
+; mov hasmoved2,1
 enm8:
 jmp en
 check8:
@@ -588,12 +589,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p29
+cmp cl,Player1_color
+jne enm9
 mov hasmoved,1
-jmp enm9
-p29:
-mov hasmoved2,1
+; jmp enm9
+; p29:
+; mov hasmoved2,1
 enm9:
 jmp en
 check9:
@@ -614,12 +615,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p210
+cmp cl,Player1_color
+jne enm10
 mov hasmoved,1
-jmp enm10
-p210:
-mov hasmoved2,1
+; jmp enm10
+; p210:
+; mov hasmoved2,1
 enm10:
 jmp en
 check10:
@@ -640,12 +641,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p211
+cmp cl,Player1_color
+jne enm11
 mov hasmoved,1
-jmp enm11
-p211:
-mov hasmoved2,1
+; jmp enm11
+; p211:
+; mov hasmoved2,1
 enm11:
 jmp en
 check11:
@@ -666,12 +667,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p212
+cmp cl,Player1_color
+jne enm12
 mov hasmoved,1
-jmp enm12
-p212:
-mov hasmoved2,1
+; jmp enm12
+; p212:
+; mov hasmoved2,1
 enm12:
 jmp en
 check12:
@@ -692,12 +693,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p213
+cmp cl,Player1_color
+jne enm13
 mov hasmoved,1
-jmp enm13
-p213:
-mov hasmoved2,1
+; jmp enm13
+; p213:
+; mov hasmoved2,1
 enm13:
 jmp en
 check13:
@@ -718,12 +719,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p214
+cmp cl,Player1_color
+jne enm14
 mov hasmoved,1
-jmp enm14
-p214:
-mov hasmoved2,1
+; jmp enm14
+; p214:
+; mov hasmoved2,1
 enm14:
 jmp en
 check14:
@@ -744,12 +745,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p215
+cmp cl,Player1_color
+jne enm15
 mov hasmoved,1
-jmp enm15
-p215:
-mov hasmoved2,1
+; jmp enm15
+; p215:
+; mov hasmoved2,1
 enm15:
 jmp en
 check15:
@@ -770,12 +771,12 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p216
+cmp cl,Player1_color
+jne enm16
 mov hasmoved,1
-jmp enm16
-p216:
-mov hasmoved2,1
+; jmp enm16
+; p216:
+; mov hasmoved2,1
 enm16:
 jmp en
 check16:
@@ -796,22 +797,22 @@ mov al, cc
 mov toColumn, al
 pop ax
 call movePiece
-cmp cl,1
-jne p217
+cmp cl,Player1_color
+jne enm17
 mov hasmoved,1
-jmp enm17
-p217:
-mov hasmoved2,1
+; jmp enm17
+; p217:
+; mov hasmoved2,1
 enm17:
 jmp en
 
 notmoved:
-cmp cl,1
-jne nm2
+cmp cl,Player1_color
+jne en
 mov hasmoved,0
-jmp en
-nm2:
-mov hasmoved2,0
+; jmp en
+; nm2:
+; mov hasmoved2,0
 
 en:
 popa
@@ -1631,8 +1632,8 @@ p2_moved:
 ; mov ch,0
 ; callDrawSquare cx,01h
 
-drawSquareOnCell 03,player2_fromRow,player2_fromCol
-drawSquareOnCell 05,player2_toRow,player2_toCol
+; drawSquareOnCell 03,player2_fromRow,player2_fromCol
+; drawSquareOnCell 05,player2_toRow,player2_toCol
 
 
     jmp checkkeygm
@@ -1740,6 +1741,10 @@ mov selectedRow,cl
 mov PreviousSelectedRow,cl
 drawSquareOnCell 03h,currRow,currColumn
 
+; mov al,Player1_color
+; mov ah,0
+; callDrawSquare ax,03h
+
 getAvailForSelectedPiece currRow,currColumn,Player1_color
 
 ;;;;;check available moves for the piece and draw them
@@ -1755,7 +1760,7 @@ q2:
 cmp al,71h
 jne esc2
 
-callAppropriateMove 1,selectedRow,selectedCol,currRow,currColumn
+callAppropriateMove Player1_color,selectedRow,selectedCol,currRow,currColumn
 
 cmp hasmoved,0
 je noreset
@@ -4772,19 +4777,19 @@ chat proc
     ; mov ah,0ch
     ; mov al, 0
     ; int 21h
-                                    mov              al, '$'
-                                    mov              ah,1
-                                    int              16h      ; get char w/o wait
+                                    mov                 al, '$'
+                                    mov                 ah,1
+                                    int                 16h                                                                                                                                                                                                                                                                        ; get char w/o wait
     
                                     mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
 
-                                    cmp              al, 1bh
-                                    jne              nort
-                                    out              dx, al
-                                    mov              ah,0ch
-                                    mov              al,0
-                                    int              21h; clear buffer only after sending
-                                    jmp              rt
+                                    cmp                 al, 1bh
+                                    jne                 nort
+                                    out                 dx, al
+                                    mov                 ah,0ch
+                                    mov                 al,0
+                                    int                 21h                                                                                                                                                                                                                                                                        ; clear buffer only after sending
+                                    jmp                 rt
 
     nort:                           
                                     cmp                 ah,1ch
@@ -4851,24 +4856,24 @@ chat proc
     con:                            
                                     mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
     CHK:                            
-                                    in               al , dx
-                                    AND              al , 1
-                                    JNZ              rec
-                                    jmp              cht                  ;check ready                                                                                                                                                                                                                                                               ; check if ready
+                                    in                  al , dx
+                                    AND                 al , 1
+                                    JNZ                 rec
+                                    jmp                 cht                                                                                                                                                                                                                                                                        ;check ready                                                                                                                                                                                                                                                               ; check if ready
 
     rec:                            
                                     mov                 dx , 03F8H
                                     in                  al , dx
     ; mov VALUE , al
                                         
-                                    cmp              al, 1bh
-                                    jne              nort2
-                                    jmp rt
+                                    cmp                 al, 1bh
+                                    jne                 nort2
+                                    jmp                 rt
 
-                                nort2:
-                                    cmp              al,1ch
-                                    jz               nwline
-                                    jnz              pchar
+    nort2:                          
+                                    cmp                 al,1ch
+                                    jz                  nwline
+                                    jnz                 pchar
 
 
     nwline:                         
