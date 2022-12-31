@@ -1647,7 +1647,7 @@ w:
 ; push ax
 ; pop ax
 
-cmp al,77h
+cmp ah,48h
 jnz s
 
 ;navigate up
@@ -1670,7 +1670,7 @@ jmp consumebuffergm
 
 
 s:
-cmp al,73h
+cmp ah,50h
 jnz a
 
 cmp currRow,7
@@ -1687,7 +1687,7 @@ jmp consumebuffergm
 
 
 a:
-cmp al,61h
+cmp ah,4bh
 jnz d 
 
 cmp currColumn,0
@@ -1703,7 +1703,7 @@ jmp consumebuffergm
 
 
 d:
-cmp al,64h
+cmp ah,4dh
 jnz preq
 
 cmp currColumn,7
@@ -1727,7 +1727,7 @@ st:
 jmp enterms
 
 q:
-cmp al,71h
+cmp al,2fh
 jnz exitgame
 
 ;select
@@ -1760,7 +1760,7 @@ jmp consumebuffergm
 
 
 q2:
-cmp al,71h
+cmp al,2fh
 jne esc2
 
 callAppropriateMove Player1_color,selectedRow,selectedCol,currRow,currColumn
