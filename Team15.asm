@@ -4264,7 +4264,7 @@ chat proc
     int 21h
 
     mov ah, 2
-    mov dx, 0B00h
+    mov dx, 0C00h
     int 10h
 
     mov dx,offset khat
@@ -4272,7 +4272,7 @@ chat proc
     int 21h
 
     mov ah,2
-    mov dx,0C00h
+    mov dx,0D00h
     int 10h
 
     mov dx,offset name2+2
@@ -4280,7 +4280,7 @@ chat proc
     int 21h
 
     mov ah,2
-    mov dx,0100h
+    mov dx,0003h
     int 10h
 
     mov bx, 0100h
