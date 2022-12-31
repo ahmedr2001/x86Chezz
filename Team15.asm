@@ -4966,10 +4966,10 @@ movePiece proc
                                     mov                 dx, 1800h
                                     mov                 bx, 0
                                     mov                 ah, 2
-                                    int                 10h
+                                    int                 10h     ;move cursor    
                                     mov                 dx, offset eatWP
                                     mov                 ah, 9
-                                    int                 21h
+                                    int                 21h     ;display piece eaten
                                     pop                 bx
                                     pop                 ax
     checkGameWon:                   
@@ -5170,5 +5170,192 @@ movePiece proc
                                     ret
 
                                     endp
+
+
+    inChat proc                                    
+        pusha
+
+                mov ax, 0013h
+                int 10h
+
+        mov                 bx, 1700h
+        mov                 cx, 1800h
+;=========================================================================
+
+        incht:                            
+
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+    ; AGAIN:
+                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+                                    AND                 al , 00100000b
+                                    JZ                  insent
+
+    insend:                           
+                                    cmp                 ch, 25
+                                    jl                  incon2
+                                    push                ax
+                                    push                bx
+                                    push                cx
+                                    push                dx
+                                    mov                 ax, 0600h
+                                    mov                 bh, 00h
+                                    mov                 cx, 1700h
+                                    mov                 dx, 184Fh
+                                    int                 10h
+                                    pop                 dx
+                                    pop                 cx
+                                    pop                 bx
+                                    pop                 ax
+                                    mov                 cx, 1800h
+    incon2:                           
+
+    ; mov ah,0ch
+    ; mov al, 0
+    ; int 21h
+                                    mov                 al, '$'
+                                    mov                 ah,1
+                                    int                 16h                                                                                                                                                                                                                                                                        ; get char w/o wait
+    
+                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+
+                                    cmp                 al, 1bh
+                                    jne                 innort
+                                    out                 dx, al
+                                    mov                 ah,0ch
+                                    mov                 al,0
+                                    int                 21h                                                                                                                                                                                                                                                                        ; clear buffer only after sending
+                                    jmp                 inrt
+
+    innort:                           
+                                    cmp                 ah,1ch
+                                    jz                  insentr
+                                    jnz                 inschar
+
+    insentr:                          
+                                    inc                 bh
+                                    mov                 bl,0
+                                    mov                 al,ah
+                                    out                 dx, al
+                                    mov                 ah,0ch
+                                    mov                 al,0
+                                    int                 21h
+                                    jmp                 insent
+
+    inschar:                          
+                                    cmp                 al, '$'
+                                    jz                  insent
+                                    push                dx
+                                    mov                 ah,2
+                                    mov                 dx,bx
+                                    push                bx
+                                    mov                 bh,0
+                                    int                 10h                                                                                                                                                                                                                                                                        ; move cursor
+                                    pop                 bx
+                                    mov                 ah,2
+                                    mov                 dl,al
+                                    int                 21h                                                                                                                                                                                                                                                                        ; display char
+                                    pop                 dx
+    ; mov al, '$'
+                                    inc                 bl
+                                    cmp                 bl,80
+                                    jge                 insentr
+                                    ; mov                 bl,0
+                                    ; inc                 bh
+    
+    innotendl:                        
+                                    out                 dx , al
+                                    mov                 ah,0ch
+                                    mov                 al,0
+                                    int                 21h                                                                                                                                                                                                                                                                        ; clear buffer only after sending
+
+
+
+    insent:                           
+                                    cmp                 bh, 24
+                                    jl                  incon
+                                    push                ax
+                                    push                bx
+                                    push                cx
+                                    push                dx
+                                    mov                 ax, 0600h
+                                    mov                 bh, 00h
+                                    mov                 cx, 1600h
+                                    mov                 dx, 174Fh
+                                    int                 10h
+                                    pop                 dx
+                                    pop                 cx
+                                    pop                 bx
+                                    pop                 ax
+                                    mov                 bx, 1700h
+
+    incon:                            
+                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+    inCHK:                            
+                                    in                  al , dx
+                                    AND                 al , 1
+                                    JNZ                 inrec
+                                    jmp                 incht                                                                                                                                                                                                                                                                        ;check ready                                                                                                                                                                                                                                                               ; check if ready
+
+    inrec:                            
+                                    mov                 dx , 03F8H
+                                    in                  al , dx
+    ; mov VALUE , al
+                                        
+                                    cmp                 al, 1bh
+                                    jne                 innort2
+                                    jmp                 inrt
+
+    innort2:                          
+                                    cmp                 al,1ch
+                                    jz                  innwline
+                                    jnz                 inpchar
+
+
+    innwline:                         
+                                    push                dx
+                                    inc                 ch
+                                    mov                 cl,0
+    ; mov dx,offset newline
+    ; mov ah,9
+    ; int 21h
+    ; mov ah,2
+    ; mov dx,bx
+    ; int 10h     ; move cursor
+                                    pop                 dx
+                                    jmp                 inrecd
+
+    inpchar:                          
+                                    push                dx
+                                    mov                 ah,2
+                                    push                bx
+                                    mov                 bh,0
+                                    mov                 dx,cx
+                                    int                 10h                                                                                                                                                                                                                                                                        ; move cursor
+                                    pop                 bx
+
+                                    mov                 dl,al
+                                    mov                 ah,2
+                                    int                 21h                                                                                                                                                                                                                                                                        ; display char
+                                    pop                 dx
+    ; mov ah,2
+    ; mov dx,bx
+    ; int 10h    ; move cursor
+                                    inc                 cl
+                                    cmp                 cl,80
+                                    jge                 innwline
+                                    ; mov                 cl,0
+                                    ; inc                 ch
+    innotendl2:                       
+
+
+   
+    ; jmp recd
+
+    inrecd:                           
+                                    jmp                 incht
+
+     inrt:popa
+        ret
+        endp
 
 end main 
