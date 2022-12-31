@@ -10,3 +10,7 @@ we need to initialize every thing when we go to main screen from game mode.
 
 moving the queen cause game to crash
 some pawns cause errors when they reach final cell
+
+
+phase2:
+movepiece & callAppropriateMove needs to be proc not macro(movepiece is 100 line and it's called about 16 time in call callAppropriateMove so final code is about 1600 and cause out of memory)
