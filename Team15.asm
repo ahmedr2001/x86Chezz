@@ -1862,7 +1862,7 @@ jnz s
 cmp currRow,0
 je skipnavu
 
-drawCooldown
+; drawCooldown
 eraseHighlight
 
 
@@ -1885,7 +1885,7 @@ jnz a
 cmp currRow,7
 je skipnavd
 
-drawCooldown
+; drawCooldown
 eraseHighlight
 
 inc currRow
@@ -1902,7 +1902,7 @@ jnz d
 cmp currColumn,0
 je skipnavl
 
-drawCooldown
+; drawCooldown
 eraseHighlight
 
 dec currColumn
@@ -1919,7 +1919,7 @@ jnz preq
 cmp currColumn,7
 je skipnavr
 
-drawCooldown
+; drawCooldown
 eraseHighlight
 
 inc currColumn
@@ -2467,6 +2467,9 @@ mov col,ah
 mov PNO,bl
 pop bx
 pop ax
+mov bl,player
+cmp bl,2
+jz rt
 call rookMoves 
 jmp rt
 blackrock:
@@ -2482,6 +2485,9 @@ mov col,ah
 mov PNO,bl
 pop bx
 pop ax
+mov bl,player
+cmp bl,1
+jz rt
 call rookMoves 
 jmp rt
 whitebishop:
@@ -2497,6 +2503,9 @@ mov col,ah
 mov PNO,bl
 pop bx
 pop ax
+mov bl,player
+cmp bl,2
+jz rt
 call bishopMoves 
 jmp rt
 blackbishop:
@@ -2512,6 +2521,9 @@ mov col,ah
 mov PNO,bl
 pop bx
 pop ax
+mov bl,player
+cmp bl,1
+jz rt
 call bishopMoves 
 jmp rt
 whitequeen:
@@ -2527,6 +2539,9 @@ mov col,ah
 mov PNO,bl
 pop bx
 pop ax
+mov bl,player
+cmp bl,2
+jz rt
 call queenMoves 
 jmp rt
 blackqueen:
@@ -2542,6 +2557,9 @@ mov col,ah
 mov PNO,bl
 pop bx
 pop ax
+mov bl,player
+cmp bl,1
+jz rt
 call queenMoves 
 jmp rt
 
