@@ -1633,6 +1633,10 @@ mov                 bx, 1700h
 mov                 cx, 1800h
 push bx
 push cx
+mov ah, 00
+int 1ah
+mov ax, dx
+mov startTime, ax
 ;gm
 checkkeygm:
 
@@ -1640,6 +1644,7 @@ lea si, buf
 mov ah,00
 int 1ah
 mov ax, dx
+sub ax, startTime
 call number2string
 mov dx, 0000h
 mov bx, 0
@@ -2646,6 +2651,8 @@ ENDM getAvailForSelectedPiece
 .386
 .stack 64
 .data
+
+        startTime           dw  ?
 
         khat                db  "--------------------------------------------------------------------------------$"
 
@@ -5255,6 +5262,7 @@ movePiece proc
     ; lea di, cooldown
                                     mov                 ax, cooldown[bx]
                                     sub                 dx, ax
+                                    sub                 dx, startTime
                                     cmp                 dx, 50
     jl noMove
 
@@ -5267,7 +5275,26 @@ movePiece proc
                                         mov                 bx, ax
                                         mov                 grid[bx], 0
                                         eraseImage          toColumn, toRow, greyCell, whiteCell
-                                        drawEncodingOnBoard code, toColumn, toRow
+                                        cmp code,01
+                                    jne noTransfrom1
+                                    cmp toRow,0
+                                    jne noTransfrom1
+                                    drawEncodingOnBoard 05, toColumn, toRow
+                                    mov code,05
+                                    jmp Transform
+                                    noTransfrom1:
+
+                                    cmp code,11
+                                    jne noTransfrom2
+                                    cmp toRow,7
+                                    jne noTransfrom2
+                                    drawEncodingOnBoard 15, toColumn, toRow
+                                    mov code,15
+                                    jmp Transform
+                                    noTransfrom2:
+
+                                    drawEncodingOnBoard code, toColumn, toRow
+                                    Transform:
         ; lea si, grid
                                         mov                 al, toRow
                                         mov                 bl, 8
@@ -5300,6 +5327,7 @@ movePiece proc
                                         pop                 ax
                                         mov                 ah,00h
                                         int                 1ah
+                                        sub                 dx, startTime 
         ; lea di, cooldown
                                         mov                 al, toRow
                                         mov                 bl, 8
