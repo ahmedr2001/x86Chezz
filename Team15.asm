@@ -1534,8 +1534,13 @@ playgame:
 ;#####################################################
 
 
+mov                 bx, 1700h
+mov                 cx, 1800h
+push bx
+push cx
 ;gm
 checkkeygm:
+
 lea si, buf
 mov ah,00
 int 1ah
@@ -1548,6 +1553,7 @@ int 10h
 mov ah,9
 mov dx, offset buf
 int 21h
+mov                 al, '$'
 mov ah,1
 int 16h
 jnz w
@@ -1562,7 +1568,7 @@ p2_moved:
             in  al , dx
             AND al , 1
             JZ  checkkeygm                    ;if no data to reciverd) then check if i want to send
-    ;If Ready read the VALUE in Receive data register                      ;wonderful comments!
+    ;If Ready read the VALUE in Receive data register                     
             mov dx , 03F8H
             in  al , dx
             mov player2_piece , al
@@ -1570,6 +1576,108 @@ p2_moved:
             ; callDrawSquare ax,04
             cmp al,1bh
             jz e
+            cmp al, 16
+            jle recive_fr
+linsent:     
+pop cx
+pop bx                      
+cmp                 bh, 24
+jl                  lincon
+push                ax
+push                bx
+push                cx
+push                dx
+mov                 ax, 0601h
+mov                 bh, 00h
+mov                 cx, 1600h
+mov                 dx, 174Fh
+int                 10h
+pop                 dx
+pop                 cx
+pop                 bx
+pop                 ax
+mov                 bx, 1700h
+
+lincon:                            
+; mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+; linCHK:                            
+; in                  al , dx
+; AND                 al , 1
+; JNZ                 linrec
+; jmp                 consumebuffergm                                                                                                                                                                                                                                                                        ;check ready                                                                                                                                                                                                                                                               ; check if ready
+
+linrec:                            
+; mov                 dx , 03F8H
+; in                  al , dx
+; mov VALUE , al
+
+cmp                 al, 1bh
+jne                 linnort2
+jmp                 esc2
+
+linnort2:                          
+cmp                 al,1ch
+jz                  linnwline
+jnz                 linpchar
+linnwline:              
+push                dx
+; inc                 ch
+; mov                 cl,0
+; cmp                 ch, 25
+; jl                  lincon2
+push                ax
+push                bx
+push                cx
+push                dx
+mov                 ax, 0701h
+mov                 bh, 00h
+mov                 cx, 1800h
+mov                 dx, 184Fh
+int                 10h
+pop                 dx
+pop                 cx
+pop                 bx
+pop                 ax
+mov                 cx, 1800h           
+; mov dx,offset newline
+; mov ah,9
+; int 21h
+; mov ah,2
+; mov dx,bx
+; int 10h     ; move cursor
+pop                 dx
+push bx
+push cx
+mov                 ah,0ch
+mov                 al,0
+int                 21h
+jmp                 checkkeygm
+
+linpchar:                          
+push                dx
+mov                 ah,2
+push                bx
+mov                 bh,0
+mov                 dx,cx
+int                 10h                                                                                                                                                                                                                                                                        ; move cursor
+pop                 bx
+
+mov                 dl, al
+mov                 ah,2
+int                 21h                                                                                                                                                                                                                                                                        ; display char
+pop                 dx
+; mov ah,2
+; mov dx,bx
+; int 10h    ; move cursor
+inc                 cl
+cmp                 cl,38
+jge                 linnwline
+linnotendl2:  
+push bx
+push cx
+jmp checkkeygm
+
+
     ;2
     recive_fr:
     ;Check that Data Ready
@@ -1841,7 +1949,7 @@ jmp consumebuffergm
 
 esc2:
 cmp al,1bh
-jnz consumebuffergm
+jnz linechat
 
 
 
@@ -1862,7 +1970,8 @@ jmp consumebuffergm
 
 exitgame:
 cmp al,1bh
-jnz consumebuffergm
+; jnz consumebuffergm
+jnz linechat
 
 
  sendExitGame:
@@ -1891,6 +2000,103 @@ e:
 jmp st
 
 
+linechat:
+cmp al, '$'
+jne inline
+jmp checkkeygm
+inline:
+pop cx
+pop bx
+mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+; AGAIN:
+push ax
+In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
+AND                 al , 00100000b
+JZ                  checkkeygm
+linsend:     
+pop ax                      
+cmp                 ch, 25
+jl                  lincon2
+push                ax
+push                bx
+push                cx
+push                dx
+mov                 ax, 0700h
+mov                 bh, 00h
+mov                 cx, 1700h
+mov                 dx, 184Fh
+int                 10h
+pop                 dx
+pop                 cx
+pop                 bx
+pop                 ax
+mov                 cx, 1800h
+
+
+lincon2:
+mov dx, 3f8h
+cmp                 ah,1ch
+jz                  linsentr
+jnz                 linschar
+
+linsentr:      
+out dx, al                    
+; inc                 bh
+; mov                 bl,0
+; mov                 al,ah
+; out                 dx, al
+; cmp                 ch, 25
+; jl                  lincon2
+push                ax
+push                bx
+push                cx
+push                dx
+mov                 ax, 0701h
+mov                 bh, 00h
+mov                 cx, 1600h
+mov                 dx, 174Fh
+int                 10h
+pop                 dx
+pop                 cx
+pop                 bx
+pop                 ax
+mov                 bx, 1700h
+mov                 ah,0ch
+mov                 al,0
+int                 21h
+push bx
+push cx
+jmp                 checkkeygm
+
+linschar:                          
+; cmp                 al, '$'
+; jz                  insent
+push                dx
+mov                 ah,2
+mov                 dx,bx
+push                bx
+mov                 bh,0
+int                 10h                                                                                                                                                                                                                                                                        ; move cursor
+pop                 bx
+mov                 ah,2
+mov                 dl, al
+int                 21h                                                                                                                                                                                                                                                                        ; display char
+pop                 dx
+; mov al, '$'
+inc                 bl
+cmp                 bl,39
+jge                 linsentr
+; mov                 bl,0
+; inc                 bh
+
+linnotendl:                        
+out                 dx , al
+push bx
+push cx
+mov                 ah,0ch
+mov                 al,0
+int                 21h
+jmp checkkeygm
 
 
 consumebuffergm:
@@ -4952,7 +5158,7 @@ movePiece proc
                                     mov                 ax, cooldown[bx]
                                     sub                 dx, ax
                                     cmp                 dx, 50
-    ; jl noMove
+    jl noMove
 
                                     eraseImage          fromColumn, fromRow, greyCell, whiteCell
     ; lea si, grid
