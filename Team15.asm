@@ -879,25 +879,25 @@ end:
 popa
 endm checkAvailable
 
-checkAvailable2 macro
+checkAvailable2 macro r,c
 local end
 pusha
-mov isAvailableCell2,0
+mov isAvailableCell,0
 
 
-mov al,currRow2
+mov al,r
 mov ah,0
 mov bl,8
 imul bl
 mov bx,ax
-add bl,currColumn2
+add bl,c
 
-mov al,availMoves2[bx]
+mov al,availMoves[bx]
 
 
 cmp al,0ffh
 jne end
-mov isAvailableCell2,1
+mov isAvailableCell,1
 
 end:
 
@@ -905,8 +905,29 @@ popa
 endm checkAvailable2
 
 eraseHighlight macro 
-local checks,checks2,removeh,removeh2,end,checkp2
+local checks,checks2,removeh,removeh2,end,checkp2,c,cool,fcool,nodraw
 pusha
+
+; mov bx,0
+
+; cool:
+; cmp bx,64d
+; je fcool
+; mov                 ah,00h
+; int                 1ah
+                                    
+; mov                 ax, cooldown[bx]
+; sub                 dx, ax
+; cmp                 dx, 50
+; ja nodraw
+; callDrawSquare bx,05h
+; jmp c
+; nodraw:
+; callDrawSquare bx,07
+; c:
+; inc bx
+; jmp cool
+; fcool:
 
 checkAvailable
 cmp isAvailableCell,0
@@ -921,8 +942,12 @@ jz removeh
 drawSquareOnCell 03h,currRow,currColumn
 jmp end
 
+
+
 removeh:
 drawSquareOnCell 07h,currRow,currColumn
+
+
 
 
 ; checkp2:
@@ -940,12 +965,82 @@ drawSquareOnCell 07h,currRow,currColumn
 ; drawSquareOnCell 03h,currRow2,currColumn2
 ; jmp end
 
-removeh2:
-drawSquareOnCell 07h,currRow2,currColumn2
+; removeh2:
+; drawSquareOnCell 07h,currRow2,currColumn2
 
 end:
 popa
 endm eraseHighlight
+
+
+; availwithcell macro cell
+; pusha
+; mov ax, cell
+;     mov ah,0
+;     mov bl,8
+;     idiv bl
+;     mov bx,ax
+;     checkAvailable2 bl,bh 
+
+; popa
+; endm availwithcell
+
+drawcooldown macro
+local cool,fcool,c,nodraw,r,issel
+pusha
+
+mov bx,0
+
+cool:
+cmp bx,64d
+je fcool
+; push bx
+
+; mov ax, bx
+;     mov ah,0
+;     mov cl,8
+;     idiv cl
+;     mov cx,ax
+
+;     pop bx
+
+mov                 ah,00h
+int                 1ah
+                                    
+mov                 ax, cooldown[bx]
+sub                 dx, ax
+cmp                 dx, 50
+ja nodraw
+callDrawSquare bx,05h
+jmp c
+nodraw:
+callDrawSquare bx,07h
+
+
+; checkAvailable2 cl,ch
+; cmp isAvailableCell,0
+; jz issel
+; drawSquareOnCell 04h,cl,ch
+; jmp c
+
+; issel:
+; checkSelected cl,ch
+; cmp isSelectedCell,0
+; jz r
+; drawSquareOnCell 03,cl,ch
+; jmp c
+
+; r:
+; drawSquareOnCell 07,cl,ch
+
+c:
+inc bx
+jmp cool
+fcool:
+; eraseHighlight
+; drawSquareOnCell 0eh,currRow,currColumn
+popa
+endm drawcooldown
 
 
 resetavailmoves macro
@@ -1548,6 +1643,11 @@ int 10h
 mov ah,9
 mov dx, offset buf
 int 21h
+
+; RefreshGrid
+; eraseHighlight
+; drawSquareOnCell 0eh,currRow,currColumn
+
 mov ah,1
 int 16h
 jnz w
@@ -1654,6 +1754,7 @@ jnz s
 cmp currRow,0
 je skipnavu
 
+drawCooldown
 eraseHighlight
 
 
@@ -1676,7 +1777,7 @@ jnz a
 cmp currRow,7
 je skipnavd
 
-
+drawCooldown
 eraseHighlight
 
 inc currRow
@@ -1693,6 +1794,7 @@ jnz d
 cmp currColumn,0
 je skipnavl
 
+drawCooldown
 eraseHighlight
 
 dec currColumn
@@ -1709,6 +1811,7 @@ jnz preq
 cmp currColumn,7
 je skipnavr
 
+drawCooldown
 eraseHighlight
 
 inc currColumn
@@ -2343,3032 +2446,3032 @@ ENDM getAvailForSelectedPiece
 .stack 64
 .data
 
-    khat                db  "--------------------------------------------------------------------------------$"
+        khat                db  "--------------------------------------------------------------------------------$"
 
-    eatWP               db  "Piece eaten$"
-    seconds             db  ?
-    buf                 db  6 dup (?)
+        eatWP               db  "Piece eaten$"
+        seconds             db  ?
+        buf                 db  6 dup (?)
 
-    winMessageP1        db  "Game ended! Player 1 wins!$"
-    winMessageP2        db  "Game ended! Player 2 wins!$"
+        winMessageP1        db  "Game ended! Player 1 wins!$"
+        winMessageP2        db  "Game ended! Player 2 wins!$"
 
-    x                   dw  ?
-    y                   dw  ?
+        x                   dw  ?
+        y                   dw  ?
 
-    grid                db  12,13,14,15,16,14,13,12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;0-7
-                        db  11,11,11,11,11,11,11,11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;9-15
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;16-23
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;24-31
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;32-39
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;40-47
-                        db  01,01,01,01,01,01,01,01                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;48-55
-                        db  02,03,04,05,06,04,03,02                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;56-64
+        grid                db  12,13,14,15,16,14,13,12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;0-7
+                            db  11,11,11,11,11,11,11,11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;9-15
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;16-23
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;24-31
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;32-39
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;40-47
+                            db  01,01,01,01,01,01,01,01                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;48-55
+                            db  02,03,04,05,06,04,03,02                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;56-64
    
-    cooldown            dw  0000,0000,0000,0000,0000,0000,0000,0000
-                        dw  0000,0000,0000,0000,0000,0000,0000,0000
-                        dw  0000,0000,0000,0000,0000,0000,0000,0000
-                        dw  0000,0000,0000,0000,0000,0000,0000,0000
-                        dw  0000,0000,0000,0000,0000,0000,0000,0000
-                        dw  0000,0000,0000,0000,0000,0000,0000,0000
-                        dw  0000,0000,0000,0000,0000,0000,0000,0000
-                        dw  0000,0000,0000,0000,0000,0000,0000,0000
+        cooldown            dw  0000,0000,0000,0000,0000,0000,0000,0000
+                            dw  0000,0000,0000,0000,0000,0000,0000,0000
+                            dw  0000,0000,0000,0000,0000,0000,0000,0000
+                            dw  0000,0000,0000,0000,0000,0000,0000,0000
+                            dw  0000,0000,0000,0000,0000,0000,0000,0000
+                            dw  0000,0000,0000,0000,0000,0000,0000,0000
+                            dw  0000,0000,0000,0000,0000,0000,0000,0000
+                            dw  0000,0000,0000,0000,0000,0000,0000,0000
 
-    availMoves          db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;1
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;2
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;3
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;4
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;5
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;6
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;7
-                        db  00,00,00,00,00,00,00,00
+        availMoves          db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;1
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;2
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;3
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;4
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;5
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;6
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;7
+                            db  00,00,00,00,00,00,00,00
                      
-    availMoves2         db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;1
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;2
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;3
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;4
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;5
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;6
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;7
-                        db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;8
+        availMoves2         db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;1
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;2
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;3
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;4
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;5
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;6
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;7
+                            db  00,00,00,00,00,00,00,00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ;8
 
 
 
-    whiteCell           db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+        whiteCell           db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
 
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
 
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
 
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
 
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
                                         
-    greyCell            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+        greyCell            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
                                         
-    ;Size: 20 x 20
-    arrow_right         db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
+        ;Size: 20 x 20
+        arrow_right         db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,0ffh,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,36h,36h,36h,36h,36h,36h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
 
-    ;Size: 20 x 20
-    black_bishop        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0h,0h,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh
-                        db  0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h
+        ;Size: 20 x 20
+        black_bishop        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0h,0h,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh
+                            db  0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h
 
-    ;Size: 20 x 20
-    black_king          db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh
+        ;Size: 20 x 20
+        black_king          db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh
 
-    ;Size: 20 x 20
-    black_knight        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh
+        ;Size: 20 x 20
+        black_knight        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh
 
-    ;Size: 20 x 20
-    black_pawn          db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh
+        ;Size: 20 x 20
+        black_pawn          db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh
 
-    ;Size: 20 x 20
-    black_queen         db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0h,0h,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh
+        ;Size: 20 x 20
+        black_queen         db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0h,0h,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh
 
-    ;Size: 20 x 20
-    black_rock          db  0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh
+        ;Size: 20 x 20
+        black_rock          db  0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0h,0h,0h,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh,0ffh,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0h,0ffh
 
-    ;Size: 20 x 20
-    white_bishop        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,01h,01h,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,01h,01h,01h,01h,01h,01h,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh
-                        db  0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h
+        ;Size: 20 x 20
+        white_bishop        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,01h,01h,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,01h,01h,01h,01h,01h,01h,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh
+                            db  0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h
 
-    ;Size: 20 x 20
-    white_king          db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh
+        ;Size: 20 x 20
+        white_king          db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh
 
-    ;Size: 20 x 20
-    white_knight        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh
+        ;Size: 20 x 20
+        white_knight        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh
 
-    ;Size: 20 x 20
-    white_pawn          db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh
+        ;Size: 20 x 20
+        white_pawn          db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh
 
-    ;Size: 20 x 20
-    white_queen         db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,01h,01h,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh
+        ;Size: 20 x 20
+        white_queen         db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,01h,01h,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh
 
-    ;Size: 20 x 20
-    white_rock          db  0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh
-                        db  0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh
-
-
-
-
-    ism                 db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,18h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h
-                        db  15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,1bh,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,16h,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,17h,19h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,07h,16h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,16h,19h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
-                        db  07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,07h,07h,19h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,17h,16h,16h,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,19h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h
-                        db  15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,1bh,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,17h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,16h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,16h,17h,15h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh
-                        db  07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,17h,16h,16h,16h,16h,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,18h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h
-                        db  15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,16h,19h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
-                        db  07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,17h,16h,16h,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
-                        db  1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,19h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h
-                        db  15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,1bh,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-                        db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
-
-
-    currRow             db  7
-    currColumn          db  0
-    ;-------------------;
-    currRow2            db  0
-    currColumn2         db  0
-
-    selectedRow         db  0ffh
-    selectedCol         db  0ffh
-    ;-------------------;
-    selectedRow2        db  0ffh
-    selectedCol2        db  0ffh
-
-    isSelectedCell      db  0
-    isEmptyCell         db  ?
-    isAvailableCell     db  ?
-    hasmoved            db  ?
-    ;--------------------
-    isSelectedCell2     db  0
-    isEmptyCell2        db  ?
-    isAvailableCell2    db  ?
-    hasmoved2           db  ?
-
-    selectedPiece       db  ?
-    ;_--------------
-    selectedPiece2      db  ?
-
-
-    checkq              db  0
-    ;---------------
-    checkq2             db  0
-
-
-    fsend               db  0
-    freceive            db  0
-
-    ; mynumb
-
-    ; ;---------------------------------------------------------------------------------------
-
-    Player1_color       db  0
-    Player2_color       db  0
-
-    player2_piece       db  0
-    player2_fromRow     db  0
-    player2_fromCol     db  0
-    player2_toRow       db  0
-    player2_toCol       db  0
-
-
-    NameExchangeDone    db  0
-
-    PreviousSelectedRow db  0ffh
-    PreviousSelectedCol db  0ffh
-
-
-    ; ;---------------------------------------------------------------------------------------
+        ;Size: 20 x 20
+        white_rock          db  0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,0ffh,01h,01h,01h,0ffh,0ffh,0ffh
+                            db  0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh,0ffh,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,01h,0ffh
 
 
 
-    hello               db  "Hello, $"
-    exclamation         db  "!$"
-    enterName           db  'Please enter your name:','$'
-    pressEnter          db  'Press Enter Key to continue','$'
-    ;First byte is the size, second byte is the number of characters from the keyboard
-    chIn                db  'a'
-    keypressed          db  ?
-    mes1                db  "To Start Chatting Press 1$"
-    mes2                db  "To Start The Game Press 2$"
-    mes3                db  "To End The Program Press ESC$"
-    messageF1           db  " - You pressed F1$"
-    messageF2           db  " - You pressed F2$"
-    messageTemp         db  ' - Temporary notification bar for now. Happy Hacking!$'
-    name1               db  30,?,30 dup('$')
-    name2               db  30,?,30 dup('$')                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ;we received more bits than we expected;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;DANGER                                        ;First byte is the size, second byte is the number of characters from the keyboard
-    chatInvitationMes   db  'chat invitation $'
-    GameInvitationMes   db  'game invitation $'
-    sentMes             db  'sent to $'
-    recivedMes          db  'recived from $'
-    refuseMes           db  'refused the $'
-    invitationMes       db  'invitation $'
-    ignoreMes           db  ' $'
-    Emptynotification   db  '                                                                          $'
 
-    boardWidth          equ 160
-    boardHeight         equ 160
-    row                 db  ?
-    col                 db  ?
-    IsmailRow           db  ?
-    IsmailCol           db  ?
-    PNO                 db  ?
+        ism                 db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,18h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h
+                            db  15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,1bh,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,16h,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,17h,19h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,1bh,07h,16h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,16h,19h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
+                            db  07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,07h,07h,19h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,17h,16h,16h,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,19h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h
+                            db  15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,1bh,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,17h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,16h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,16h,17h,15h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh
+                            db  07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,17h,16h,16h,16h,16h,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,18h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h
+                            db  15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,15h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,19h,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,17h,16h,19h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
+                            db  07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,18h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,17h,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,1eh,19h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,07h,19h,16h,17h,16h,16h,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,15h,16h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1bh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,16h,16h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,15h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1dh,16h,15h,16h,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,18h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,07h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1ch,0fh,0fh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h
+                            db  1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,07h,17h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,19h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h
+                            db  15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,16h,07h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1bh,16h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,1bh,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,19h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,15h,18h,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch,1ch
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1ch,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
+                            db  16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,1bh,1eh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,19h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1eh,17h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,15h,1dh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,1ch,15h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,16h,07h,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh,0fh
 
-    code                db  ?
-    fromRow             db  ?
-    fromColumn          db  ?
-    toRow               db  ?
-    toColumn            db  ?
+
+        currRow             db  7
+        currColumn          db  0
+        ;-------------------;
+        currRow2            db  0
+        currColumn2         db  0
+
+        selectedRow         db  0ffh
+        selectedCol         db  0ffh
+        ;-------------------;
+        selectedRow2        db  0ffh
+        selectedCol2        db  0ffh
+
+        isSelectedCell      db  0
+        isEmptyCell         db  ?
+        isAvailableCell     db  ?
+        hasmoved            db  ?
+        ;--------------------
+        isSelectedCell2     db  0
+        isEmptyCell2        db  ?
+        isAvailableCell2    db  ?
+        hasmoved2           db  ?
+
+        selectedPiece       db  ?
+        ;_--------------
+        selectedPiece2      db  ?
 
 
-    value               db  ?,"$"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ;Data to recive in
-    charSend            db  ?,"$"
+        checkq              db  0
+        ;---------------
+        checkq2             db  0
+
+
+        fsend               db  0
+        freceive            db  0
+
+        ; mynumb
+
+        ; ;---------------------------------------------------------------------------------------
+
+        Player1_color       db  0
+        Player2_color       db  0
+
+        player2_piece       db  0
+        player2_fromRow     db  0
+        player2_fromCol     db  0
+        player2_toRow       db  0
+        player2_toCol       db  0
+
+
+        NameExchangeDone    db  0
+
+        PreviousSelectedRow db  0ffh
+        PreviousSelectedCol db  0ffh
+
+
+        ; ;---------------------------------------------------------------------------------------
+
+
+
+        hello               db  "Hello, $"
+        exclamation         db  "!$"
+        enterName           db  'Please enter your name:','$'
+        pressEnter          db  'Press Enter Key to continue','$'
+        ;First byte is the size, second byte is the number of characters from the keyboard
+        chIn                db  'a'
+        keypressed          db  ?
+        mes1                db  "To Start Chatting Press 1$"
+        mes2                db  "To Start The Game Press 2$"
+        mes3                db  "To End The Program Press ESC$"
+        messageF1           db  " - You pressed F1$"
+        messageF2           db  " - You pressed F2$"
+        messageTemp         db  ' - Temporary notification bar for now. Happy Hacking!$'
+        name1               db  30,?,30 dup('$')
+        name2               db  30,?,30 dup('$')                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ;we received more bits than we expected;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;DANGER                                        ;First byte is the size, second byte is the number of characters from the keyboard
+        chatInvitationMes   db  'chat invitation $'
+        GameInvitationMes   db  'game invitation $'
+        sentMes             db  'sent to $'
+        recivedMes          db  'recived from $'
+        refuseMes           db  'refused the $'
+        invitationMes       db  'invitation $'
+        ignoreMes           db  ' $'
+        Emptynotification   db  '                                                                          $'
+
+        boardWidth          equ 160
+        boardHeight         equ 160
+        row                 db  ?
+        col                 db  ?
+        IsmailRow           db  ?
+        IsmailCol           db  ?
+        PNO                 db  ?
+
+        code                db  ?
+        fromRow             db  ?
+        fromColumn          db  ?
+        toRow               db  ?
+        toColumn            db  ?
+
+
+        value               db  ?,"$"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ;Data to recive in
+        charSend            db  ?,"$"
 
 
 .code
 
         
 main proc far
-                                    mov                 ax,@DATA
-                                    mov                 ds,ax
-    ;    mov ah,0
-    ;    mov al,13h
-    ;    int 10h
+                                        mov                 ax,@DATA
+                                        mov                 ds,ax
+        ;    mov ah,0
+        ;    mov al,13h
+        ;    int 10h
 
 
-                                    usernameScreen      enterName, pressEnter
-    ;Go to Main screen
-    ;TODO: go to main screen
+                                        usernameScreen      enterName, pressEnter
+        ;Go to Main screen
+        ;TODO: go to main screen
 
       
-                                    mainScreen          hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
+                                        mainScreen          hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypressed, white_bishop, 20, 20, ism, boardWidth, boardHeight, greyCell, whiteCell, grid, cooldown, winMessageP1, winMessageP2, checkKing1Message, checkKing2Message, row, col, PNO, availMoves, availMoves2
 
-                                    mov                 ah,04ch
-                                    int                 21h
+                                        mov                 ah,04ch
+                                        int                 21h
 main ENDP
 
-    ;*********************************************************************************************************************
-    ;*********************************************************************************************************************
-    ;************************************************ Avail moves Proc ***************************************************
-    ;*********************************************************************************************************************
-    ;*********************************************************************************************************************
+        ;*********************************************************************************************************************
+        ;*********************************************************************************************************************
+        ;************************************************ Avail moves Proc ***************************************************
+        ;*********************************************************************************************************************
+        ;*********************************************************************************************************************
 
-    ;*******************************************************************************************
-    ;****************************************** Rook *******************************************
-    ;*******************************************************************************************
+        ;*******************************************************************************************
+        ;****************************************** Rook *******************************************
+        ;*******************************************************************************************
     
 rookMoves proc
-                                    pusha
-    ; ;------------------------- TESTING
-    ;                                 drawSquareOnCell 03h,row,col
-    ; ; callDrawSquare bx
-    ; ; --------------------------
+                                        pusha
+        ; ;------------------------- TESTING
+        ;                                 drawSquareOnCell 03h,row,col
+        ; ; callDrawSquare bx
+        ; ; --------------------------
 
-    ; intialize indexes
+        ; intialize indexes
 
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
 
-    ;******************************************
-    ;***************** Right Cells ************
-    ;******************************************
+        ;******************************************
+        ;***************** Right Cells ************
+        ;******************************************
 
-                                    inc                 si
-    checkRight:                                                                                                                                                                                                                                                                                                                    ;right cols
-                                    cmp                 si,08h
-                                    jz                  preLeft
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-    ; -------------------------- TESTING (delete)
-    ; drawSquareOnCell 04h,row,col
-    ; callDrawSquare bx
-    ; --------------------------
+                                        inc                 si
+        checkRight:                                                                                                                                                                                                                                                                                                                        ;right cols
+                                        cmp                 si,08h
+                                        jz                  preLeft
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+        ; -------------------------- TESTING (delete)
+        ; drawSquareOnCell 04h,row,col
+        ; callDrawSquare bx
+        ; --------------------------
 
-                                    mov                 al,grid[bx]
-                                    cmp                 al,00
-                                    jnz                 lastRight
-    ; cmp              PNO,1
-    ; jne              p2
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e
-    ; p2:
-    ; mov              availMoves2[bx],0ffh
-    ; e:
-                                    callDrawSquare      bx,04h
-                                    inc                 si                                                                                                                                                                                                                                                                         ;go to right boxes
-                                    jmp                 checkRight
-    lastRight:                      
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov                 dl,grid[bx]
-                                    push                bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-                                    mov                 dh,grid[bx]
-                                    pop                 bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp                 dh,10
-                                    jl                  whiteAttackerR                                                                                                                                                                                                                                                             ;white Attacker
-    ;black Attacker
-                                    cmp                 dl,10
-                                    jg                  preleft
-                                    jmp                 eatRight
-    ;white Attacker
-    whiteAttackerR:                 
-                                    cmp                 dl,10
-                                    jl                  preleft
-    ; Friendly fire is disabled
-    eatRight:                       
-    ; cmp              PNO,1
-    ; jne              p22
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e2
-    ; p22:
-    ; mov              availMoves2[bx],0ffh
-    ; e2:
-                                    callDrawSquare      bx,04h
-
-
-
-    preLeft:                        
-    ;reset indexes
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
-
-    ;****************************************
-    ;***************** left Cells ***********
-    ;****************************************
-
-                                    dec                 si
-    checkLeft:                                                                                                                                                                                                                                                                                                                     ;right cols
-                                    cmp                 si,0ffffh
-                                    jz                  preTop
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-    ; -------------------------- TESTING (delete)
-    ; drawSquareOnCell 04h,row,col
-    ; callDrawSquare bx
-    ; --------------------------
-                                    mov                 al,grid[bx]
-                                    cmp                 al,00
-                                    jnz                 lastLeft
-    ; cmp              PNO,1
-    ; jne              p23
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e3
-    ; p23:
-    ; mov              availMoves2[bx],0ffh
-    ; e3:
-                                    callDrawSquare      bx,04h
-                                    dec                 si                                                                                                                                                                                                                                                                         ;go to right boxes
-                                    jmp                 checkLeft
-    lastLeft:                       
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov                 dl,grid[bx]
-                                    push                bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-                                    mov                 dh,grid[bx]
-                                    pop                 bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp                 dh,10
-                                    jl                  whiteAttackerL                                                                                                                                                                                                                                                             ;white Attacker
-    ;black Attacker
-                                    cmp                 dl,10
-                                    jg                  preTop
-                                    jmp                 eatLeft
-    ;white Attacker
-    whiteAttackerL:                 
-                                    cmp                 dl,10
-                                    jl                  preTop
-    ; Friendly fire is disabled
-    eatLeft:                        
-    ; cmp              PNO,1
-    ; jne              p24
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e4
-    ; p24:
-    ; mov              availMoves2[bx],0ffh
-    ; e4:
-                                    callDrawSquare      bx,04h
-
-    preTop:                         
-    ;reset indexes
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx
-                                    mov                 bl,row
-
-    ;*************************************
-    ;***************** Top Cells *********
-    ;*************************************
-
-                                    dec                 bx
-    checkTop:                       
-                                    cmp                 bx,0ffffh
-                                    jz                  preBottom
-                                    mov                 cl,8
-                                    mov                 al,bl
-                                    imul                cl
-                                    push                bx
-                                    mov                 bx,ax
-                                    add                 bx,si
-                                    mov                 al,grid[bx]
-                                    cmp                 al,00
-                                    jnz                 lastTop
-    ; cmp              PNO,1
-    ; jne              p25
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e5
-    ; p25:
-    ; mov              availMoves2[bx],0ffh
-    ; e5:
-                                    callDrawSquare      bx,04h
-                                    pop                 bx
-
-                                    dec                 bx                                                                                                                                                                                                                                                                         ;go to top boxes
-                                    jmp                 checkTop
-    lastTop:                        
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    pop                 ax
-
-                                    mov                 dl,grid[bx]
-                                    push                bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-                                    mov                 dh,grid[bx]
-                                    pop                 bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp                 dh,10
-                                    jl                  whiteAttackerT                                                                                                                                                                                                                                                             ;white Attacker
-    ;black Attacker
-                                    cmp                 dl,10
-                                    jg                  preBottom
-                                    jmp                 eatTop
-    ;white Attacker
-    whiteAttackerT:                 
-                                    cmp                 dl,10
-                                    jl                  preBottom
-    ; Friendly fire is disabled
-    eatTop:                         
-    ; cmp              PNO,1
-    ; jne              p26
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e6
-    ; p26:
-    ; mov              availMoves2[bx],0ffh
-    ; e6:
-                                    callDrawSquare      bx,04h
-
-    preBottom:                      
-    ; reset indexes
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx
-                                    mov                 bl,row
-
-    ;*************************************
-    ;***************** Bottom Cells *********
-    ;*************************************
-
-                                    inc                 bx
-    checkBottom:                    
-                                    cmp                 bx,08h
-                                    jz                  rt91
-                                    mov                 cl,8
-                                    mov                 al,bl
-                                    imul                cl
-                                    push                bx
-                                    mov                 bx,ax
-                                    add                 bx,si
-                                    mov                 al,grid[bx]
-                                    cmp                 al,00
-                                    jnz                 lastBottom
-    ; cmp              PNO,1
-    ; jne              p27
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e7
-    ; p27:
-    ; mov              availMoves2[bx],0ffh
-    ; e7:
-                                    callDrawSquare      bx,04h
-                                    pop                 bx
-
-                                    inc                 bx                                                                                                                                                                                                                                                                         ;go to top boxes
-                                    jmp                 checkBottom
-    lastBottom:                     
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    pop                 ax
-                                    mov                 dl,grid[bx]
-                                    push                bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-                                    mov                 dh,grid[bx]
-                                    pop                 bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp                 dh,10
-                                    jl                  whiteAttackerB                                                                                                                                                                                                                                                             ;white Attacker
-    ;black Attacker
-                                    cmp                 dl,10
-                                    jg                  rt91
-                                    jmp                 eatBottom
-    ;white Attacker
-    whiteAttackerB:                 
-                                    cmp                 dl,10
-                                    jl                  rt91
-    ; Friendly fire is disabled
-    eatBottom:                      
-    ; cmp              PNO,1
-    ; jne              p28
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e8
-    ; p28:
-    ; mov              availMoves2[bx],0ffh
-    ; e8:
-                                    callDrawSquare      bx,04h
+                                        mov                 al,grid[bx]
+                                        cmp                 al,00
+                                        jnz                 lastRight
+        ; cmp              PNO,1
+        ; jne              p2
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e
+        ; p2:
+        ; mov              availMoves2[bx],0ffh
+        ; e:
+                                        callDrawSquare      bx,04h
+                                        inc                 si                                                                                                                                                                                                                                                                             ;go to right boxes
+                                        jmp                 checkRight
+        lastRight:                      
+        ; Disable friendly fire...
+        ;check same team?
+        ;get away piece code
+                                        mov                 dl,grid[bx]
+                                        push                bx
+        ;get attacker piece code
+        ;reset bx
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+                                        mov                 dh,grid[bx]
+                                        pop                 bx
+        ;is same Color? "dl:away piece / dh:home piece"
+                                        cmp                 dh,10
+                                        jl                  whiteAttackerR                                                                                                                                                                                                                                                                 ;white Attacker
+        ;black Attacker
+                                        cmp                 dl,10
+                                        jg                  preleft
+                                        jmp                 eatRight
+        ;white Attacker
+        whiteAttackerR:                 
+                                        cmp                 dl,10
+                                        jl                  preleft
+        ; Friendly fire is disabled
+        eatRight:                       
+        ; cmp              PNO,1
+        ; jne              p22
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e2
+        ; p22:
+        ; mov              availMoves2[bx],0ffh
+        ; e2:
+                                        callDrawSquare      bx,04h
 
 
-    rt91:                           
 
-                                    popa
-                                    ret
-                                    ENDp                rookMoves
+        preLeft:                        
+        ;reset indexes
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
 
-    ;*******************************************************************************************
-    ;****************************************** Bishop *****************************************
-    ;*******************************************************************************************
+        ;****************************************
+        ;***************** left Cells ***********
+        ;****************************************
+
+                                        dec                 si
+        checkLeft:                                                                                                                                                                                                                                                                                                                         ;right cols
+                                        cmp                 si,0ffffh
+                                        jz                  preTop
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+        ; -------------------------- TESTING (delete)
+        ; drawSquareOnCell 04h,row,col
+        ; callDrawSquare bx
+        ; --------------------------
+                                        mov                 al,grid[bx]
+                                        cmp                 al,00
+                                        jnz                 lastLeft
+        ; cmp              PNO,1
+        ; jne              p23
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e3
+        ; p23:
+        ; mov              availMoves2[bx],0ffh
+        ; e3:
+                                        callDrawSquare      bx,04h
+                                        dec                 si                                                                                                                                                                                                                                                                             ;go to right boxes
+                                        jmp                 checkLeft
+        lastLeft:                       
+        ; Disable friendly fire...
+        ;check same team?
+        ;get away piece code
+                                        mov                 dl,grid[bx]
+                                        push                bx
+        ;get attacker piece code
+        ;reset bx
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+                                        mov                 dh,grid[bx]
+                                        pop                 bx
+        ;is same Color? "dl:away piece / dh:home piece"
+                                        cmp                 dh,10
+                                        jl                  whiteAttackerL                                                                                                                                                                                                                                                                 ;white Attacker
+        ;black Attacker
+                                        cmp                 dl,10
+                                        jg                  preTop
+                                        jmp                 eatLeft
+        ;white Attacker
+        whiteAttackerL:                 
+                                        cmp                 dl,10
+                                        jl                  preTop
+        ; Friendly fire is disabled
+        eatLeft:                        
+        ; cmp              PNO,1
+        ; jne              p24
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e4
+        ; p24:
+        ; mov              availMoves2[bx],0ffh
+        ; e4:
+                                        callDrawSquare      bx,04h
+
+        preTop:                         
+        ;reset indexes
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx
+                                        mov                 bl,row
+
+        ;*************************************
+        ;***************** Top Cells *********
+        ;*************************************
+
+                                        dec                 bx
+        checkTop:                       
+                                        cmp                 bx,0ffffh
+                                        jz                  preBottom
+                                        mov                 cl,8
+                                        mov                 al,bl
+                                        imul                cl
+                                        push                bx
+                                        mov                 bx,ax
+                                        add                 bx,si
+                                        mov                 al,grid[bx]
+                                        cmp                 al,00
+                                        jnz                 lastTop
+        ; cmp              PNO,1
+        ; jne              p25
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e5
+        ; p25:
+        ; mov              availMoves2[bx],0ffh
+        ; e5:
+                                        callDrawSquare      bx,04h
+                                        pop                 bx
+
+                                        dec                 bx                                                                                                                                                                                                                                                                             ;go to top boxes
+                                        jmp                 checkTop
+        lastTop:                        
+        ; Disable friendly fire...
+        ;check same team?
+        ;get away piece code
+                                        pop                 ax
+
+                                        mov                 dl,grid[bx]
+                                        push                bx
+        ;get attacker piece code
+        ;reset bx
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+                                        mov                 dh,grid[bx]
+                                        pop                 bx
+        ;is same Color? "dl:away piece / dh:home piece"
+                                        cmp                 dh,10
+                                        jl                  whiteAttackerT                                                                                                                                                                                                                                                                 ;white Attacker
+        ;black Attacker
+                                        cmp                 dl,10
+                                        jg                  preBottom
+                                        jmp                 eatTop
+        ;white Attacker
+        whiteAttackerT:                 
+                                        cmp                 dl,10
+                                        jl                  preBottom
+        ; Friendly fire is disabled
+        eatTop:                         
+        ; cmp              PNO,1
+        ; jne              p26
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e6
+        ; p26:
+        ; mov              availMoves2[bx],0ffh
+        ; e6:
+                                        callDrawSquare      bx,04h
+
+        preBottom:                      
+        ; reset indexes
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx
+                                        mov                 bl,row
+
+        ;*************************************
+        ;***************** Bottom Cells *********
+        ;*************************************
+
+                                        inc                 bx
+        checkBottom:                    
+                                        cmp                 bx,08h
+                                        jz                  rt91
+                                        mov                 cl,8
+                                        mov                 al,bl
+                                        imul                cl
+                                        push                bx
+                                        mov                 bx,ax
+                                        add                 bx,si
+                                        mov                 al,grid[bx]
+                                        cmp                 al,00
+                                        jnz                 lastBottom
+        ; cmp              PNO,1
+        ; jne              p27
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e7
+        ; p27:
+        ; mov              availMoves2[bx],0ffh
+        ; e7:
+                                        callDrawSquare      bx,04h
+                                        pop                 bx
+
+                                        inc                 bx                                                                                                                                                                                                                                                                             ;go to top boxes
+                                        jmp                 checkBottom
+        lastBottom:                     
+        ; Disable friendly fire...
+        ;check same team?
+        ;get away piece code
+                                        pop                 ax
+                                        mov                 dl,grid[bx]
+                                        push                bx
+        ;get attacker piece code
+        ;reset bx
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+                                        mov                 dh,grid[bx]
+                                        pop                 bx
+        ;is same Color? "dl:away piece / dh:home piece"
+                                        cmp                 dh,10
+                                        jl                  whiteAttackerB                                                                                                                                                                                                                                                                 ;white Attacker
+        ;black Attacker
+                                        cmp                 dl,10
+                                        jg                  rt91
+                                        jmp                 eatBottom
+        ;white Attacker
+        whiteAttackerB:                 
+                                        cmp                 dl,10
+                                        jl                  rt91
+        ; Friendly fire is disabled
+        eatBottom:                      
+        ; cmp              PNO,1
+        ; jne              p28
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e8
+        ; p28:
+        ; mov              availMoves2[bx],0ffh
+        ; e8:
+                                        callDrawSquare      bx,04h
+
+
+        rt91:                           
+
+                                        popa
+                                        ret
+                                        ENDp                rookMoves
+
+        ;*******************************************************************************************
+        ;****************************************** Bishop *****************************************
+        ;*******************************************************************************************
 
 bishopMoves proc
-                                    PUSHA
+                                        PUSHA
 
-    ; ; ------------------------- TESTING
-    ;                                 drawSquareOnCell 03h,row,col
-    ; ; callDrawSquare bx
-    ; ; --------------------------
+        ; ; ------------------------- TESTING
+        ;                                 drawSquareOnCell 03h,row,col
+        ; ; callDrawSquare bx
+        ; ; --------------------------
     
-    ; intialize indexes
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx
-                                    mov                 bl,row
+        ; intialize indexes
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx
+                                        mov                 bl,row
     
-    ;**********************************************
-    ;***************** 4 o'clock Cells ************
-    ;**********************************************
+        ;**********************************************
+        ;***************** 4 o'clock Cells ************
+        ;**********************************************
 
-                                    inc                 bx
-                                    inc                 si
-    checkBR:                                                                                                                                                                                                                                                                                                                       ;bottom right
-                                    cmp                 bx,08h
-                                    jz                  precheckTL
-                                    cmp                 si,08h
-                                    jz                  precheckTL
-                                    mov                 cl,8
-                                    mov                 al,bl
-                                    imul                cl
-                                    push                bx
-                                    mov                 bx,ax
-                                    add                 bx,si
-                                    mov                 al,grid[bx]
-                                    cmp                 al,00
-                                    jnz                 lastBR
-    ; cmp              PNO,1
-    ; jne              p29
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e9
-    ; p29:
-    ; mov              availMoves2[bx],0ffh
-    ; e9:
-                                    callDrawSquare      bx,04h
-                                    pop                 bx
-                                    inc                 bx
-                                    inc                 si
-                                    jmp                 checkBR
-    lastBR:                         
-                                    pop                 ax
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov                 dl,grid[bx]
-                                    push                bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-                                    mov                 dh,grid[bx]
-                                    pop                 bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp                 dh,10
-                                    jl                  whiteAttackerBR                                                                                                                                                                                                                                                            ;white Attacker
-    ;black Attacker
-                                    cmp                 dl,10
-                                    jg                  precheckTL
-                                    jmp                 eatBR
-    ;white Attacker
-    whiteAttackerBR:                
-                                    cmp                 dl,10
-                                    jl                  precheckTL
-    ; Friendly fire is disabled
-    eatBR:                          
-                                    callDrawSquare      bx,04h
-    ; cmp              PNO,1
-    ; jne              p210
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e10
-    ; p210:
-    ; mov              availMoves2[bx],0ffh
-    ; e10:
-
-
-    precheckTL:                     
-    ;reset indexes
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx
-                                    mov                 bl,row
+                                        inc                 bx
+                                        inc                 si
+        checkBR:                                                                                                                                                                                                                                                                                                                           ;bottom right
+                                        cmp                 bx,08h
+                                        jz                  precheckTL
+                                        cmp                 si,08h
+                                        jz                  precheckTL
+                                        mov                 cl,8
+                                        mov                 al,bl
+                                        imul                cl
+                                        push                bx
+                                        mov                 bx,ax
+                                        add                 bx,si
+                                        mov                 al,grid[bx]
+                                        cmp                 al,00
+                                        jnz                 lastBR
+        ; cmp              PNO,1
+        ; jne              p29
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e9
+        ; p29:
+        ; mov              availMoves2[bx],0ffh
+        ; e9:
+                                        callDrawSquare      bx,04h
+                                        pop                 bx
+                                        inc                 bx
+                                        inc                 si
+                                        jmp                 checkBR
+        lastBR:                         
+                                        pop                 ax
+        ; Disable friendly fire...
+        ;check same team?
+        ;get away piece code
+                                        mov                 dl,grid[bx]
+                                        push                bx
+        ;get attacker piece code
+        ;reset bx
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+                                        mov                 dh,grid[bx]
+                                        pop                 bx
+        ;is same Color? "dl:away piece / dh:home piece"
+                                        cmp                 dh,10
+                                        jl                  whiteAttackerBR                                                                                                                                                                                                                                                                ;white Attacker
+        ;black Attacker
+                                        cmp                 dl,10
+                                        jg                  precheckTL
+                                        jmp                 eatBR
+        ;white Attacker
+        whiteAttackerBR:                
+                                        cmp                 dl,10
+                                        jl                  precheckTL
+        ; Friendly fire is disabled
+        eatBR:                          
+                                        callDrawSquare      bx,04h
+        ; cmp              PNO,1
+        ; jne              p210
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e10
+        ; p210:
+        ; mov              availMoves2[bx],0ffh
+        ; e10:
 
 
-    ;***********************************************
-    ;***************** 10 o'clock Cells ************
-    ;***********************************************
-
-                                    dec                 bx
-                                    dec                 si
-    checkTL:                                                                                                                                                                                                                                                                                                                       ;top left
-                                    cmp                 bx,0ffffh
-                                    jz                  precheckTR
-                                    cmp                 si,0ffffh
-                                    jz                  precheckTR
-                                    mov                 cl,8
-                                    mov                 al,bl
-                                    imul                cl
-                                    push                bx
-                                    mov                 bx,ax
-                                    add                 bx,si
-                                    mov                 al,grid[bx]
-                                    cmp                 al,00
-                                    jnz                 lastTL
-    ; cmp              PNO,1
-    ; jne              p211
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e11
-    ; p211:
-    ; mov              availMoves2[bx],0ffh
-    ; e11:
-                                    callDrawSquare      bx,04h
-                                    pop                 bx
-                                    dec                 bx
-                                    dec                 si
-                                    jmp                 checkTL
-    lastTL:                         
-                                    pop                 ax
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov                 dl,grid[bx]
-                                    push                bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-                                    mov                 dh,grid[bx]
-                                    pop                 bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp                 dh,10
-                                    jl                  whiteAttackerTL                                                                                                                                                                                                                                                            ;white Attacker
-    ;black Attacker
-                                    cmp                 dl,10
-                                    jg                  precheckTR
-                                    jmp                 eatTL
-    ;white Attacker
-    whiteAttackerTL:                
-                                    cmp                 dl,10
-                                    jl                  precheckTR
-    ; Friendly fire is disabled
-    eatTL:                          
-    ; cmp              PNO,1
-    ; jne              p212
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e12
-    ; p212:
-    ; mov              availMoves2[bx],0ffh
-    ; e12:
-                                    callDrawSquare      bx,04h
+        precheckTL:                     
+        ;reset indexes
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx
+                                        mov                 bl,row
 
 
-    precheckTR:                     
-    ;reset indexes
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx
-                                    mov                 bl,row
+        ;***********************************************
+        ;***************** 10 o'clock Cells ************
+        ;***********************************************
 
-    ; ;**********************************************
-    ; ;***************** 2 o'clock Cells ************
-    ; ;**********************************************
+                                        dec                 bx
+                                        dec                 si
+        checkTL:                                                                                                                                                                                                                                                                                                                           ;top left
+                                        cmp                 bx,0ffffh
+                                        jz                  precheckTR
+                                        cmp                 si,0ffffh
+                                        jz                  precheckTR
+                                        mov                 cl,8
+                                        mov                 al,bl
+                                        imul                cl
+                                        push                bx
+                                        mov                 bx,ax
+                                        add                 bx,si
+                                        mov                 al,grid[bx]
+                                        cmp                 al,00
+                                        jnz                 lastTL
+        ; cmp              PNO,1
+        ; jne              p211
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e11
+        ; p211:
+        ; mov              availMoves2[bx],0ffh
+        ; e11:
+                                        callDrawSquare      bx,04h
+                                        pop                 bx
+                                        dec                 bx
+                                        dec                 si
+                                        jmp                 checkTL
+        lastTL:                         
+                                        pop                 ax
+        ; Disable friendly fire...
+        ;check same team?
+        ;get away piece code
+                                        mov                 dl,grid[bx]
+                                        push                bx
+        ;get attacker piece code
+        ;reset bx
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+                                        mov                 dh,grid[bx]
+                                        pop                 bx
+        ;is same Color? "dl:away piece / dh:home piece"
+                                        cmp                 dh,10
+                                        jl                  whiteAttackerTL                                                                                                                                                                                                                                                                ;white Attacker
+        ;black Attacker
+                                        cmp                 dl,10
+                                        jg                  precheckTR
+                                        jmp                 eatTL
+        ;white Attacker
+        whiteAttackerTL:                
+                                        cmp                 dl,10
+                                        jl                  precheckTR
+        ; Friendly fire is disabled
+        eatTL:                          
+        ; cmp              PNO,1
+        ; jne              p212
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e12
+        ; p212:
+        ; mov              availMoves2[bx],0ffh
+        ; e12:
+                                        callDrawSquare      bx,04h
 
-                                    dec                 bx
-                                    inc                 si
-    checkTR:                                                                                                                                                                                                                                                                                                                       ;top right
-                                    cmp                 bx,0ffffh
-                                    jz                  precheckBL
-                                    cmp                 si,08h
-                                    jz                  precheckBL
-                                    mov                 cl,8
-                                    mov                 al,bl
-                                    imul                cl
-                                    push                bx
-                                    mov                 bx,ax
-                                    add                 bx,si
-                                    mov                 al,grid[bx]
-                                    cmp                 al,00
-                                    jnz                 lastTR
-    ; cmp              PNO,1
-    ; jne              p213
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e13
-    ; p213:
-    ; mov              availMoves2[bx],0ffh
-    ; e13:
-                                    callDrawSquare      bx,04h
-                                    pop                 bx
-                                    dec                 bx
-                                    inc                 si
-                                    jmp                 checkTR
-    lastTR:                         
-                                    pop                 ax
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov                 dl,grid[bx]
-                                    push                bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-                                    mov                 dh,grid[bx]
-                                    pop                 bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp                 dh,10
-                                    jl                  whiteAttackerTR                                                                                                                                                                                                                                                            ;white Attacker
-    ;black Attacker
-                                    cmp                 dl,10
-                                    jg                  precheckBL
-                                    jmp                 eatTR
-    ;white Attacker
-    whiteAttackerTR:                
-                                    cmp                 dl,10
-                                    jl                  precheckBL
-    ; Friendly fire is disabled
-    eatTR:                          
-    ; cmp              PNO,1
-    ; jne              p214
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e14
-    ; p214:
-    ; mov              availMoves2[bx],0ffh
-    ; e14:
-                                    callDrawSquare      bx,04h
 
-    precheckBL:                     
-    ;reset indexes
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx
-                                    mov                 bl,row
+        precheckTR:                     
+        ;reset indexes
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx
+                                        mov                 bl,row
 
-    ; ;**********************************************
-    ; ;***************** 8 o'clock Cells ************
-    ; ;**********************************************
+        ; ;**********************************************
+        ; ;***************** 2 o'clock Cells ************
+        ; ;**********************************************
 
-                                    inc                 bx
-                                    dec                 si
-    checkBL:                                                                                                                                                                                                                                                                                                                       ;bottom left
-                                    cmp                 bx,08h
-                                    jz                  rt1
-                                    cmp                 si,0ffffh
-                                    jz                  rt1
-                                    mov                 cl,8
-                                    mov                 al,bl
-                                    imul                cl
-                                    push                bx
-                                    mov                 bx,ax
-                                    add                 bx,si
-                                    mov                 al,grid[bx]
-                                    cmp                 al,00
-                                    jnz                 lastBL
-    ; cmp              PNO,1
-    ; jne              p215
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e15
-    ; p215:
-    ; mov              availMoves2[bx],0ffh
-    ; e15:
-                                    callDrawSquare      bx,04h
-                                    pop                 bx
-                                    inc                 bx
-                                    dec                 si
-                                    jmp                 checkBL
-    lastBL:                         
-                                    pop                 ax
-    ; Disable friendly fire...
-    ;check same team?
-    ;get away piece code
-                                    mov                 dl,grid[bx]
-                                    push                bx
-    ;get attacker piece code
-    ;reset bx
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 si,bx                                                                                                                                                                                                                                                                      ;store col number in si
-                                    mov                 bl,row                                                                                                                                                                                                                                                                     ;store row number in bl
-                                    mov                 cl,8
-                                    mov                 al,row
-                                    imul                cl
-                                    mov                 bx,ax                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8
-                                    add                 bx,si                                                                                                                                                                                                                                                                      ;bx = bl(row number)*8 +si(col number)
-                                    mov                 dh,grid[bx]
-                                    pop                 bx
-    ;is same Color? "dl:away piece / dh:home piece"
-                                    cmp                 dh,10
-                                    jl                  whiteAttackerBL                                                                                                                                                                                                                                                            ;white Attacker
-    ;black Attacker
-                                    cmp                 dl,10
-                                    jg                  rt1
-                                    jmp                 eatBL
-    ;white Attacker
-    whiteAttackerBL:                
-                                    cmp                 dl,10
-                                    jl                  rt1
-    ; Friendly fire is disabled
-    eatBL:                          
-    ; cmp              PNO,1
-    ; jne              p216
-                                    mov                 availMoves[bx],0ffh
-    ; jmp              e16
-    ; p216:
-    ; mov              availMoves2[bx],0ffh
-    ; e16:
-                                    callDrawSquare      bx,04h
+                                        dec                 bx
+                                        inc                 si
+        checkTR:                                                                                                                                                                                                                                                                                                                           ;top right
+                                        cmp                 bx,0ffffh
+                                        jz                  precheckBL
+                                        cmp                 si,08h
+                                        jz                  precheckBL
+                                        mov                 cl,8
+                                        mov                 al,bl
+                                        imul                cl
+                                        push                bx
+                                        mov                 bx,ax
+                                        add                 bx,si
+                                        mov                 al,grid[bx]
+                                        cmp                 al,00
+                                        jnz                 lastTR
+        ; cmp              PNO,1
+        ; jne              p213
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e13
+        ; p213:
+        ; mov              availMoves2[bx],0ffh
+        ; e13:
+                                        callDrawSquare      bx,04h
+                                        pop                 bx
+                                        dec                 bx
+                                        inc                 si
+                                        jmp                 checkTR
+        lastTR:                         
+                                        pop                 ax
+        ; Disable friendly fire...
+        ;check same team?
+        ;get away piece code
+                                        mov                 dl,grid[bx]
+                                        push                bx
+        ;get attacker piece code
+        ;reset bx
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+                                        mov                 dh,grid[bx]
+                                        pop                 bx
+        ;is same Color? "dl:away piece / dh:home piece"
+                                        cmp                 dh,10
+                                        jl                  whiteAttackerTR                                                                                                                                                                                                                                                                ;white Attacker
+        ;black Attacker
+                                        cmp                 dl,10
+                                        jg                  precheckBL
+                                        jmp                 eatTR
+        ;white Attacker
+        whiteAttackerTR:                
+                                        cmp                 dl,10
+                                        jl                  precheckBL
+        ; Friendly fire is disabled
+        eatTR:                          
+        ; cmp              PNO,1
+        ; jne              p214
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e14
+        ; p214:
+        ; mov              availMoves2[bx],0ffh
+        ; e14:
+                                        callDrawSquare      bx,04h
 
-    rt1:                            
-                                    popa
-                                    ret
-                                    ENDp                bishopMoves
+        precheckBL:                     
+        ;reset indexes
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx
+                                        mov                 bl,row
 
-    ;*******************************************************************************************
-    ;****************************************** Queen *******************************************
-    ;*******************************************************************************************
+        ; ;**********************************************
+        ; ;***************** 8 o'clock Cells ************
+        ; ;**********************************************
+
+                                        inc                 bx
+                                        dec                 si
+        checkBL:                                                                                                                                                                                                                                                                                                                           ;bottom left
+                                        cmp                 bx,08h
+                                        jz                  rt1
+                                        cmp                 si,0ffffh
+                                        jz                  rt1
+                                        mov                 cl,8
+                                        mov                 al,bl
+                                        imul                cl
+                                        push                bx
+                                        mov                 bx,ax
+                                        add                 bx,si
+                                        mov                 al,grid[bx]
+                                        cmp                 al,00
+                                        jnz                 lastBL
+        ; cmp              PNO,1
+        ; jne              p215
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e15
+        ; p215:
+        ; mov              availMoves2[bx],0ffh
+        ; e15:
+                                        callDrawSquare      bx,04h
+                                        pop                 bx
+                                        inc                 bx
+                                        dec                 si
+                                        jmp                 checkBL
+        lastBL:                         
+                                        pop                 ax
+        ; Disable friendly fire...
+        ;check same team?
+        ;get away piece code
+                                        mov                 dl,grid[bx]
+                                        push                bx
+        ;get attacker piece code
+        ;reset bx
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 si,bx                                                                                                                                                                                                                                                                          ;store col number in si
+                                        mov                 bl,row                                                                                                                                                                                                                                                                         ;store row number in bl
+                                        mov                 cl,8
+                                        mov                 al,row
+                                        imul                cl
+                                        mov                 bx,ax                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8
+                                        add                 bx,si                                                                                                                                                                                                                                                                          ;bx = bl(row number)*8 +si(col number)
+                                        mov                 dh,grid[bx]
+                                        pop                 bx
+        ;is same Color? "dl:away piece / dh:home piece"
+                                        cmp                 dh,10
+                                        jl                  whiteAttackerBL                                                                                                                                                                                                                                                                ;white Attacker
+        ;black Attacker
+                                        cmp                 dl,10
+                                        jg                  rt1
+                                        jmp                 eatBL
+        ;white Attacker
+        whiteAttackerBL:                
+                                        cmp                 dl,10
+                                        jl                  rt1
+        ; Friendly fire is disabled
+        eatBL:                          
+        ; cmp              PNO,1
+        ; jne              p216
+                                        mov                 availMoves[bx],0ffh
+        ; jmp              e16
+        ; p216:
+        ; mov              availMoves2[bx],0ffh
+        ; e16:
+                                        callDrawSquare      bx,04h
+
+        rt1:                            
+                                        popa
+                                        ret
+                                        ENDp                bishopMoves
+
+        ;*******************************************************************************************
+        ;****************************************** Queen *******************************************
+        ;*******************************************************************************************
 
 queenMoves proc
-                                    pusha                                                                                                                                                                                                                                                                                          ;no need to it as you push in rook and bishop and queen doesn't change rigisters (for optimization)
+                                        pusha                                                                                                                                                                                                                                                                                              ;no need to it as you push in rook and bishop and queen doesn't change rigisters (for optimization)
     
-                                    call                bishopMoves
-                                    call                rookMoves
+                                        call                bishopMoves
+                                        call                rookMoves
       
-                                    popa
-                                    ret
-                                    ENDp                queenMoves
+                                        popa
+                                        ret
+                                        ENDp                queenMoves
 
 
-    ;*******************************************************************************************
-    ;****************************************** BKing ******************************************
-    ;*******************************************************************************************
+        ;*******************************************************************************************
+        ;****************************************** BKing ******************************************
+        ;*******************************************************************************************
 
 HighlightAvailableForBKing proc
-    ;local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
-                                    pusha
-    ;highlight 3 above it
-                                    mov                 al,row
-                                    mov                 ah,0
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 cl,8
-                                    lea                 di,grid
-    ; lea              si,availMoves2
-                                    lea                 si,availMoves
+        ;local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
+                                        pusha
+        ;highlight 3 above it
+                                        mov                 al,row
+                                        mov                 ah,0
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 cl,8
+                                        lea                 di,grid
+        ; lea              si,availMoves2
+                                        lea                 si,availMoves
 
-                                    mul                 cl
-                                    add                 di,ax                                                                                                                                                                                                                                                                      ;on current cell
-                                    add                 di,bx
-                                    add                 si,ax
-                                    add                 si,bx
+                                        mul                 cl
+                                        add                 di,ax                                                                                                                                                                                                                                                                          ;on current cell
+                                        add                 di,bx
+                                        add                 si,ax
+                                        add                 si,bx
 
-                                    cmp                 row,1
-                                    jl                  noAbove2
-                                    mov                 al,row
-                                    dec                 al
-                                    mov                 IsmailRow,al
-                                    sub                 di,8                                                                                                                                                                                                                                                                       ;above cell
-                                    sub                 si,8
-                                    cmp                 byte ptr [di],07h
-                                    jl                  EmptyAbove2
-                                    jmp                 noEnemyAbove2
-    EmptyAbove2:                    
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-    noEnemyAbove2:                  
-                                    dec                 di
-                                    dec                 si
-                                    dec                 bl
-                                    cmp                 col,1
-                                    jl                  noAboveLeft2
-                                    cmp                 byte ptr [di],07h
-                                    jl                  EmptyAboveLeft2
-                                    jmp                 noEnemyAboveLeft2
-    EmptyAboveLeft2:                
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-    noEnemyAboveLeft2:              
-    noAboveLeft2:                   
-                                    add                 di,2
-                                    add                 si,2
-                                    add                 bl,2
-                                    cmp                 col,6
-                                    jg                  noAboveRight2
-                                    cmp                 byte ptr [di],07h
-                                    jl                  EmptyAboveRight2
-                                    jmp                 noEnemyAboveRight2
-    EmptyAboveRight2:               
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-    noEnemyAboveRight2:             
-    noAboveRight2:                  
-                                    dec                 bl
-                                    add                 di,7                                                                                                                                                                                                                                                                       ;back to current cell
-                                    add                 si,7
-    noAbove2:                       
+                                        cmp                 row,1
+                                        jl                  noAbove2
+                                        mov                 al,row
+                                        dec                 al
+                                        mov                 IsmailRow,al
+                                        sub                 di,8                                                                                                                                                                                                                                                                           ;above cell
+                                        sub                 si,8
+                                        cmp                 byte ptr [di],07h
+                                        jl                  EmptyAbove2
+                                        jmp                 noEnemyAbove2
+        EmptyAbove2:                    
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+        noEnemyAbove2:                  
+                                        dec                 di
+                                        dec                 si
+                                        dec                 bl
+                                        cmp                 col,1
+                                        jl                  noAboveLeft2
+                                        cmp                 byte ptr [di],07h
+                                        jl                  EmptyAboveLeft2
+                                        jmp                 noEnemyAboveLeft2
+        EmptyAboveLeft2:                
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+        noEnemyAboveLeft2:              
+        noAboveLeft2:                   
+                                        add                 di,2
+                                        add                 si,2
+                                        add                 bl,2
+                                        cmp                 col,6
+                                        jg                  noAboveRight2
+                                        cmp                 byte ptr [di],07h
+                                        jl                  EmptyAboveRight2
+                                        jmp                 noEnemyAboveRight2
+        EmptyAboveRight2:               
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+        noEnemyAboveRight2:             
+        noAboveRight2:                  
+                                        dec                 bl
+                                        add                 di,7                                                                                                                                                                                                                                                                           ;back to current cell
+                                        add                 si,7
+        noAbove2:                       
 
-    ;highlight 3 below it
+        ;highlight 3 below it
 
-                                    cmp                 row,6
-                                    jg                  noBelow2
-                                    mov                 al,row                                                                                                                                                                                                                                                                     ;and bl => equal now col
-                                    add                 di,8                                                                                                                                                                                                                                                                       ;below it
-                                    add                 si,8                                                                                                                                                                                                                                                                       ;below it
-                                    inc                 al                                                                                                                                                                                                                                                                         ;below it
-                                    mov                 IsmailRow,al
-                                    cmp                 byte ptr [di],07h
-                                    jl                  EmptyBelow2
-                                    jmp                 noEnemyBelow2
-    EmptyBelow2:                    
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-    noEnemyBelow2:                  
-                                    cmp                 col,1
-                                    jl                  noBelowLeft2
-                                    dec                 di
-                                    dec                 si
-                                    cmp                 byte ptr [di],07h
-                                    jl                  EmptyBelowLeft2
-                                    jmp                 noEnemyBelowLeft2
-    EmptyBelowLeft2:                
-                                    dec                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 bl
-    noEnemyBelowLeft2:              
-                                    inc                 di
-                                    inc                 si
-    noBelowLeft2:                   
-                                    cmp                 col,6
-                                    jg                  noBelowRight2
-                                    inc                 di
-                                    inc                 si
-                                    cmp                 byte ptr [di],07h
-                                    jl                  EmptyBelowRight2
-                                    jmp                 noEnemyBelowRight2
-    EmptyBelowRight2:               
-                                    inc                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 bl
-    noEnemyBelowRight2:             
-                                    dec                 di
-                                    dec                 si
-    noBelowRight2:                  
-                                    dec                 al                                                                                                                                                                                                                                                                         ;on cell and bl too
-                                    sub                 di,8
-                                    sub                 si,8
-    noBelow2:                       
+                                        cmp                 row,6
+                                        jg                  noBelow2
+                                        mov                 al,row                                                                                                                                                                                                                                                                         ;and bl => equal now col
+                                        add                 di,8                                                                                                                                                                                                                                                                           ;below it
+                                        add                 si,8                                                                                                                                                                                                                                                                           ;below it
+                                        inc                 al                                                                                                                                                                                                                                                                             ;below it
+                                        mov                 IsmailRow,al
+                                        cmp                 byte ptr [di],07h
+                                        jl                  EmptyBelow2
+                                        jmp                 noEnemyBelow2
+        EmptyBelow2:                    
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+        noEnemyBelow2:                  
+                                        cmp                 col,1
+                                        jl                  noBelowLeft2
+                                        dec                 di
+                                        dec                 si
+                                        cmp                 byte ptr [di],07h
+                                        jl                  EmptyBelowLeft2
+                                        jmp                 noEnemyBelowLeft2
+        EmptyBelowLeft2:                
+                                        dec                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 bl
+        noEnemyBelowLeft2:              
+                                        inc                 di
+                                        inc                 si
+        noBelowLeft2:                   
+                                        cmp                 col,6
+                                        jg                  noBelowRight2
+                                        inc                 di
+                                        inc                 si
+                                        cmp                 byte ptr [di],07h
+                                        jl                  EmptyBelowRight2
+                                        jmp                 noEnemyBelowRight2
+        EmptyBelowRight2:               
+                                        inc                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 bl
+        noEnemyBelowRight2:             
+                                        dec                 di
+                                        dec                 si
+        noBelowRight2:                  
+                                        dec                 al                                                                                                                                                                                                                                                                             ;on cell and bl too
+                                        sub                 di,8
+                                        sub                 si,8
+        noBelow2:                       
 
-    ;di,si are on cell
-                                    mov                 al,row                                                                                                                                                                                                                                                                     ;and bl => equal now col
-                                    mov                 IsmailRow,al
-    ;highlight right
-                                    cmp                 col,6
-                                    jg                  noRight2
-                                    inc                 di
-                                    inc                 si
-                                    cmp                 byte ptr [di],07h
-                                    jl                  EmptyRight2
-                                    jmp                 noEnemyRight2
-    EmptyRight2:                    
-                                    inc                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    dec                 bl
-                                    mov                 byte ptr [si],0ffh
-    noEnemyRight2:                  
-                                    dec                 di                                                                                                                                                                                                                                                                         ;on cell now
-                                    dec                 si                                                                                                                                                                                                                                                                         ;too
-    noRight2:                       
+        ;di,si are on cell
+                                        mov                 al,row                                                                                                                                                                                                                                                                         ;and bl => equal now col
+                                        mov                 IsmailRow,al
+        ;highlight right
+                                        cmp                 col,6
+                                        jg                  noRight2
+                                        inc                 di
+                                        inc                 si
+                                        cmp                 byte ptr [di],07h
+                                        jl                  EmptyRight2
+                                        jmp                 noEnemyRight2
+        EmptyRight2:                    
+                                        inc                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        dec                 bl
+                                        mov                 byte ptr [si],0ffh
+        noEnemyRight2:                  
+                                        dec                 di                                                                                                                                                                                                                                                                             ;on cell now
+                                        dec                 si                                                                                                                                                                                                                                                                             ;too
+        noRight2:                       
 
-    ;highlight left
-                                    cmp                 col,1
-                                    jl                  noLeft2
-                                    dec                 di
-                                    dec                 si
-                                    cmp                 byte ptr [di],07h
-                                    jl                  EmptyLeft2
-                                    jmp                 noEnemyLeft2
-    EmptyLeft2:                     
-                                    dec                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 bl
-    noEnemyLeft2:                   
-                                    inc                 di
-                                    inc                 si
-    noLeft2:                        
-                                    popa
-                                    ret
-                                    endp                HighlightAvailableForBKing
+        ;highlight left
+                                        cmp                 col,1
+                                        jl                  noLeft2
+                                        dec                 di
+                                        dec                 si
+                                        cmp                 byte ptr [di],07h
+                                        jl                  EmptyLeft2
+                                        jmp                 noEnemyLeft2
+        EmptyLeft2:                     
+                                        dec                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 bl
+        noEnemyLeft2:                   
+                                        inc                 di
+                                        inc                 si
+        noLeft2:                        
+                                        popa
+                                        ret
+                                        endp                HighlightAvailableForBKing
 
-    ;*******************************************************************************************
-    ;****************************************** WKing ******************************************
-    ;*******************************************************************************************
+        ;*******************************************************************************************
+        ;****************************************** WKing ******************************************
+        ;*******************************************************************************************
 
 HighlightAvailableForWKing proc
-    ;local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
-    ;highlight 3 above it
-                                    pusha
-                                    mov                 al,row
-                                    mov                 ah,0
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 cl,8
-                                    lea                 di,grid
-                                    lea                 si,availMoves
-                                    mul                 cl
-                                    add                 di,ax                                                                                                                                                                                                                                                                      ;on current cell
-                                    add                 di,bx
-                                    add                 si,ax
-                                    add                 si,bx
+        ;local  noAboveLeft, noAboveRight, noAbove, noBelowLeft, noBelowRight, noBelow, noRight, noLeft,noEnemyAbove,noEnemyAboveLeft,noEnemyAboveRight,noEnemyBelow,noEnemyBelowLeft,noEnemyBelowRight,noEnemyLeft,noEnemyRight,EmptyAbove,EmptyAboveLeft,EmptyAboveRight,EmptyBelow,EmptyBelowLeft,EmptyBelowRight,EmptyRight,EmptyLeft
+        ;highlight 3 above it
+                                        pusha
+                                        mov                 al,row
+                                        mov                 ah,0
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 cl,8
+                                        lea                 di,grid
+                                        lea                 si,availMoves
+                                        mul                 cl
+                                        add                 di,ax                                                                                                                                                                                                                                                                          ;on current cell
+                                        add                 di,bx
+                                        add                 si,ax
+                                        add                 si,bx
 
-                                    cmp                 row,1
-                                    jl                  noAbove11
-                                    mov                 al,row
-                                    dec                 al
-                                    mov                 IsmailRow,al
-                                    sub                 di,8                                                                                                                                                                                                                                                                       ;above cell
-                                    sub                 si,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyAbove11
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyAbove11
-    EmptyAbove11:                   
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        cmp                 row,1
+                                        jl                  noAbove11
+                                        mov                 al,row
+                                        dec                 al
+                                        mov                 IsmailRow,al
+                                        sub                 di,8                                                                                                                                                                                                                                                                           ;above cell
+                                        sub                 si,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyAbove11
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyAbove11
+        EmptyAbove11:                   
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
                                     
-                                    mov                 byte ptr [si],0ffh
-    noEnemyAbove11:                 
-                                    dec                 di
-                                    dec                 si
-                                    dec                 bl
-                                    cmp                 col,1
-                                    jl                  noAboveLeft11
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyAboveLeft11
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyAboveLeft11
-    EmptyAboveLeft11:               
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-    noEnemyAboveLeft11:             
-    noAboveLeft11:                  
-                                    add                 di,2
-                                    add                 si,2
-                                    add                 bl,2
-                                    cmp                 col,6
-                                    jg                  noAboveRight11
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyAboveRight11
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyAboveRight11
-    EmptyAboveRight11:              
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-    noEnemyAboveRight11:            
-    noAboveRight11:                 
-                                    dec                 bl
-                                    add                 di,7                                                                                                                                                                                                                                                                       ;back to current cell
-                                    add                 si,7
-    noAbove11:                      
+                                        mov                 byte ptr [si],0ffh
+        noEnemyAbove11:                 
+                                        dec                 di
+                                        dec                 si
+                                        dec                 bl
+                                        cmp                 col,1
+                                        jl                  noAboveLeft11
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyAboveLeft11
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyAboveLeft11
+        EmptyAboveLeft11:               
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+        noEnemyAboveLeft11:             
+        noAboveLeft11:                  
+                                        add                 di,2
+                                        add                 si,2
+                                        add                 bl,2
+                                        cmp                 col,6
+                                        jg                  noAboveRight11
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyAboveRight11
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyAboveRight11
+        EmptyAboveRight11:              
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+        noEnemyAboveRight11:            
+        noAboveRight11:                 
+                                        dec                 bl
+                                        add                 di,7                                                                                                                                                                                                                                                                           ;back to current cell
+                                        add                 si,7
+        noAbove11:                      
 
-    ;highlight 3 below it
+        ;highlight 3 below it
 
-                                    cmp                 row,6
-                                    jg                  noBelow11
-                                    mov                 al,row                                                                                                                                                                                                                                                                     ;and bl => equal now col
-                                    add                 di,8                                                                                                                                                                                                                                                                       ;below it
-                                    add                 si,8                                                                                                                                                                                                                                                                       ;below it
-                                    inc                 al                                                                                                                                                                                                                                                                         ;below it
-                                    mov                 IsmailRow,al
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyBelow11
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyBelow11
-    EmptyBelow11:                   
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-    noEnemyBelow11:                 
-                                    cmp                 col,1
-                                    jl                  noBelowLeft11
-                                    dec                 di
-                                    dec                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyBelowLeft11
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyBelowLeft11
-    EmptyBelowLeft11:               
-                                    dec                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 bl
-    noEnemyBelowLeft11:             
-                                    inc                 di
-                                    inc                 si
-    noBelowLeft11:                  
-                                    cmp                 col,6
-                                    jg                  noBelowRight11
-                                    inc                 di
-                                    inc                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyBelowRight11
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyBelowRight11
-    EmptyBelowRight11:              
-                                    inc                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 bl
-    noEnemyBelowRight11:            
-                                    dec                 di
-                                    dec                 si
-    noBelowRight11:                 
-                                    dec                 al                                                                                                                                                                                                                                                                         ;on cell and bl too
-                                    sub                 di,8
-                                    sub                 si,8
-    noBelow11:                      
+                                        cmp                 row,6
+                                        jg                  noBelow11
+                                        mov                 al,row                                                                                                                                                                                                                                                                         ;and bl => equal now col
+                                        add                 di,8                                                                                                                                                                                                                                                                           ;below it
+                                        add                 si,8                                                                                                                                                                                                                                                                           ;below it
+                                        inc                 al                                                                                                                                                                                                                                                                             ;below it
+                                        mov                 IsmailRow,al
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyBelow11
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyBelow11
+        EmptyBelow11:                   
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+        noEnemyBelow11:                 
+                                        cmp                 col,1
+                                        jl                  noBelowLeft11
+                                        dec                 di
+                                        dec                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyBelowLeft11
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyBelowLeft11
+        EmptyBelowLeft11:               
+                                        dec                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 bl
+        noEnemyBelowLeft11:             
+                                        inc                 di
+                                        inc                 si
+        noBelowLeft11:                  
+                                        cmp                 col,6
+                                        jg                  noBelowRight11
+                                        inc                 di
+                                        inc                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyBelowRight11
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyBelowRight11
+        EmptyBelowRight11:              
+                                        inc                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 bl
+        noEnemyBelowRight11:            
+                                        dec                 di
+                                        dec                 si
+        noBelowRight11:                 
+                                        dec                 al                                                                                                                                                                                                                                                                             ;on cell and bl too
+                                        sub                 di,8
+                                        sub                 si,8
+        noBelow11:                      
 
-    ;di,si are on cell
-                                    mov                 al,row                                                                                                                                                                                                                                                                     ;and bl => equal now col
-                                    mov                 IsmailRow,al
-    ;highlight right
-                                    cmp                 col,6
-                                    jg                  noRight11
-                                    inc                 di
-                                    inc                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyRight11
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyRight11
-    EmptyRight11:                   
-                                    inc                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    dec                 bl
-                                    mov                 byte ptr [si],0ffh
-    noEnemyRight11:                 
-                                    dec                 di                                                                                                                                                                                                                                                                         ;on cell now
-                                    dec                 si                                                                                                                                                                                                                                                                         ;too
-    noRight11:                      
+        ;di,si are on cell
+                                        mov                 al,row                                                                                                                                                                                                                                                                         ;and bl => equal now col
+                                        mov                 IsmailRow,al
+        ;highlight right
+                                        cmp                 col,6
+                                        jg                  noRight11
+                                        inc                 di
+                                        inc                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyRight11
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyRight11
+        EmptyRight11:                   
+                                        inc                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        dec                 bl
+                                        mov                 byte ptr [si],0ffh
+        noEnemyRight11:                 
+                                        dec                 di                                                                                                                                                                                                                                                                             ;on cell now
+                                        dec                 si                                                                                                                                                                                                                                                                             ;too
+        noRight11:                      
 
-    ;highlight left
-                                    cmp                 col,1
-                                    jl                  noLeft11
-                                    dec                 di
-                                    dec                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyLeft11
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyLeft11
-    EmptyLeft11:                    
-                                    dec                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-    noEnemyLeft11:                  
-    noLeft11:                       
-                                    popa
-                                    ret
-                                    endp                HighlightAvailableForWKing
+        ;highlight left
+                                        cmp                 col,1
+                                        jl                  noLeft11
+                                        dec                 di
+                                        dec                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyLeft11
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyLeft11
+        EmptyLeft11:                    
+                                        dec                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+        noEnemyLeft11:                  
+        noLeft11:                       
+                                        popa
+                                        ret
+                                        endp                HighlightAvailableForWKing
 
-    ;*******************************************************************************************
-    ;****************************************** WKnight ****************************************
-    ;*******************************************************************************************
+        ;*******************************************************************************************
+        ;****************************************** WKnight ****************************************
+        ;*******************************************************************************************
 
 HighlightAvailableForWKnight proc
-    ;local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight,noUpLeft,noDownLeft,noDownRight,noUpRight,noEnemyBelowLeft
-                                    pusha
-                                    mov                 al,row
-                                    mov                 ah,0
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 cl,8
-                                    lea                 di,grid
-                                    lea                 si,availMoves
-                                    mul                 cl
-                                    add                 di,ax
-                                    add                 di,bx
-                                    add                 si,ax
-                                    add                 si,bx
+        ;local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight,noUpLeft,noDownLeft,noDownRight,noUpRight,noEnemyBelowLeft
+                                        pusha
+                                        mov                 al,row
+                                        mov                 ah,0
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 cl,8
+                                        lea                 di,grid
+                                        lea                 si,availMoves
+                                        mul                 cl
+                                        add                 di,ax
+                                        add                 di,bx
+                                        add                 si,ax
+                                        add                 si,bx
 
-    ;highlight above
-                                    cmp                 row,2
-                                    jl                  noAbove1
-                                    sub                 di,16                                                                                                                                                                                                                                                                      ;above
-                                    sub                 si,16
-                                    mov                 al,row
-                                    sub                 al,2                                                                                                                                                                                                                                                                       ;above 2 steps
-                                    mov                 IsmailRow,al
-                                    cmp                 col,1
-                                    jl                  noLeftAbove1
-                                    dec                 di
-                                    dec                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyAboveLeft1
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyAboveLeft1
-    EmptyAboveLeft1:                
-                                    dec                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 bl
-    noEnemyAboveLeft1:              
-                                    inc                 di
-                                    inc                 si
-    noLeftAbove1:                   
-                                    cmp                 col,6
-                                    jg                  noRightAbove1
-                                    inc                 di
-                                    inc                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyAboveRight1
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyAboveRight1
-    EmptyAboveRight1:               
-                                    inc                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 bl
-    noEnemyAboveRight1:             
-                                    dec                 di
-                                    dec                 si
-    noRightAbove1:                  
-                                    add                 di,16
-                                    add                 si,16
-    noAbove1:                       
-    ;highlight below
+        ;highlight above
+                                        cmp                 row,2
+                                        jl                  noAbove1
+                                        sub                 di,16                                                                                                                                                                                                                                                                          ;above
+                                        sub                 si,16
+                                        mov                 al,row
+                                        sub                 al,2                                                                                                                                                                                                                                                                           ;above 2 steps
+                                        mov                 IsmailRow,al
+                                        cmp                 col,1
+                                        jl                  noLeftAbove1
+                                        dec                 di
+                                        dec                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyAboveLeft1
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyAboveLeft1
+        EmptyAboveLeft1:                
+                                        dec                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 bl
+        noEnemyAboveLeft1:              
+                                        inc                 di
+                                        inc                 si
+        noLeftAbove1:                   
+                                        cmp                 col,6
+                                        jg                  noRightAbove1
+                                        inc                 di
+                                        inc                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyAboveRight1
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyAboveRight1
+        EmptyAboveRight1:               
+                                        inc                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 bl
+        noEnemyAboveRight1:             
+                                        dec                 di
+                                        dec                 si
+        noRightAbove1:                  
+                                        add                 di,16
+                                        add                 si,16
+        noAbove1:                       
+        ;highlight below
 
-                                    cmp                 row,5
-                                    jg                  noBelow1
-                                    add                 di,16
-                                    add                 si,16
-                                    mov                 al,row                                                                                                                                                                                                                                                                     ;on cell and bl too
-                                    add                 al,2                                                                                                                                                                                                                                                                       ;below 2 steps
-                                    mov                 IsmailRow,al
-                                    cmp                 col,1
-                                    jl                  noLeftBelow1
-                                    dec                 di
-                                    dec                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyBelowLeft1
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyBelowLeft1
-    EmptyBelowLeft1:                
-                                    dec                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 bl
-    noEnemyBelowLeft1:              
-                                    inc                 di
-                                    inc                 si
-    noLeftBelow1:                   
+                                        cmp                 row,5
+                                        jg                  noBelow1
+                                        add                 di,16
+                                        add                 si,16
+                                        mov                 al,row                                                                                                                                                                                                                                                                         ;on cell and bl too
+                                        add                 al,2                                                                                                                                                                                                                                                                           ;below 2 steps
+                                        mov                 IsmailRow,al
+                                        cmp                 col,1
+                                        jl                  noLeftBelow1
+                                        dec                 di
+                                        dec                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyBelowLeft1
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyBelowLeft1
+        EmptyBelowLeft1:                
+                                        dec                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 bl
+        noEnemyBelowLeft1:              
+                                        inc                 di
+                                        inc                 si
+        noLeftBelow1:                   
 
-                                    cmp                 col,6
-                                    jg                  noRightBelow1
-                                    inc                 di
-                                    inc                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyBelowRight1
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyBelowRight1
-    EmptyBelowRight1:               
-                                    inc                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 bl
-    noEnemyBelowRight1:             
-                                    dec                 di
-                                    dec                 si
-    noRightBelow1:                  
-                                    sub                 di,16
-                                    sub                 si,16
-    noBelow1:                       
-    ;highlight right
+                                        cmp                 col,6
+                                        jg                  noRightBelow1
+                                        inc                 di
+                                        inc                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyBelowRight1
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyBelowRight1
+        EmptyBelowRight1:               
+                                        inc                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 bl
+        noEnemyBelowRight1:             
+                                        dec                 di
+                                        dec                 si
+        noRightBelow1:                  
+                                        sub                 di,16
+                                        sub                 si,16
+        noBelow1:                       
+        ;highlight right
 
-                                    cmp                 col,5
-                                    jg                  noRight1
-                                    add                 di,2
-                                    add                 si,2                                                                                                                                                                                                                                                                       ;on cell and bl too
-                                    add                 bl,2                                                                                                                                                                                                                                                                       ;right 2 steps
-                                    mov                 IsmailCol,bl
-                                    mov                 al,row
-                                    cmp                 row,1
-                                    jl                  noUpRight1
-                                    sub                 di,8
-                                    sub                 si,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyUpRight1
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyUpright1
-    EmptyUpRight1:                  
-                                    dec                 al
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 al
-    noEnemyUpright1:                
-                                    add                 di,8
-                                    add                 si,8
-    noUpRight1:                     
-                                    cmp                 row,6
-                                    jg                  noDownRight1
-                                    add                 di,8
-                                    add                 si,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyDownRight1
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyDownright1
-    EmptyDownRight1:                
-                                    inc                 al
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 al
-    noEnemyDownright1:              
-                                    sub                 di,8
-                                    sub                 si,8
-    noDownRight1:                   
-                                    sub                 bl,2
-                                    sub                 di,2
-                                    sub                 si,2
-    noRight1:                       
-    ;highlight left
+                                        cmp                 col,5
+                                        jg                  noRight1
+                                        add                 di,2
+                                        add                 si,2                                                                                                                                                                                                                                                                           ;on cell and bl too
+                                        add                 bl,2                                                                                                                                                                                                                                                                           ;right 2 steps
+                                        mov                 IsmailCol,bl
+                                        mov                 al,row
+                                        cmp                 row,1
+                                        jl                  noUpRight1
+                                        sub                 di,8
+                                        sub                 si,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyUpRight1
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyUpright1
+        EmptyUpRight1:                  
+                                        dec                 al
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 al
+        noEnemyUpright1:                
+                                        add                 di,8
+                                        add                 si,8
+        noUpRight1:                     
+                                        cmp                 row,6
+                                        jg                  noDownRight1
+                                        add                 di,8
+                                        add                 si,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyDownRight1
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyDownright1
+        EmptyDownRight1:                
+                                        inc                 al
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 al
+        noEnemyDownright1:              
+                                        sub                 di,8
+                                        sub                 si,8
+        noDownRight1:                   
+                                        sub                 bl,2
+                                        sub                 di,2
+                                        sub                 si,2
+        noRight1:                       
+        ;highlight left
 
-                                    cmp                 col,2
-                                    jl                  noLeft1
-                                    sub                 di,2
-                                    sub                 si,2
-    ;on cell and bl too
-                                    sub                 bl,2                                                                                                                                                                                                                                                                       ;left 2 steps
-                                    mov                 IsmailCol,bl
+                                        cmp                 col,2
+                                        jl                  noLeft1
+                                        sub                 di,2
+                                        sub                 si,2
+        ;on cell and bl too
+                                        sub                 bl,2                                                                                                                                                                                                                                                                           ;left 2 steps
+                                        mov                 IsmailCol,bl
                                    
-                                    mov                 al,row
-                                    cmp                 row,1
-                                    jl                  noUpLeft1
-                                    sub                 di,8
-                                    sub                 si,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyUpLeft1
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyUpLeft1
-    EmptyUpLeft1:                   
-                                    dec                 al
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 al
-    noEnemyUpLeft1:                 
-                                    add                 di,8
-                                    add                 si,8
-    noUpLeft1:                      
-                                    cmp                 row,6
-                                    jg                  noDownLeft1
-                                    add                 di,8
-                                    add                 si,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyDownLeft1
-                                    cmp                 byte ptr [di],07h
-                                    jl                  noEnemyDownLeft1
-    EmptyDownLeft1:                 
-                                    inc                 al
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 al
-    noEnemyDownLeft1:               
-                                    sub                 di,8
-                                    sub                 si,8
-    noDownLeft1:                    
-                                    add                 di,2
-                                    add                 si,2
+                                        mov                 al,row
+                                        cmp                 row,1
+                                        jl                  noUpLeft1
+                                        sub                 di,8
+                                        sub                 si,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyUpLeft1
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyUpLeft1
+        EmptyUpLeft1:                   
+                                        dec                 al
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 al
+        noEnemyUpLeft1:                 
+                                        add                 di,8
+                                        add                 si,8
+        noUpLeft1:                      
+                                        cmp                 row,6
+                                        jg                  noDownLeft1
+                                        add                 di,8
+                                        add                 si,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyDownLeft1
+                                        cmp                 byte ptr [di],07h
+                                        jl                  noEnemyDownLeft1
+        EmptyDownLeft1:                 
+                                        inc                 al
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 al
+        noEnemyDownLeft1:               
+                                        sub                 di,8
+                                        sub                 si,8
+        noDownLeft1:                    
+                                        add                 di,2
+                                        add                 si,2
 
-    noLeft1:                        
-                                    popa
-                                    ret
-                                    endp                HighlightAvailableForWKnight
+        noLeft1:                        
+                                        popa
+                                        ret
+                                        endp                HighlightAvailableForWKnight
  
 
-    ;*******************************************************************************************
-    ;****************************************** BKnight ****************************************
-    ;*******************************************************************************************
+        ;*******************************************************************************************
+        ;****************************************** BKnight ****************************************
+        ;*******************************************************************************************
 
 HighlightAvailableForBKnight proc
-    ;local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight,noUpLeft,noDownLeft,noDownRight,noUpRight,noEnemyBelowLeft
-                                    pusha
-                                    mov                 al,row
-                                    mov                 ah,0
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 cl,8
-                                    lea                 di,grid
-    ; lea              si,availMoves2
-                                    lea                 si,availMoves
+        ;local noAbove,noBelow,noRight,noLeft,noLeftAbove,noRightAbove,noLeftbelow,noRightbelow,noEnemyAboveLeft,noEnemyAboveRight,noBelowLeft,noEnemyBelowRight,noEnemyDownLeft,noEnemyDownright,noEnemyUpLeft,noEnemyUpright,EmptyAboveLeft,EmptyAboveRight,EmptyBelowLeft,EmptyBelowRight,EmptyDownLeft,EmptyDownRight,EmptyUpLeft,EmptyUpRight,noUpLeft,noDownLeft,noDownRight,noUpRight,noEnemyBelowLeft
+                                        pusha
+                                        mov                 al,row
+                                        mov                 ah,0
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 cl,8
+                                        lea                 di,grid
+        ; lea              si,availMoves2
+                                        lea                 si,availMoves
 
-                                    mul                 cl
-                                    add                 di,ax
-                                    add                 di,bx
-                                    add                 si,ax
-                                    add                 si,bx
+                                        mul                 cl
+                                        add                 di,ax
+                                        add                 di,bx
+                                        add                 si,ax
+                                        add                 si,bx
 
-    ;highlight above
-                                    cmp                 row,2
-                                    jl                  noAbove
-                                    sub                 di,16
-                                    sub                 si,16
-                                    mov                 al,row
-                                    sub                 al,2
-                                    mov                 IsmailRow,al
-                                    cmp                 col,1
-                                    jl                  noLeftAbove
-                                    dec                 di
-                                    dec                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyAboveLeft
-                                    cmp                 byte ptr [di],07h
-                                    jg                  noEnemyAboveLeft
-    EmptyAboveLeft:                 
-                                    dec                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 bl
-    noEnemyAboveLeft:               
-                                    inc                 di
-                                    inc                 si
-    noLeftAbove:                    
-                                    cmp                 col,6
-                                    jg                  noRightAbove
-                                    inc                 di
-                                    inc                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyAboveRight
-                                    cmp                 byte ptr [di],07h
-                                    jg                  noEnemyAboveRight
-    EmptyAboveRight:                
-                                    inc                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 bl
-    noEnemyAboveRight:              
-                                    dec                 di
-                                    dec                 si
-    noRightAbove:                   
-                                    add                 di,16
-                                    add                 si,16
-    noAbove:                        
-    ;highlight below
+        ;highlight above
+                                        cmp                 row,2
+                                        jl                  noAbove
+                                        sub                 di,16
+                                        sub                 si,16
+                                        mov                 al,row
+                                        sub                 al,2
+                                        mov                 IsmailRow,al
+                                        cmp                 col,1
+                                        jl                  noLeftAbove
+                                        dec                 di
+                                        dec                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyAboveLeft
+                                        cmp                 byte ptr [di],07h
+                                        jg                  noEnemyAboveLeft
+        EmptyAboveLeft:                 
+                                        dec                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 bl
+        noEnemyAboveLeft:               
+                                        inc                 di
+                                        inc                 si
+        noLeftAbove:                    
+                                        cmp                 col,6
+                                        jg                  noRightAbove
+                                        inc                 di
+                                        inc                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyAboveRight
+                                        cmp                 byte ptr [di],07h
+                                        jg                  noEnemyAboveRight
+        EmptyAboveRight:                
+                                        inc                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 bl
+        noEnemyAboveRight:              
+                                        dec                 di
+                                        dec                 si
+        noRightAbove:                   
+                                        add                 di,16
+                                        add                 si,16
+        noAbove:                        
+        ;highlight below
 
-                                    cmp                 row,5
-                                    jg                  noBelow
-                                    add                 di,16
-                                    add                 si,16
-                                    mov                 al,row                                                                                                                                                                                                                                                                     ;on cell and bl too
-                                    add                 al,2                                                                                                                                                                                                                                                                       ;below 2 steps
-                                    mov                 IsmailRow,al
-                                    cmp                 col,1
-                                    jl                  noLeftBelow
-                                    dec                 di
-                                    dec                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyBelowLeft
-                                    cmp                 byte ptr [di],07h
-                                    jg                  noEnemyBelowLeft
-    EmptyBelowLeft:                 
-                                    dec                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 bl
-    noEnemyBelowLeft:               
-                                    inc                 di
-                                    inc                 si
-    noLeftBelow:                    
+                                        cmp                 row,5
+                                        jg                  noBelow
+                                        add                 di,16
+                                        add                 si,16
+                                        mov                 al,row                                                                                                                                                                                                                                                                         ;on cell and bl too
+                                        add                 al,2                                                                                                                                                                                                                                                                           ;below 2 steps
+                                        mov                 IsmailRow,al
+                                        cmp                 col,1
+                                        jl                  noLeftBelow
+                                        dec                 di
+                                        dec                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyBelowLeft
+                                        cmp                 byte ptr [di],07h
+                                        jg                  noEnemyBelowLeft
+        EmptyBelowLeft:                 
+                                        dec                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 bl
+        noEnemyBelowLeft:               
+                                        inc                 di
+                                        inc                 si
+        noLeftBelow:                    
 
-                                    cmp                 col,6
-                                    jg                  noRightBelow
-                                    inc                 di
-                                    inc                 si
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyBelowRight
-                                    cmp                 byte ptr [di],07h
-                                    jg                  noEnemyBelowRight
-    EmptyBelowRight:                
-                                    inc                 bl
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 bl
-    noEnemyBelowRight:              
-                                    dec                 di
-                                    dec                 si
-    noRightBelow:                   
-                                    sub                 di,16
-                                    sub                 si,16
-    noBelow:                        
-    ;highlight right
+                                        cmp                 col,6
+                                        jg                  noRightBelow
+                                        inc                 di
+                                        inc                 si
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyBelowRight
+                                        cmp                 byte ptr [di],07h
+                                        jg                  noEnemyBelowRight
+        EmptyBelowRight:                
+                                        inc                 bl
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 bl
+        noEnemyBelowRight:              
+                                        dec                 di
+                                        dec                 si
+        noRightBelow:                   
+                                        sub                 di,16
+                                        sub                 si,16
+        noBelow:                        
+        ;highlight right
 
-                                    cmp                 col,5
-                                    jg                  noRight
-                                    add                 di,2
-                                    add                 si,2                                                                                                                                                                                                                                                                       ;on cell and bl too
-                                    add                 bl,2                                                                                                                                                                                                                                                                       ;right 2 steps
-                                    mov                 IsmailCol,bl
-                                    mov                 al,row
-                                    cmp                 row,1
-                                    jl                  noUpRight
-                                    sub                 di,8
-                                    sub                 si,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyUpRight
-                                    cmp                 byte ptr [di],07h
-                                    jg                  noEnemyUpright
-    EmptyUpRight:                   
-                                    dec                 al
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 al
-    noEnemyUpright:                 
-                                    add                 di,8
-                                    add                 si,8
-    noUpRight:                      
-                                    cmp                 row,6
-                                    jg                  noDownRight
-                                    add                 di,8
-                                    add                 si,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyDownRight
-                                    cmp                 byte ptr [di],07h
-                                    jg                  noEnemyDownright
-    EmptyDownRight:                 
-                                    inc                 al
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 al
-    noEnemyDownright:               
-                                    sub                 di,8
-                                    sub                 si,8
-    noDownRight:                    
-                                    sub                 bl,2
-                                    sub                 di,2
-                                    sub                 si,2
-    noRight:                        
-    ;highlight left
+                                        cmp                 col,5
+                                        jg                  noRight
+                                        add                 di,2
+                                        add                 si,2                                                                                                                                                                                                                                                                           ;on cell and bl too
+                                        add                 bl,2                                                                                                                                                                                                                                                                           ;right 2 steps
+                                        mov                 IsmailCol,bl
+                                        mov                 al,row
+                                        cmp                 row,1
+                                        jl                  noUpRight
+                                        sub                 di,8
+                                        sub                 si,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyUpRight
+                                        cmp                 byte ptr [di],07h
+                                        jg                  noEnemyUpright
+        EmptyUpRight:                   
+                                        dec                 al
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 al
+        noEnemyUpright:                 
+                                        add                 di,8
+                                        add                 si,8
+        noUpRight:                      
+                                        cmp                 row,6
+                                        jg                  noDownRight
+                                        add                 di,8
+                                        add                 si,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyDownRight
+                                        cmp                 byte ptr [di],07h
+                                        jg                  noEnemyDownright
+        EmptyDownRight:                 
+                                        inc                 al
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 al
+        noEnemyDownright:               
+                                        sub                 di,8
+                                        sub                 si,8
+        noDownRight:                    
+                                        sub                 bl,2
+                                        sub                 di,2
+                                        sub                 si,2
+        noRight:                        
+        ;highlight left
 
-                                    cmp                 col,2
-                                    jl                  noLeft
-                                    sub                 di,2
-                                    sub                 si,2                                                                                                                                                                                                                                                                       ;on cell and bl too
-                                    sub                 bl,2                                                                                                                                                                                                                                                                       ;left 2 steps
-                                    mov                 IsmailCol,bl
-                                    mov                 al,row
-                                    cmp                 row,1
-                                    jl                  noUpLeft
-                                    sub                 di,8
-                                    sub                 si,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyUpLeft
-                                    cmp                 byte ptr [di],07h
-                                    jg                  noEnemyUpLeft
-    EmptyUpLeft:                    
-                                    dec                 al
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    inc                 al
-    noEnemyUpLeft:                  
-                                    add                 di,8
-                                    add                 si,8
-    noUpLeft:                       
-                                    cmp                 row,6
-                                    jg                  noDownLeft
-                                    add                 di,8
-                                    add                 si,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  EmptyDownLeft
-                                    cmp                 byte ptr [di],07h
-                                    jg                  noEnemyDownLeft
-    EmptyDownLeft:                  
-                                    inc                 al
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh
-                                    dec                 al
-    noEnemyDownLeft:                
-    noDownLeft:                     
-    noLeft:                         
-                                    popa
-                                    ret
-                                    endp                HighlightAvailableForBKnight
+                                        cmp                 col,2
+                                        jl                  noLeft
+                                        sub                 di,2
+                                        sub                 si,2                                                                                                                                                                                                                                                                           ;on cell and bl too
+                                        sub                 bl,2                                                                                                                                                                                                                                                                           ;left 2 steps
+                                        mov                 IsmailCol,bl
+                                        mov                 al,row
+                                        cmp                 row,1
+                                        jl                  noUpLeft
+                                        sub                 di,8
+                                        sub                 si,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyUpLeft
+                                        cmp                 byte ptr [di],07h
+                                        jg                  noEnemyUpLeft
+        EmptyUpLeft:                    
+                                        dec                 al
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        inc                 al
+        noEnemyUpLeft:                  
+                                        add                 di,8
+                                        add                 si,8
+        noUpLeft:                       
+                                        cmp                 row,6
+                                        jg                  noDownLeft
+                                        add                 di,8
+                                        add                 si,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  EmptyDownLeft
+                                        cmp                 byte ptr [di],07h
+                                        jg                  noEnemyDownLeft
+        EmptyDownLeft:                  
+                                        inc                 al
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh
+                                        dec                 al
+        noEnemyDownLeft:                
+        noDownLeft:                     
+        noLeft:                         
+                                        popa
+                                        ret
+                                        endp                HighlightAvailableForBKnight
 
-    ;*******************************************************************************************
-    ;****************************************** WPawn ******************************************
-    ;*******************************************************************************************
+        ;*******************************************************************************************
+        ;****************************************** WPawn ******************************************
+        ;*******************************************************************************************
     
-    ;;for two computers
+        ;;for two computers
 HighlightAvailableForWPawnTwo proc
-    ;local notFirstStepP2, endOfBoardP2, done,canNotMove1,canNotMove2,OK1,OK11,notFirstStepP22,OK2
-    ;if first step (one or two)
-                                    pusha
-                                    mov                 al,row
-                                    mov                 ah,0
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 cl,8
-                                    lea                 si,availMoves
-                                    lea                 di,grid
-                                    cmp                 ax,6
-                                    JNE                 notFirstStepP21
+        ;local notFirstStepP2, endOfBoardP2, done,canNotMove1,canNotMove2,OK1,OK11,notFirstStepP22,OK2
+        ;if first step (one or two)
+                                        pusha
+                                        mov                 al,row
+                                        mov                 ah,0
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 cl,8
+                                        lea                 si,availMoves
+                                        lea                 di,grid
+                                        cmp                 ax,6
+                                        JNE                 notFirstStepP21
                                     
 
-                                    sub                 ax,1
-                                    mul                 cl
-                                    add                 di,ax
-                                    add                 di,bx
-                                    cmp                 byte ptr [di],00h
-                                    je                  OK121
-                                    jmp                 canNotMove1
-    OK121:                          
-                                    mov                 al,row
-                                    sub                 al,1
-                                    mov                 IsmailRow,al
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mul                 cl
-                                    add                 si,ax
-                                    add                 si,bx
-                                    mov                 byte ptr [si],0ffh
-    notFirstStepP21:                
-                                    mov                 al,row
-                                    cmp                 al,6
-                                    JNE                 notFirstStepP221
-                                    sub                 ax,2
-                                    sub                 di,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  OK1121
-                                    jmp                 canNotMove121
-    OK1121:                         
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    sub                 si,8
-                                    mov                 byte ptr [si],0ffh
-    canNotMove121:                  
-                                    jmp                 done121
-    notFirstStepP221:               
-    ;else
-                                    cmp                 row,0
-                                    je                  endOfBoardP212
-                                    sub                 ax,1
-                                    mul                 cl
-                                    add                 di,ax
-                                    add                 di,bx
-                                    cmp                 byte ptr [di],00h
-                                    je                  OK212
-                                    jmp                 canNotMove212
-    OK212:                          
-                                    mov                 al,row
-                                    dec                 al
-                                    mov                 IsmailRow,al
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mul                 cl
-                                    add                 si,ax
-                                    add                 si,bx
-                                    mov                 byte ptr [si],0ffh
-    canNotMove212:                  
-    endOfBoardP212:                 
-    done121:                        
-                                    popa
-                                    ret
-                                    endp                HighlightAvailableForWPawnTwo
+                                        sub                 ax,1
+                                        mul                 cl
+                                        add                 di,ax
+                                        add                 di,bx
+                                        cmp                 byte ptr [di],00h
+                                        je                  OK121
+                                        jmp                 canNotMove1
+        OK121:                          
+                                        mov                 al,row
+                                        sub                 al,1
+                                        mov                 IsmailRow,al
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mul                 cl
+                                        add                 si,ax
+                                        add                 si,bx
+                                        mov                 byte ptr [si],0ffh
+        notFirstStepP21:                
+                                        mov                 al,row
+                                        cmp                 al,6
+                                        JNE                 notFirstStepP221
+                                        sub                 ax,2
+                                        sub                 di,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  OK1121
+                                        jmp                 canNotMove121
+        OK1121:                         
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        sub                 si,8
+                                        mov                 byte ptr [si],0ffh
+        canNotMove121:                  
+                                        jmp                 done121
+        notFirstStepP221:               
+        ;else
+                                        cmp                 row,0
+                                        je                  endOfBoardP212
+                                        sub                 ax,1
+                                        mul                 cl
+                                        add                 di,ax
+                                        add                 di,bx
+                                        cmp                 byte ptr [di],00h
+                                        je                  OK212
+                                        jmp                 canNotMove212
+        OK212:                          
+                                        mov                 al,row
+                                        dec                 al
+                                        mov                 IsmailRow,al
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mul                 cl
+                                        add                 si,ax
+                                        add                 si,bx
+                                        mov                 byte ptr [si],0ffh
+        canNotMove212:                  
+        endOfBoardP212:                 
+        done121:                        
+                                        popa
+                                        ret
+                                        endp                HighlightAvailableForWPawnTwo
 
 
-    ;;need different color
+        ;;need different color
 HighlightAvailableForWPawnToEat proc
-    ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
-                                    pusha
-                                    cmp                 row,0
-                                    jne                 notGridEnd1
-                                    jmp                 gridEnd1
-    notGridEnd1:                    
-                                    mov                 al,row
-                                    mov                 ah,0
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 cl,8
-                                    lea                 si,availMoves
-                                    lea                 di,grid
-                                    mul                 cl
-                                    add                 di,ax                                                                                                                                                                                                                                                                      ;on cell
-                                    add                 di,bx
-                                    add                 si,ax
-                                    add                 si,bx
-                                    cmp                 col,0
-                                    je                  EndLeft
-                                    sub                 di,9
-                                    sub                 si,9
-                                    cmp                 byte ptr [di],07h
-                                    jl                  DoNotHighlightToEat1
-                                    mov                 al,row
-                                    dec                 al
-                                    dec                 bl
-                                    mov                 IsmailRow,al
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h, IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh                                                                                                                                                                                                                                                         ;;eat
-                                    inc                 bl
-    DoNotHighlightToEat1:           
-                                    add                 di,9
-                                    add                 si,9
-    EndLeft:                        
-                                    cmp                 col,7
-                                    je                  EndRight
-                                    sub                 di,7
-                                    sub                 si,7
-                                    cmp                 byte ptr [di],07h
-                                    jl                  DoNotHighlightToEat2
-                                    mov                 al,row
-                                    dec                 al
-                                    inc                 bl
-                                    mov                 IsmailRow,al
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh                                                                                                                                                                                                                                                         ;;eat
-                                    dec                 bl
-    DoNotHighlightToEat2:           
-    EndRight:                       
-    gridEnd1:                       
-                                    popa
-                                    ret
-                                    endp                HighlightAvailableForWPawnToEat
+        ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
+                                        pusha
+                                        cmp                 row,0
+                                        jne                 notGridEnd1
+                                        jmp                 gridEnd1
+        notGridEnd1:                    
+                                        mov                 al,row
+                                        mov                 ah,0
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 cl,8
+                                        lea                 si,availMoves
+                                        lea                 di,grid
+                                        mul                 cl
+                                        add                 di,ax                                                                                                                                                                                                                                                                          ;on cell
+                                        add                 di,bx
+                                        add                 si,ax
+                                        add                 si,bx
+                                        cmp                 col,0
+                                        je                  EndLeft
+                                        sub                 di,9
+                                        sub                 si,9
+                                        cmp                 byte ptr [di],07h
+                                        jl                  DoNotHighlightToEat1
+                                        mov                 al,row
+                                        dec                 al
+                                        dec                 bl
+                                        mov                 IsmailRow,al
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h, IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh                                                                                                                                                                                                                                                             ;;eat
+                                        inc                 bl
+        DoNotHighlightToEat1:           
+                                        add                 di,9
+                                        add                 si,9
+        EndLeft:                        
+                                        cmp                 col,7
+                                        je                  EndRight
+                                        sub                 di,7
+                                        sub                 si,7
+                                        cmp                 byte ptr [di],07h
+                                        jl                  DoNotHighlightToEat2
+                                        mov                 al,row
+                                        dec                 al
+                                        inc                 bl
+                                        mov                 IsmailRow,al
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh                                                                                                                                                                                                                                                             ;;eat
+                                        dec                 bl
+        DoNotHighlightToEat2:           
+        EndRight:                       
+        gridEnd1:                       
+                                        popa
+                                        ret
+                                        endp                HighlightAvailableForWPawnToEat
 
-    ;*******************************************************************************************
-    ;****************************************** BPawn ******************************************
-    ;*******************************************************************************************
+        ;*******************************************************************************************
+        ;****************************************** BPawn ******************************************
+        ;*******************************************************************************************
 
 HighlightAvailableForBPawnTwo proc
-    ;local notFirstStepP2, endOfBoardP2, done,canNotMove1,canNotMove2,OK1,OK11,notFirstStepP22,OK2
-    ;if first step (one or two)
-                                    pusha
-                                    mov                 al,row
-                                    mov                 ah,0
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 cl,8
-    ; lea              si,availMoves2
-                                    lea                 si,availMoves
+        ;local notFirstStepP2, endOfBoardP2, done,canNotMove1,canNotMove2,OK1,OK11,notFirstStepP22,OK2
+        ;if first step (one or two)
+                                        pusha
+                                        mov                 al,row
+                                        mov                 ah,0
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 cl,8
+        ; lea              si,availMoves2
+                                        lea                 si,availMoves
 
-                                    lea                 di,grid
-                                    cmp                 ax,1
-                                    JNE                 notFirstStepP2
-                                    add                 ax,1
-                                    mul                 cl
-                                    add                 di,ax
-                                    add                 di,bx
-                                    cmp                 byte ptr [di],00h
-                                    je                  OK1
-                                    jmp                 canNotMove1
-    OK1:                            
-                                    mov                 al,row
-                                    add                 al,1
-                                    mov                 IsmailRow,al
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mul                 cl
-                                    add                 si,ax
-                                    add                 si,bx
-                                    mov                 byte ptr [si],0ffh
-    notFirstStepP2:                 
-                                    mov                 al,row
-                                    cmp                 al,1
-                                    JNE                 notFirstStepP22
-                                    add                 ax,2
-                                    add                 di,8
-                                    cmp                 byte ptr [di],00h
-                                    je                  OK11
-                                    jmp                 canNotMove1
-    OK11:                           
-                                    mov                 IsmailRow,al
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    add                 si,8
-                                    mov                 byte ptr [si],0ffh
-    canNotMove1:                    
-                                    jmp                 done
-    notFirstStepP22:                
-    ;else
-                                    cmp                 ax,7
-                                    je                  endOfBoardP2
-                                    add                 ax,1
-                                    mul                 cl
-                                    add                 di,ax
-                                    add                 di,bx
-                                    cmp                 byte ptr [di],00h
-                                    je                  OK2
-                                    jmp                 canNotMove2
-    OK2:                            
-                                    mov                 al,row
-                                    inc                 al
-                                    mov                 IsmailRow,al
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mul                 cl
-                                    add                 si,ax
-                                    add                 si,bx
-                                    mov                 byte ptr [si],0ffh
-    canNotMove2:                    
-    endOfBoardP2:                   
-    done:                           
-                                    popa
-                                    ret
-                                    endp                HighlightAvailableForBPawnTwo
+                                        lea                 di,grid
+                                        cmp                 ax,1
+                                        JNE                 notFirstStepP2
+                                        add                 ax,1
+                                        mul                 cl
+                                        add                 di,ax
+                                        add                 di,bx
+                                        cmp                 byte ptr [di],00h
+                                        je                  OK1
+                                        jmp                 canNotMove1
+        OK1:                            
+                                        mov                 al,row
+                                        add                 al,1
+                                        mov                 IsmailRow,al
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mul                 cl
+                                        add                 si,ax
+                                        add                 si,bx
+                                        mov                 byte ptr [si],0ffh
+        notFirstStepP2:                 
+                                        mov                 al,row
+                                        cmp                 al,1
+                                        JNE                 notFirstStepP22
+                                        add                 ax,2
+                                        add                 di,8
+                                        cmp                 byte ptr [di],00h
+                                        je                  OK11
+                                        jmp                 canNotMove1
+        OK11:                           
+                                        mov                 IsmailRow,al
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        add                 si,8
+                                        mov                 byte ptr [si],0ffh
+        canNotMove1:                    
+                                        jmp                 done
+        notFirstStepP22:                
+        ;else
+                                        cmp                 ax,7
+                                        je                  endOfBoardP2
+                                        add                 ax,1
+                                        mul                 cl
+                                        add                 di,ax
+                                        add                 di,bx
+                                        cmp                 byte ptr [di],00h
+                                        je                  OK2
+                                        jmp                 canNotMove2
+        OK2:                            
+                                        mov                 al,row
+                                        inc                 al
+                                        mov                 IsmailRow,al
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mul                 cl
+                                        add                 si,ax
+                                        add                 si,bx
+                                        mov                 byte ptr [si],0ffh
+        canNotMove2:                    
+        endOfBoardP2:                   
+        done:                           
+                                        popa
+                                        ret
+                                        endp                HighlightAvailableForBPawnTwo
 
 
 HighlightAvailableForBPawnToEat proc
-    ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
-                                    pusha
-                                    cmp                 row,7
-                                    jne                 notGridEnd2
-                                    jmp                 gridEnd2
-    notGridEnd2:                    
-                                    mov                 al,row
-                                    mov                 ah,0
-                                    mov                 bl,col
-                                    mov                 bh,0
-                                    mov                 cl,8
-    ; lea              si,availMoves2
-                                    lea                 si,availMoves
+        ;local DoNotHighlightToEat1,DoNotHighlightToEat2,EndLeft,EndRight
+                                        pusha
+                                        cmp                 row,7
+                                        jne                 notGridEnd2
+                                        jmp                 gridEnd2
+        notGridEnd2:                    
+                                        mov                 al,row
+                                        mov                 ah,0
+                                        mov                 bl,col
+                                        mov                 bh,0
+                                        mov                 cl,8
+        ; lea              si,availMoves2
+                                        lea                 si,availMoves
 
-                                    lea                 di,grid
-                                    mul                 cl
-                                    add                 di,ax                                                                                                                                                                                                                                                                      ;on cell
-                                    add                 di,bx
-                                    add                 si,ax
-                                    add                 si,bx
-                                    cmp                 col,0
-                                    je                  EndLeft21
-                                    add                 di,7
-                                    add                 si,7
-                                    cmp                 byte ptr [di],00h
-                                    je                  DoNotHighlightToEat121
-                                    cmp                 byte ptr [di],07h
-                                    jg                  DoNotHighlightToEat121
-                                    mov                 al,row
-                                    inc                 al
-                                    dec                 bl
-                                    mov                 IsmailRow,al
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h, IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh                                                                                                                                                                                                                                                         ;;eat
-                                    inc                 bl
-    DoNotHighlightToEat121:         
-                                    sub                 di,7
-                                    sub                 si,7
-    EndLeft21:                      
-                                    cmp                 col,7
-                                    je                  EndRight21
-                                    add                 di,9
-                                    add                 si,9
-                                    cmp                 byte ptr [di],00h
-                                    je                  DoNotHighlightToEat221
-                                    cmp                 byte ptr [di],07h
-                                    jg                  DoNotHighlightToEat221
-                                    mov                 al,row
-                                    inc                 al
-                                    inc                 bl
-                                    mov                 IsmailRow,al
-                                    mov                 IsmailCol,bl
-                                    drawSquareOnCell    04h,IsmailRow,IsmailCol
-                                    mov                 byte ptr [si],0ffh                                                                                                                                                                                                                                                         ;;eat
-                                    dec                 bl
-    DoNotHighlightToEat221:         
-    EndRight21:                     
-    gridEnd2:                       
-                                    popa
-                                    ret
-                                    endp                HighlightAvailableForBPawnToEat
+                                        lea                 di,grid
+                                        mul                 cl
+                                        add                 di,ax                                                                                                                                                                                                                                                                          ;on cell
+                                        add                 di,bx
+                                        add                 si,ax
+                                        add                 si,bx
+                                        cmp                 col,0
+                                        je                  EndLeft21
+                                        add                 di,7
+                                        add                 si,7
+                                        cmp                 byte ptr [di],00h
+                                        je                  DoNotHighlightToEat121
+                                        cmp                 byte ptr [di],07h
+                                        jg                  DoNotHighlightToEat121
+                                        mov                 al,row
+                                        inc                 al
+                                        dec                 bl
+                                        mov                 IsmailRow,al
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h, IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh                                                                                                                                                                                                                                                             ;;eat
+                                        inc                 bl
+        DoNotHighlightToEat121:         
+                                        sub                 di,7
+                                        sub                 si,7
+        EndLeft21:                      
+                                        cmp                 col,7
+                                        je                  EndRight21
+                                        add                 di,9
+                                        add                 si,9
+                                        cmp                 byte ptr [di],00h
+                                        je                  DoNotHighlightToEat221
+                                        cmp                 byte ptr [di],07h
+                                        jg                  DoNotHighlightToEat221
+                                        mov                 al,row
+                                        inc                 al
+                                        inc                 bl
+                                        mov                 IsmailRow,al
+                                        mov                 IsmailCol,bl
+                                        drawSquareOnCell    04h,IsmailRow,IsmailCol
+                                        mov                 byte ptr [si],0ffh                                                                                                                                                                                                                                                             ;;eat
+                                        dec                 bl
+        DoNotHighlightToEat221:         
+        EndRight21:                     
+        gridEnd2:                       
+                                        popa
+                                        ret
+                                        endp                HighlightAvailableForBPawnToEat
 
 
-    ;*********************************************************************************************************************
-    ;*********************************************************************************************************************
-    ;************************************************ Name Page Proc *****************************************************
-    ;*********************************************************************************************************************
-    ;*********************************************************************************************************************
+        ;*********************************************************************************************************************
+        ;*********************************************************************************************************************
+        ;************************************************ Name Page Proc *****************************************************
+        ;*********************************************************************************************************************
+        ;*********************************************************************************************************************
 
 getName proc
             
-                                    mov                 ch,0
-                                    mov                 cl,0
-                                    jmp                 getCh
+                                        mov                 ch,0
+                                        mov                 cl,0
+                                        jmp                 getCh
             
-    endByEnter:                     
-                                    mov                 ah,0
-                                    int                 16h
-                                    jmp                 endGetName
+        endByEnter:                     
+                                        mov                 ah,0
+                                        int                 16h
+                                        jmp                 endGetName
             
-    consumeBuffer:                  
-                                    mov                 ah,0
-                                    int                 16h
+        consumeBuffer:                  
+                                        mov                 ah,0
+                                        int                 16h
         
-    getCh:                                                                                                                                                                                                                                                                                                                         ;read 1 ch
-                                    mov                 ah,1
-                                    int                 16h
-                                    jnz                 validation
-                                    jz                  getCh
+        getCh:                                                                                                                                                                                                                                                                                                                             ;read 1 ch
+                                        mov                 ah,1
+                                        int                 16h
+                                        jnz                 validation
+                                        jz                  getCh
      
             
-    validation:                     
-                                    cmp                 cl,0
-                                    jz                  isLetter
-                                    cmp                 ah,1ch
-                                    jz                  endByEnter
-                                    jmp                 echoIt
+        validation:                     
+                                        cmp                 cl,0
+                                        jz                  isLetter
+                                        cmp                 ah,1ch
+                                        jz                  endByEnter
+                                        jmp                 echoIt
     
-    isLetter:                       
-                                    cmp                 al,65
-                                    jl                  consumeBuffer
-                                    cmp                 al,90
-                                    jl                  echoIt
-                                    cmp                 al,97
-                                    jl                  consumeBuffer
-                                    cmp                 al,122
-                                    jg                  consumeBuffer
-    ;Valid then echo
+        isLetter:                       
+                                        cmp                 al,65
+                                        jl                  consumeBuffer
+                                        cmp                 al,90
+                                        jl                  echoIt
+                                        cmp                 al,97
+                                        jl                  consumeBuffer
+                                        cmp                 al,122
+                                        jg                  consumeBuffer
+        ;Valid then echo
     
-    echoIt:                         
-                                    mov                 ah,2
-                                    mov                 dl,al
-                                    int                 21h
-                                    inc                 cl
-    ;store in data
-                                    mov                 si,cx
-                                    mov                 Name1[si+1],al
-                                    cmp                 cl,15                                                                                                                                                                                                                                                                      ;no more ch needed
-                                    jl                  consumeBuffer
+        echoIt:                         
+                                        mov                 ah,2
+                                        mov                 dl,al
+                                        int                 21h
+                                        inc                 cl
+        ;store in data
+                                        mov                 si,cx
+                                        mov                 Name1[si+1],al
+                                        cmp                 cl,15                                                                                                                                                                                                                                                                          ;no more ch needed
+                                        jl                  consumeBuffer
     
-    lastButton:                                                                                                                                                                                                                                                                                                                    ;if name reached size limit
-                                    call                waitEnter
+        lastButton:                                                                                                                                                                                                                                                                                                                        ;if name reached size limit
+                                        call                waitEnter
     
-    endGetName:                                                                                                                                                                                                                                                                                                                    ;store in data
-                                    mov                 Name1[1],cl
+        endGetName:                                                                                                                                                                                                                                                                                                                        ;store in data
+                                        mov                 Name1[1],cl
             
-                                    ret
-                                    endp                getName
+                                        ret
+                                        endp                getName
 
 waitEnter proc
             
-                                    jmp                 getButton
-    popButton:                      
-    ;pop the button (called after any input)
-                                    mov                 ah,0
-                                    int                 16h
-    ;Get Enter key
-    getButton:                      
-                                    mov                 ah,1
-                                    int                 16h
-                                    jnz                 Enter                                                                                                                                                                                                                                                                      ;if user entered button it will jmp
-                                    jmp                 getButton                                                                                                                                                                                                                                                                  ;no button entered try again
+                                        jmp                 getButton
+        popButton:                      
+        ;pop the button (called after any input)
+                                        mov                 ah,0
+                                        int                 16h
+        ;Get Enter key
+        getButton:                      
+                                        mov                 ah,1
+                                        int                 16h
+                                        jnz                 Enter                                                                                                                                                                                                                                                                          ;if user entered button it will jmp
+                                        jmp                 getButton                                                                                                                                                                                                                                                                      ;no button entered try again
     
-    Enter:                          
-                                    cmp                 ah,1ch
-                                    jnz                 popButton                                                                                                                                                                                                                                                                  ; if button is not Enter, repeat
-    ;button is Enter
-    ;pop it from buffer
-                                    mov                 ah,0
-                                    int                 16h
+        Enter:                          
+                                        cmp                 ah,1ch
+                                        jnz                 popButton                                                                                                                                                                                                                                                                      ; if button is not Enter, repeat
+        ;button is Enter
+        ;pop it from buffer
+                                        mov                 ah,0
+                                        int                 16h
         
-                                    ret
-                                    endp                waitEnter
+                                        ret
+                                        endp                waitEnter
 
 
-    ;*********************************************************************************************************************
-    ;*********************************************************************************************************************
-    ;************************************************ I Don't Know Proc *****************************************************
-    ;*********************************************************************************************************************
-    ;*********************************************************************************************************************
+        ;*********************************************************************************************************************
+        ;*********************************************************************************************************************
+        ;************************************************ I Don't Know Proc *****************************************************
+        ;*********************************************************************************************************************
+        ;*********************************************************************************************************************
 
-    ;------------------------------------------
-    ;CONVERT A NUMBER IN STRING.
-    ;ALGORITHM : EXTRACT DIGITS ONE BY ONE, STORE
-    ;THEM IN STACK, THEN EXTRACT THEM IN REVERSE
-    ;ORDER TO CONSTRUCT STRING (STR).
-    ;PARAMETERS : AX = NUMBER TO CONVERT.
-    ;             SI = POINTING WHERE TO STORE STRING.
+        ;------------------------------------------
+        ;CONVERT A NUMBER IN STRING.
+        ;ALGORITHM : EXTRACT DIGITS ONE BY ONE, STORE
+        ;THEM IN STACK, THEN EXTRACT THEM IN REVERSE
+        ;ORDER TO CONSTRUCT STRING (STR).
+        ;PARAMETERS : AX = NUMBER TO CONVERT.
+        ;             SI = POINTING WHERE TO STORE STRING.
 
 number2string proc
-    ;FILL BUF WITH DOLLARS.
-                                    push                si
-                                    call                dollars
-                                    pop                 si
+        ;FILL BUF WITH DOLLARS.
+                                        push                si
+                                        call                dollars
+                                        pop                 si
 
-                                    mov                 bx, 10                                                                                                                                                                                                                                                                     ;DIGITS ARE EXTRACTED DIVIDING BY 10.
-                                    mov                 cx, 0                                                                                                                                                                                                                                                                      ;COUNTER FOR EXTRACTED DIGITS.
-    cycle1:                         
-                                    mov                 dx, 0                                                                                                                                                                                                                                                                      ;NECESSARY TO DIVIDE BY BX.
-                                    div                 bx                                                                                                                                                                                                                                                                         ;DX:AX / 10 = AX:QUOTIENT DX:REMAINDER.
-                                    push                dx                                                                                                                                                                                                                                                                         ;PRESERVE DIGIT EXTRACTED FOR LATER.
-                                    inc                 cx                                                                                                                                                                                                                                                                         ;INCREASE COUNTER FOR EVERY DIGIT EXTRACTED.
-                                    cmp                 ax, 0                                                                                                                                                                                                                                                                      ;IF NUMBER IS
-                                    jne                 cycle1                                                                                                                                                                                                                                                                     ;NOT ZERO, LOOP.
-    ;NOW RETRIEVE PUSHED DIGITS.
-    cycle2:                         
-                                    pop                 dx
-                                    add                 dl, 48                                                                                                                                                                                                                                                                     ;CONVERT DIGIT TO CHARACTER.
-                                    mov                 [ si ], dl
-                                    inc                 si
-                                    loop                cycle2
+                                        mov                 bx, 10                                                                                                                                                                                                                                                                         ;DIGITS ARE EXTRACTED DIVIDING BY 10.
+                                        mov                 cx, 0                                                                                                                                                                                                                                                                          ;COUNTER FOR EXTRACTED DIGITS.
+        cycle1:                         
+                                        mov                 dx, 0                                                                                                                                                                                                                                                                          ;NECESSARY TO DIVIDE BY BX.
+                                        div                 bx                                                                                                                                                                                                                                                                             ;DX:AX / 10 = AX:QUOTIENT DX:REMAINDER.
+                                        push                dx                                                                                                                                                                                                                                                                             ;PRESERVE DIGIT EXTRACTED FOR LATER.
+                                        inc                 cx                                                                                                                                                                                                                                                                             ;INCREASE COUNTER FOR EVERY DIGIT EXTRACTED.
+                                        cmp                 ax, 0                                                                                                                                                                                                                                                                          ;IF NUMBER IS
+                                        jne                 cycle1                                                                                                                                                                                                                                                                         ;NOT ZERO, LOOP.
+        ;NOW RETRIEVE PUSHED DIGITS.
+        cycle2:                         
+                                        pop                 dx
+                                        add                 dl, 48                                                                                                                                                                                                                                                                         ;CONVERT DIGIT TO CHARACTER.
+                                        mov                 [ si ], dl
+                                        inc                 si
+                                        loop                cycle2
 
-                                    ret
-                                    endp
+                                        ret
+                                        endp
 
-    ;------------------------------------------
-    ;FILLS VARIABLE WITH '$'.
-    ;USED BEFORE CONVERT NUMBERS TO STRING, BECAUSE
-    ;THE STRING WILL BE DISPLAYED.
-    ;PARAMETER : SI = POINTING TO STRING TO FILL.
+        ;------------------------------------------
+        ;FILLS VARIABLE WITH '$'.
+        ;USED BEFORE CONVERT NUMBERS TO STRING, BECAUSE
+        ;THE STRING WILL BE DISPLAYED.
+        ;PARAMETER : SI = POINTING TO STRING TO FILL.
 
 dollars proc
-                                    mov                 cx, 6
-    six_dollars:                    
-                                    mov                 bl, '$'
-                                    mov                 [ si ], bl
-                                    inc                 si
-                                    loop                six_dollars
+                                        mov                 cx, 6
+        six_dollars:                    
+                                        mov                 bl, '$'
+                                        mov                 [ si ], bl
+                                        inc                 si
+                                        loop                six_dollars
 
-                                    ret
-                                    endp
+                                        ret
+                                        endp
 
 chat proc
 
-                                    pusha
-                                    mov                 ax,0003
-                                    int                 10h
+                                        pusha
+                                        mov                 ax,0003
+                                        int                 10h
 
-    ; mov dx,3fbh                 ; Line Control Register
-    ; mov al,10000000b            ;Set Divisor Latch Access Bit
-    ; out dx,al                   ;Out it
+        ; mov dx,3fbh                 ; Line Control Register
+        ; mov al,10000000b            ;Set Divisor Latch Access Bit
+        ; out dx,al                   ;Out it
    
-    ; mov dx,3f8h
-    ; mov al,0ch
-    ; out dx,al
+        ; mov dx,3f8h
+        ; mov al,0ch
+        ; out dx,al
    
-    ; mov dx,3f9h
-    ; mov al,00h
-    ; out dx,al
+        ; mov dx,3f9h
+        ; mov al,00h
+        ; out dx,al
    
-    ; mov dx,3fbh
-    ; mov al,00011011b
-    ; out dx,al
+        ; mov dx,3fbh
+        ; mov al,00011011b
+        ; out dx,al
 
-                                    mov                 dx, offset name1+2
-                                    mov                 ah, 9
-                                    int                 21h
+                                        mov                 dx, offset name1+2
+                                        mov                 ah, 9
+                                        int                 21h
 
-                                    mov                 ah, 2
-                                    mov                 dx, 0C00h
-                                    int                 10h
+                                        mov                 ah, 2
+                                        mov                 dx, 0C00h
+                                        int                 10h
 
-                                    mov                 dx,offset khat
-                                    mov                 ah,9
-                                    int                 21h
+                                        mov                 dx,offset khat
+                                        mov                 ah,9
+                                        int                 21h
 
-                                    mov                 ah,2
-                                    mov                 dx,0D00h
-                                    int                 10h
+                                        mov                 ah,2
+                                        mov                 dx,0D00h
+                                        int                 10h
 
-                                    mov                 dx,offset name2+2
-                                    mov                 ah,9
-                                    int                 21h
+                                        mov                 dx,offset name2+2
+                                        mov                 ah,9
+                                        int                 21h
 
-                                    mov                 ah,2
-                                    mov                 dx,0100h
-                                    int                 10h
+                                        mov                 ah,2
+                                        mov                 dx,0100h
+                                        int                 10h
 
-                                    mov                 bx, 0100h
-                                    mov                 cx, 0E00h
+                                        mov                 bx, 0100h
+                                        mov                 cx, 0E00h
 
-    ;--------------------------------------------------------------------
-    cht:                            
+        ;--------------------------------------------------------------------
+        cht:                            
 
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
-    ; AGAIN:
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  sent
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
+        ; AGAIN:
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  sent
 
-    send:                           
-                                    cmp                 ch, 25
-                                    jl                  con2
-                                    push                ax
-                                    push                bx
-                                    push                cx
-                                    push                dx
-                                    mov                 ax, 070Bh
-                                    mov                 bh, 07
-                                    mov                 cx, 0E00h
-                                    mov                 dx, 184Fh
-                                    int                 10h
-                                    pop                 dx
-                                    pop                 cx
-                                    pop                 bx
-                                    pop                 ax
-                                    mov                 cx, 0E00h
-    con2:                           
+        send:                           
+                                        cmp                 ch, 25
+                                        jl                  con2
+                                        push                ax
+                                        push                bx
+                                        push                cx
+                                        push                dx
+                                        mov                 ax, 070Bh
+                                        mov                 bh, 07
+                                        mov                 cx, 0E00h
+                                        mov                 dx, 184Fh
+                                        int                 10h
+                                        pop                 dx
+                                        pop                 cx
+                                        pop                 bx
+                                        pop                 ax
+                                        mov                 cx, 0E00h
+        con2:                           
 
-    ; mov ah,0ch
-    ; mov al, 0
-    ; int 21h
-                                    mov                 al, '$'
-                                    mov                 ah,1
-                                    int                 16h                                                                                                                                                                                                                                                                        ; get char w/o wait
+        ; mov ah,0ch
+        ; mov al, 0
+        ; int 21h
+                                        mov                 al, '$'
+                                        mov                 ah,1
+                                        int                 16h                                                                                                                                                                                                                                                                            ; get char w/o wait
     
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
 
-                                    cmp                 al, 1bh
-                                    jne                 nort
-                                    out                 dx, al
-                                    mov                 ah,0ch
-                                    mov                 al,0
-                                    int                 21h                                                                                                                                                                                                                                                                        ; clear buffer only after sending
-                                    jmp                 rt
+                                        cmp                 al, 1bh
+                                        jne                 nort
+                                        out                 dx, al
+                                        mov                 ah,0ch
+                                        mov                 al,0
+                                        int                 21h                                                                                                                                                                                                                                                                            ; clear buffer only after sending
+                                        jmp                 rt
 
-    nort:                           
-                                    cmp                 ah,1ch
-                                    jz                  sentr
-                                    jnz                 schar
+        nort:                           
+                                        cmp                 ah,1ch
+                                        jz                  sentr
+                                        jnz                 schar
 
-    sentr:                          
-                                    inc                 bh
-                                    mov                 bl,0
-                                    mov                 al,ah
-                                    out                 dx, al
-                                    mov                 ah,0ch
-                                    mov                 al,0
-                                    int                 21h
-                                    jmp                 sent
+        sentr:                          
+                                        inc                 bh
+                                        mov                 bl,0
+                                        mov                 al,ah
+                                        out                 dx, al
+                                        mov                 ah,0ch
+                                        mov                 al,0
+                                        int                 21h
+                                        jmp                 sent
 
-    schar:                          
-                                    cmp                 al, '$'
-                                    jz                  sent
-                                    push                dx
-                                    mov                 ah,2
-                                    mov                 dx,bx
-                                    push                bx
-                                    mov                 bh,0
-                                    int                 10h                                                                                                                                                                                                                                                                        ; move cursor
-                                    pop                 bx
-                                    mov                 ah,2
-                                    mov                 dl,al
-                                    int                 21h                                                                                                                                                                                                                                                                        ; display char
-                                    pop                 dx
-    ; mov al, '$'
-                                    inc                 bl
-                                    cmp                 bl,80
-                                    jnz                 notendl
-                                    mov                 bl,0
-                                    inc                 bh
+        schar:                          
+                                        cmp                 al, '$'
+                                        jz                  sent
+                                        push                dx
+                                        mov                 ah,2
+                                        mov                 dx,bx
+                                        push                bx
+                                        mov                 bh,0
+                                        int                 10h                                                                                                                                                                                                                                                                            ; move cursor
+                                        pop                 bx
+                                        mov                 ah,2
+                                        mov                 dl,al
+                                        int                 21h                                                                                                                                                                                                                                                                            ; display char
+                                        pop                 dx
+        ; mov al, '$'
+                                        inc                 bl
+                                        cmp                 bl,80
+                                        jnz                 notendl
+                                        mov                 bl,0
+                                        inc                 bh
     
-    notendl:                        
-                                    out                 dx , al
-                                    mov                 ah,0ch
-                                    mov                 al,0
-                                    int                 21h                                                                                                                                                                                                                                                                        ; clear buffer only after sending
+        notendl:                        
+                                        out                 dx , al
+                                        mov                 ah,0ch
+                                        mov                 al,0
+                                        int                 21h                                                                                                                                                                                                                                                                            ; clear buffer only after sending
 
 
 
-    sent:                           
-                                    cmp                 bh, 12
-                                    jl                  con
-                                    push                ax
-                                    push                bx
-                                    push                cx
-                                    push                dx
-                                    mov                 ax, 060Bh
-                                    mov                 bh, 07
-                                    mov                 cx, 0100h
-                                    mov                 dx, 0B4Fh
-                                    int                 10h
-                                    pop                 dx
-                                    pop                 cx
-                                    pop                 bx
-                                    pop                 ax
-                                    mov                 bx, 0100h
+        sent:                           
+                                        cmp                 bh, 12
+                                        jl                  con
+                                        push                ax
+                                        push                bx
+                                        push                cx
+                                        push                dx
+                                        mov                 ax, 060Bh
+                                        mov                 bh, 07
+                                        mov                 cx, 0100h
+                                        mov                 dx, 0B4Fh
+                                        int                 10h
+                                        pop                 dx
+                                        pop                 cx
+                                        pop                 bx
+                                        pop                 ax
+                                        mov                 bx, 0100h
 
-    con:                            
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
-    CHK:                            
-                                    in                  al , dx
-                                    AND                 al , 1
-                                    JNZ                 rec
-                                    jmp                 cht                                                                                                                                                                                                                                                                        ;check ready                                                                                                                                                                                                                                                               ; check if ready
+        con:                            
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
+        CHK:                            
+                                        in                  al , dx
+                                        AND                 al , 1
+                                        JNZ                 rec
+                                        jmp                 cht                                                                                                                                                                                                                                                                            ;check ready                                                                                                                                                                                                                                                               ; check if ready
 
-    rec:                            
-                                    mov                 dx , 03F8H
-                                    in                  al , dx
-    ; mov VALUE , al
+        rec:                            
+                                        mov                 dx , 03F8H
+                                        in                  al , dx
+        ; mov VALUE , al
                                         
-                                    cmp                 al, 1bh
-                                    jne                 nort2
-                                    jmp                 rt
+                                        cmp                 al, 1bh
+                                        jne                 nort2
+                                        jmp                 rt
 
-    nort2:                          
-                                    cmp                 al,1ch
-                                    jz                  nwline
-                                    jnz                 pchar
+        nort2:                          
+                                        cmp                 al,1ch
+                                        jz                  nwline
+                                        jnz                 pchar
 
 
-    nwline:                         
-                                    push                dx
-                                    inc                 ch
-                                    mov                 cl,0
-    ; mov dx,offset newline
-    ; mov ah,9
-    ; int 21h
-    ; mov ah,2
-    ; mov dx,bx
-    ; int 10h     ; move cursor
-                                    pop                 dx
-                                    jmp                 recd
+        nwline:                         
+                                        push                dx
+                                        inc                 ch
+                                        mov                 cl,0
+        ; mov dx,offset newline
+        ; mov ah,9
+        ; int 21h
+        ; mov ah,2
+        ; mov dx,bx
+        ; int 10h     ; move cursor
+                                        pop                 dx
+                                        jmp                 recd
 
-    pchar:                          
-                                    push                dx
-                                    mov                 ah,2
-                                    push                bx
-                                    mov                 bh,0
-                                    mov                 dx,cx
-                                    int                 10h                                                                                                                                                                                                                                                                        ; move cursor
-                                    pop                 bx
+        pchar:                          
+                                        push                dx
+                                        mov                 ah,2
+                                        push                bx
+                                        mov                 bh,0
+                                        mov                 dx,cx
+                                        int                 10h                                                                                                                                                                                                                                                                            ; move cursor
+                                        pop                 bx
 
-                                    mov                 dl,al
-                                    mov                 ah,2
-                                    int                 21h                                                                                                                                                                                                                                                                        ; display char
-                                    pop                 dx
-    ; mov ah,2
-    ; mov dx,bx
-    ; int 10h    ; move cursor
-                                    inc                 cl
-                                    cmp                 cl,80
-                                    jnz                 notendl2
-                                    mov                 cl,0
-                                    inc                 ch
-    notendl2:                       
+                                        mov                 dl,al
+                                        mov                 ah,2
+                                        int                 21h                                                                                                                                                                                                                                                                            ; display char
+                                        pop                 dx
+        ; mov ah,2
+        ; mov dx,bx
+        ; int 10h    ; move cursor
+                                        inc                 cl
+                                        cmp                 cl,80
+                                        jnz                 notendl2
+                                        mov                 cl,0
+                                        inc                 ch
+        notendl2:                       
 
 
    
-    ; jmp recd
+        ; jmp recd
 
-    recd:                           
-                                    jmp                 cht
+        recd:                           
+                                        jmp                 cht
 
-    rt:                             
-                                    popa
-                                    ret
+        rt:                             
+                                        popa
+                                        ret
 
-                                    endp
+                                        endp
 
 movePiece proc
-                                    pusha
+                                        pusha
 
-                                    mov                 ah,00h
-                                    int                 1ah
-                                    mov                 ah, 0
-                                    mov                 al, fromRow
-                                    mov                 bl, 8
-                                    imul                bl
-                                    add                 al, fromColumn
-                                    mov                 bx, ax
-    ; lea di, cooldown
-                                    mov                 ax, cooldown[bx]
-                                    sub                 dx, ax
-                                    cmp                 dx, 50
-    ; jl noMove
+                                        mov                 ah,00h
+                                        int                 1ah
+                                        mov                 ah, 0
+                                        mov                 al, fromRow
+                                        mov                 bl, 8
+                                        imul                bl
+                                        add                 al, fromColumn
+                                        mov                 bx, ax
+        ; lea di, cooldown
+                                        mov                 ax, cooldown[bx]
+                                        sub                 dx, ax
+                                        cmp                 dx, 50
+        ; jl noMove
 
-                                    eraseImage          fromColumn, fromRow, greyCell, whiteCell
-    ; lea si, grid
-                                    mov                 al, fromRow
-                                    mov                 bl, 8
-                                    imul                bl
-                                    add                 al, fromColumn
-                                    mov                 bx, ax
-                                    mov                 grid[bx], 0
-                                    eraseImage          toColumn, toRow, greyCell, whiteCell
-                                    drawEncodingOnBoard code, toColumn, toRow
-    ; lea si, grid
-                                    mov                 al, toRow
-                                    mov                 bl, 8
-                                    imul                bl
-                                    add                 al, toColumn
-                                    mov                 bx, ax
-                                    mov                 ah, grid[bx]
-                                    cmp                 ah, 0
-                                    je                  notWin
-                                    push                ax
-                                    push                bx
-                                    mov                 dx, 1400h
-                                    mov                 bx, 0
-                                    mov                 ah, 2
-                                    int                 10h     ;move cursor    
-                                    mov                 dx, offset eatWP
-                                    mov                 ah, 9
-                                    int                 21h     ;display piece eaten
-                                    pop                 bx
-                                    pop                 ax
-    checkGameWon:                   
-                                    cmp                 ah, 6
-                                    jz                  gameWon2
-                                    cmp                 ah, 16
-                                    jz                  gameWon1
-    notWin:                         
-                                    push                ax
-                                    mov                 al, code
-                                    mov                 grid[bx], al
-                                    pop                 ax
-                                    mov                 ah,00h
-                                    int                 1ah
-    ; lea di, cooldown
-                                    mov                 al, toRow
-                                    mov                 bl, 8
-                                    imul                bl
-                                    add                 al, toColumn
-                                    mov                 bx, ax
-                                    mov                 cooldown[bx], dx
-                                    jmp                 noMove
-    gameWon1:                       
-    ; resetavailmoves2
-                                    moveCursor          1400h
-                                    mov                 dx, offset winMessageP1
-                                    mov                 ah, 09h
-                                    int                 21h
-                                    mov                 cx, 0fh
-                                    mov                 dx, 4240h
-                                    mov                 ah, 86h
-                                    int                 15h
-                                    mov                 ah,0
-                                    int                 16h
+                                        eraseImage          fromColumn, fromRow, greyCell, whiteCell
+        ; lea si, grid
+                                        mov                 al, fromRow
+                                        mov                 bl, 8
+                                        imul                bl
+                                        add                 al, fromColumn
+                                        mov                 bx, ax
+                                        mov                 grid[bx], 0
+                                        eraseImage          toColumn, toRow, greyCell, whiteCell
+                                        drawEncodingOnBoard code, toColumn, toRow
+        ; lea si, grid
+                                        mov                 al, toRow
+                                        mov                 bl, 8
+                                        imul                bl
+                                        add                 al, toColumn
+                                        mov                 bx, ax
+                                        mov                 ah, grid[bx]
+                                        cmp                 ah, 0
+                                        je                  notWin
+                                        push                ax
+                                        push                bx
+                                        mov                 dx, 1400h
+                                        mov                 bx, 0
+                                        mov                 ah, 2
+                                        int                 10h                                                                                                                                                                                                                                                                            ;move cursor
+                                        mov                 dx, offset eatWP
+                                        mov                 ah, 9
+                                        int                 21h                                                                                                                                                                                                                                                                            ;display piece eaten
+                                        pop                 bx
+                                        pop                 ax
+        checkGameWon:                   
+                                        cmp                 ah, 6
+                                        jz                  gameWon2
+                                        cmp                 ah, 16
+                                        jz                  gameWon1
+        notWin:                         
+                                        push                ax
+                                        mov                 al, code
+                                        mov                 grid[bx], al
+                                        pop                 ax
+                                        mov                 ah,00h
+                                        int                 1ah
+        ; lea di, cooldown
+                                        mov                 al, toRow
+                                        mov                 bl, 8
+                                        imul                bl
+                                        add                 al, toColumn
+                                        mov                 bx, ax
+                                        mov                 cooldown[bx], dx
+                                        jmp                 noMove
+        gameWon1:                       
+        ; resetavailmoves2
+                                        moveCursor          1400h
+                                        mov                 dx, offset winMessageP1
+                                        mov                 ah, 09h
+                                        int                 21h
+                                        mov                 cx, 0fh
+                                        mov                 dx, 4240h
+                                        mov                 ah, 86h
+                                        int                 15h
+                                        mov                 ah,0
+                                        int                 16h
 
-                                    pusha
-                                    mov                 cl,PNO
-                                    cmp                 cl,Player1_color
-                                    jne                 skipSendWon1
-    ;   Send My Movement
-    ;1
-    send_code1:                     
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+                                        pusha
+                                        mov                 cl,PNO
+                                        cmp                 cl,Player1_color
+                                        jne                 skipSendWon1
+        ;   Send My Movement
+        ;1
+        send_code1:                     
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_code1
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,selectedPiece
-                                    out                 dx , al
-    ;2
-    send_fr1:                       
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_code1
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,selectedPiece
+                                        out                 dx , al
+        ;2
+        send_fr1:                       
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_fr1
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,PreviousSelectedRow
-                                    out                 dx , al
-    ;3
-    send_fc1:                       
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_fr1
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,PreviousSelectedRow
+                                        out                 dx , al
+        ;3
+        send_fc1:                       
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_fc1
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,PreviousSelectedCol
-                                    out                 dx , al
-    ;4
-    send_tr1:                       
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_fc1
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,PreviousSelectedCol
+                                        out                 dx , al
+        ;4
+        send_tr1:                       
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_tr1
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,currRow
-                                    out                 dx , al
-    ;5
-    send_tc1:                       
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_tr1
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,currRow
+                                        out                 dx , al
+        ;5
+        send_tc1:                       
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_tc1
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,currColumn
-                                    out                 dx , al
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_tc1
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,currColumn
+                                        out                 dx , al
 
-    skipSendWon1:                   
-                                    popa
-
-
-                                    mov                 ax, 0003h
-                                    int                 10h
-                                    jmp                 st
-                                    jmp                 noMove
-    gameWon2:                       
-                                    moveCursor          1400h
-                                    mov                 dx, offset winMessageP2
-                                    mov                 ah, 09
-                                    int                 21h
-                                    mov                 cx, 0fh
-                                    mov                 dx, 4240h
-                                    mov                 ah, 86h
-                                    int                 15h
-                                    mov                 ah,0
-                                    int                 16h
+        skipSendWon1:                   
+                                        popa
 
 
-                                    pusha
-                                    mov                 cl,PNO
-                                    cmp                 cl,Player1_color
-                                    jne                 skipSendWon2
-    ;   Send My Movement
-    ;1
-    send_code2:                     
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+                                        mov                 ax, 0003h
+                                        int                 10h
+                                        jmp                 st
+                                        jmp                 noMove
+        gameWon2:                       
+                                        moveCursor          1400h
+                                        mov                 dx, offset winMessageP2
+                                        mov                 ah, 09
+                                        int                 21h
+                                        mov                 cx, 0fh
+                                        mov                 dx, 4240h
+                                        mov                 ah, 86h
+                                        int                 15h
+                                        mov                 ah,0
+                                        int                 16h
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_code2
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,selectedPiece
-                                    out                 dx , al
-    ;2
-    send_fr2:                       
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_fr2
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,PreviousSelectedRow
-                                    out                 dx , al
-    ;3
-    send_fc2:                       
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+                                        pusha
+                                        mov                 cl,PNO
+                                        cmp                 cl,Player1_color
+                                        jne                 skipSendWon2
+        ;   Send My Movement
+        ;1
+        send_code2:                     
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_fc2
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,PreviousSelectedCol
-                                    out                 dx , al
-    ;4
-    send_tr2:                       
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_code2
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,selectedPiece
+                                        out                 dx , al
+        ;2
+        send_fr2:                       
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_tr2
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,currRow
-                                    out                 dx , al
-    ;5
-    send_tc2:                       
-    ; Check that Transmitter Holding Register is Empty
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_fr2
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,PreviousSelectedRow
+                                        out                 dx , al
+        ;3
+        send_fc2:                       
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  send_tc2
-    ; If empty put the VALUE in Transmit data register
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
-                                    mov                 al,currColumn
-                                    out                 dx , al
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_fc2
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,PreviousSelectedCol
+                                        out                 dx , al
+        ;4
+        send_tr2:                       
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-    skipSendWon2:                   
-                                    popa
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_tr2
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,currRow
+                                        out                 dx , al
+        ;5
+        send_tc2:                       
+        ; Check that Transmitter Holding Register is Empty
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
 
-                                    mov                 ax, 0003h
-                                    int                 10h
-                                    jmp                 st
-    noMove:                         
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  send_tc2
+        ; If empty put the VALUE in Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
+                                        mov                 al,currColumn
+                                        out                 dx , al
+
+        skipSendWon2:                   
+                                        popa
+
+                                        mov                 ax, 0003h
+                                        int                 10h
+                                        jmp                 st
+        noMove:                         
         
 
-                                    popa
-                                    ret
+                                        popa
+                                        ret
 
-                                    endp
+                                        endp
 
 
-    inChat proc                                    
-        pusha
+inChat proc
+                                        pusha
 
-                mov ax, 0013h
-                int 10h
+                                        mov                 ax, 0013h
+                                        int                 10h
 
-        mov                 bx, 1700h
-        mov                 cx, 1800h
-;=========================================================================
+                                        mov                 bx, 1700h
+                                        mov                 cx, 1800h
+        ;=========================================================================
 
-        incht:                            
+        incht:                          
 
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
-    ; AGAIN:
-                                    In                  al , dx                                                                                                                                                                                                                                                                    ;Read Line Status
-                                    AND                 al , 00100000b
-                                    JZ                  insent
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
+        ; AGAIN:
+                                        In                  al , dx                                                                                                                                                                                                                                                                        ;Read Line Status
+                                        AND                 al , 00100000b
+                                        JZ                  insent
 
-    insend:                           
-                                    cmp                 ch, 25
-                                    jl                  incon2
-                                    push                ax
-                                    push                bx
-                                    push                cx
-                                    push                dx
-                                    mov                 ax, 0600h
-                                    mov                 bh, 00h
-                                    mov                 cx, 1700h
-                                    mov                 dx, 184Fh
-                                    int                 10h
-                                    pop                 dx
-                                    pop                 cx
-                                    pop                 bx
-                                    pop                 ax
-                                    mov                 cx, 1800h
-    incon2:                           
+        insend:                         
+                                        cmp                 ch, 25
+                                        jl                  incon2
+                                        push                ax
+                                        push                bx
+                                        push                cx
+                                        push                dx
+                                        mov                 ax, 0600h
+                                        mov                 bh, 00h
+                                        mov                 cx, 1700h
+                                        mov                 dx, 184Fh
+                                        int                 10h
+                                        pop                 dx
+                                        pop                 cx
+                                        pop                 bx
+                                        pop                 ax
+                                        mov                 cx, 1800h
+        incon2:                         
 
-    ; mov ah,0ch
-    ; mov al, 0
-    ; int 21h
-                                    mov                 al, '$'
-                                    mov                 ah,1
-                                    int                 16h                                                                                                                                                                                                                                                                        ; get char w/o wait
+        ; mov ah,0ch
+        ; mov al, 0
+        ; int 21h
+                                        mov                 al, '$'
+                                        mov                 ah,1
+                                        int                 16h                                                                                                                                                                                                                                                                            ; get char w/o wait
     
-                                    mov                 dx , 3F8H                                                                                                                                                                                                                                                                  ; Transmit data register
+                                        mov                 dx , 3F8H                                                                                                                                                                                                                                                                      ; Transmit data register
 
-                                    cmp                 al, 1bh
-                                    jne                 innort
-                                    out                 dx, al
-                                    mov                 ah,0ch
-                                    mov                 al,0
-                                    int                 21h                                                                                                                                                                                                                                                                        ; clear buffer only after sending
-                                    jmp                 inrt
+                                        cmp                 al, 1bh
+                                        jne                 innort
+                                        out                 dx, al
+                                        mov                 ah,0ch
+                                        mov                 al,0
+                                        int                 21h                                                                                                                                                                                                                                                                            ; clear buffer only after sending
+                                        jmp                 inrt
 
-    innort:                           
-                                    cmp                 ah,1ch
-                                    jz                  insentr
-                                    jnz                 inschar
+        innort:                         
+                                        cmp                 ah,1ch
+                                        jz                  insentr
+                                        jnz                 inschar
 
-    insentr:                          
-                                    inc                 bh
-                                    mov                 bl,0
-                                    mov                 al,ah
-                                    out                 dx, al
-                                    mov                 ah,0ch
-                                    mov                 al,0
-                                    int                 21h
-                                    jmp                 insent
+        insentr:                        
+                                        inc                 bh
+                                        mov                 bl,0
+                                        mov                 al,ah
+                                        out                 dx, al
+                                        mov                 ah,0ch
+                                        mov                 al,0
+                                        int                 21h
+                                        jmp                 insent
 
-    inschar:                          
-                                    cmp                 al, '$'
-                                    jz                  insent
-                                    push                dx
-                                    mov                 ah,2
-                                    mov                 dx,bx
-                                    push                bx
-                                    mov                 bh,0
-                                    int                 10h                                                                                                                                                                                                                                                                        ; move cursor
-                                    pop                 bx
-                                    mov                 ah,2
-                                    mov                 dl,al
-                                    int                 21h                                                                                                                                                                                                                                                                        ; display char
-                                    pop                 dx
-    ; mov al, '$'
-                                    inc                 bl
-                                    cmp                 bl,80
-                                    jge                 insentr
-                                    ; mov                 bl,0
-                                    ; inc                 bh
+        inschar:                        
+                                        cmp                 al, '$'
+                                        jz                  insent
+                                        push                dx
+                                        mov                 ah,2
+                                        mov                 dx,bx
+                                        push                bx
+                                        mov                 bh,0
+                                        int                 10h                                                                                                                                                                                                                                                                            ; move cursor
+                                        pop                 bx
+                                        mov                 ah,2
+                                        mov                 dl,al
+                                        int                 21h                                                                                                                                                                                                                                                                            ; display char
+                                        pop                 dx
+        ; mov al, '$'
+                                        inc                 bl
+                                        cmp                 bl,80
+                                        jge                 insentr
+        ; mov                 bl,0
+        ; inc                 bh
     
-    innotendl:                        
-                                    out                 dx , al
-                                    mov                 ah,0ch
-                                    mov                 al,0
-                                    int                 21h                                                                                                                                                                                                                                                                        ; clear buffer only after sending
+        innotendl:                      
+                                        out                 dx , al
+                                        mov                 ah,0ch
+                                        mov                 al,0
+                                        int                 21h                                                                                                                                                                                                                                                                            ; clear buffer only after sending
 
 
 
-    insent:                           
-                                    cmp                 bh, 24
-                                    jl                  incon
-                                    push                ax
-                                    push                bx
-                                    push                cx
-                                    push                dx
-                                    mov                 ax, 0600h
-                                    mov                 bh, 00h
-                                    mov                 cx, 1600h
-                                    mov                 dx, 174Fh
-                                    int                 10h
-                                    pop                 dx
-                                    pop                 cx
-                                    pop                 bx
-                                    pop                 ax
-                                    mov                 bx, 1700h
+        insent:                         
+                                        cmp                 bh, 24
+                                        jl                  incon
+                                        push                ax
+                                        push                bx
+                                        push                cx
+                                        push                dx
+                                        mov                 ax, 0600h
+                                        mov                 bh, 00h
+                                        mov                 cx, 1600h
+                                        mov                 dx, 174Fh
+                                        int                 10h
+                                        pop                 dx
+                                        pop                 cx
+                                        pop                 bx
+                                        pop                 ax
+                                        mov                 bx, 1700h
 
-    incon:                            
-                                    mov                 dx , 3FDH                                                                                                                                                                                                                                                                  ; Line Status Register
-    inCHK:                            
-                                    in                  al , dx
-                                    AND                 al , 1
-                                    JNZ                 inrec
-                                    jmp                 incht                                                                                                                                                                                                                                                                        ;check ready                                                                                                                                                                                                                                                               ; check if ready
+        incon:                          
+                                        mov                 dx , 3FDH                                                                                                                                                                                                                                                                      ; Line Status Register
+        inCHK:                          
+                                        in                  al , dx
+                                        AND                 al , 1
+                                        JNZ                 inrec
+                                        jmp                 incht                                                                                                                                                                                                                                                                          ;check ready                                                                                                                                                                                                                                                               ; check if ready
 
-    inrec:                            
-                                    mov                 dx , 03F8H
-                                    in                  al , dx
-    ; mov VALUE , al
+        inrec:                          
+                                        mov                 dx , 03F8H
+                                        in                  al , dx
+        ; mov VALUE , al
                                         
-                                    cmp                 al, 1bh
-                                    jne                 innort2
-                                    jmp                 inrt
+                                        cmp                 al, 1bh
+                                        jne                 innort2
+                                        jmp                 inrt
 
-    innort2:                          
-                                    cmp                 al,1ch
-                                    jz                  innwline
-                                    jnz                 inpchar
+        innort2:                        
+                                        cmp                 al,1ch
+                                        jz                  innwline
+                                        jnz                 inpchar
 
 
-    innwline:                         
-                                    push                dx
-                                    inc                 ch
-                                    mov                 cl,0
-    ; mov dx,offset newline
-    ; mov ah,9
-    ; int 21h
-    ; mov ah,2
-    ; mov dx,bx
-    ; int 10h     ; move cursor
-                                    pop                 dx
-                                    jmp                 inrecd
+        innwline:                       
+                                        push                dx
+                                        inc                 ch
+                                        mov                 cl,0
+        ; mov dx,offset newline
+        ; mov ah,9
+        ; int 21h
+        ; mov ah,2
+        ; mov dx,bx
+        ; int 10h     ; move cursor
+                                        pop                 dx
+                                        jmp                 inrecd
 
-    inpchar:                          
-                                    push                dx
-                                    mov                 ah,2
-                                    push                bx
-                                    mov                 bh,0
-                                    mov                 dx,cx
-                                    int                 10h                                                                                                                                                                                                                                                                        ; move cursor
-                                    pop                 bx
+        inpchar:                        
+                                        push                dx
+                                        mov                 ah,2
+                                        push                bx
+                                        mov                 bh,0
+                                        mov                 dx,cx
+                                        int                 10h                                                                                                                                                                                                                                                                            ; move cursor
+                                        pop                 bx
 
-                                    mov                 dl,al
-                                    mov                 ah,2
-                                    int                 21h                                                                                                                                                                                                                                                                        ; display char
-                                    pop                 dx
-    ; mov ah,2
-    ; mov dx,bx
-    ; int 10h    ; move cursor
-                                    inc                 cl
-                                    cmp                 cl,80
-                                    jge                 innwline
-                                    ; mov                 cl,0
-                                    ; inc                 ch
-    innotendl2:                       
+                                        mov                 dl,al
+                                        mov                 ah,2
+                                        int                 21h                                                                                                                                                                                                                                                                            ; display char
+                                        pop                 dx
+        ; mov ah,2
+        ; mov dx,bx
+        ; int 10h    ; move cursor
+                                        inc                 cl
+                                        cmp                 cl,80
+                                        jge                 innwline
+        ; mov                 cl,0
+        ; inc                 ch
+        innotendl2:                     
 
 
    
-    ; jmp recd
+        ; jmp recd
 
-    inrecd:                           
-                                    jmp                 incht
+        inrecd:                         
+                                        jmp                 incht
 
-     inrt:popa
-        ret
-        endp
+        inrt:                           popa
+                                        ret
+                                        endp
 
 end main 
