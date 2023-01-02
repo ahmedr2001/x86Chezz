@@ -1431,7 +1431,7 @@ sendInvitaion:
 
     checkexit:
     cmp al,1bh
-    jnz checkkey
+    jnz consumebufferms
     mov charSend,al
 
     sendExit:
