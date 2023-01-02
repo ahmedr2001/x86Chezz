@@ -45,7 +45,7 @@ ENDM printCharColorTimes
 ;----------------------------------
 ; Macro to draw notification bar
 ; Takes nothing so far
-notificationBar MACRO hello, exclamation, name1, messageTemp
+notificationBar MACRO mes1, mes2,mes3, name , mes4, mes5,mes6
     moveCursor 1700h        ; move the cursor to row 22 column 0
     
     printCharColorTimes '-', 80, 0fh  ; Print '-' with white foreground black background 80 times (whole screen width)
@@ -53,10 +53,15 @@ notificationBar MACRO hello, exclamation, name1, messageTemp
     moveCursor 1800h
     printString emptyNotification
     moveCursor 1800h
-    printString hello
-    printString exclamation
-    printString name1+2
-    printString messageTemp
+    printString mes1
+    printString mes2
+    printString mes3
+    printString name+2
+    printString mes4
+    printString mes5
+    printString mes6
+
+
 ; CHECK: 
 ;     mov ah,0ch
 ;     mov al,0
@@ -1201,7 +1206,7 @@ mainScreen MACRO hello, exclamation, name1, messageTemp, mes1, mes2, mes3, keypr
       
      mov ax, 0003h
      int 10h
-     notificationBar hello, name1, exclamation,ignoreMes                                              
+     notificationBar ignoreMes,ignoreMes, hello, name1, exclamation,ignoreMes ,ignoreMes                                           
      ;mov ah,1
 ;     int 21h        
 ;     
@@ -1279,7 +1284,7 @@ enterms:
      mov dx,offset mes3
      int 21h     
              
-     notificationBar hello, name1, exclamation,ignoreMes                                              
+     notificationBar ignoreMes,ignoreMes,hello, name1, exclamation,ignoreMes   ,ignoreMes                                           
 
 
     cmp NameExchangeDone,0
@@ -1387,7 +1392,7 @@ sendInvitaion:
     cmp al,31h
     jnz checkf2
     mov charSend,al
-    notificationBar chatInvitationMes, sentMes, name2, exclamation
+    notificationBar ignoreMes,chatInvitationMes, sentMes, name2, exclamation,ignoreMes,ignoreMes
     
     sendf1:
     ; Check that Transmitter Holding Register is Empty
@@ -1410,7 +1415,7 @@ sendInvitaion:
     cmp al,32h
     jnz checkexit
     mov charSend,al
-    notificationBar gameInvitationMes, sentMes, name2, exclamation
+    notificationBar ignoreMes,gameInvitationMes, sentMes, name2, exclamation,ignoreMes,ignoreMes
 
     
     sendf2:
@@ -1466,18 +1471,18 @@ sendInvitaion:
             mov VALUE , al
 
             cmp al,charSend
-            jnz checkkey
+            jnz Refused
 
             cmp al,31h
             jz chatMode
             cmp al,32h
             jz preplaygame
-            notificationBar name2,refuseMes,invitationMes,exclamation
-            cmp al,1bh
-            jz checkkey
-            jmp ReceiveInv
 
 
+
+        Refused:
+            notificationBar ignoreMes,ignoreMes,ignoreMes,name2,refuseMes,invitationMes,exclamation
+            jmp checkkey
 
 
     preplaygame:
@@ -2282,13 +2287,13 @@ jmp checkkeygm
             ; jmp playgame
             cmp al,31h
             jnz checkGameInvitaion
-            notificationBar chatInvitationMes,recivedMes,name2,exclamation
+            notificationBar ignoreMes,chatInvitationMes,recivedMes,name2,exclamation,ignoreMes,ignoreMes
             jmp SendResponse
 
             checkGameInvitaion:
             cmp al,32h
             jnz checkExitInvitaion
-            notificationBar gameInvitationMes,recivedMes,name2,exclamation
+            notificationBar ignoreMes,gameInvitationMes,recivedMes,name2,exclamation,ignoreMes,ignoreMes
             jmp SendResponse
             
             checkExitInvitaion:
@@ -2340,14 +2345,12 @@ jmp checkkeygm
             cmp al,31h
             jz chatMode
             cmp al,32h
-            ; jz playgame
-
-            jnz sendInvitaion
             ; ;p1 -> black
             ; ;p2 -> blue
             mov Player1_color,2
             mov Player2_color,1
-            jmp playgame
+            jz playgame
+            notificationBar ignoreMes,ignoreMes,ignoreMes,name1,refuseMes,invitationMes,exclamation
 
             jmp sendInvitaion
 
@@ -3089,9 +3092,9 @@ ENDM getAvailForSelectedPiece
         GameInvitationMes   db  'game invitation $'
         sentMes             db  'sent to $'
         recivedMes          db  'recived from $'
-        refuseMes           db  'refused the $'
+        refuseMes           db  ' refused the $'
         invitationMes       db  'invitation $'
-        ignoreMes           db  ' $'
+        ignoreMes           db  '$'
         Emptynotification   db  '                                                                          $'
 
         boardWidth          equ 160
