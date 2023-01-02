@@ -1621,6 +1621,19 @@ playgame:
 
     drawSquareOnCell 0eh,currRow,currColumn
 
+
+mov checkq,0
+
+cmp selectedRow,0ffh
+jz skipini
+    drawSquareOnCell 07h,selectedRow,selectedCol
+        mov selectedcol,0ffh
+        mov selectedRow,0ffh
+
+
+skipini:
+
+
     ; drawSquareOnCell 0eh,currRow2,currColumn2
 
 ;;;;;;;;;;;;;end of initializing pieces on board;;;;;;;;;;;;
@@ -5269,20 +5282,20 @@ chat proc
 movePiece proc
                                         pusha
 
-                                    mov                 ah,00h
-                                    int                 1ah
-                                    mov                 ah, 0
-                                    mov                 al, fromRow
-                                    mov                 bl, 8
-                                    imul                bl
-                                    add                 al, fromColumn
-                                    mov                 bx, ax
-    ; lea di, cooldown
-                                    mov                 ax, cooldown[bx]
-                                    sub                 dx, ax
-                                    sub                 dx, startTime
-                                    cmp                 dx, 50
-    jl noMove
+                                        mov                 ah,00h
+                                        int                 1ah
+                                        mov                 ah, 0
+                                        mov                 al, fromRow
+                                        mov                 bl, 8
+                                        imul                bl
+                                        add                 al, fromColumn
+                                        mov                 bx, ax
+        ; lea di, cooldown
+                                        mov                 ax, cooldown[bx]
+                                        sub                 dx, ax
+                                        sub                 dx, startTime
+                                        cmp                 dx, 50
+                                        jl                  noMove
 
                                         eraseImage          fromColumn, fromRow, greyCell, whiteCell
         ; lea si, grid
@@ -5293,26 +5306,26 @@ movePiece proc
                                         mov                 bx, ax
                                         mov                 grid[bx], 0
                                         eraseImage          toColumn, toRow, greyCell, whiteCell
-                                        cmp code,01
-                                    jne noTransfrom1
-                                    cmp toRow,0
-                                    jne noTransfrom1
-                                    drawEncodingOnBoard 05, toColumn, toRow
-                                    mov code,05
-                                    jmp Transform
-                                    noTransfrom1:
+                                        cmp                 code,01
+                                        jne                 noTransfrom1
+                                        cmp                 toRow,0
+                                        jne                 noTransfrom1
+                                        drawEncodingOnBoard 05, toColumn, toRow
+                                        mov                 code,05
+                                        jmp                 Transform
+        noTransfrom1:                   
 
-                                    cmp code,11
-                                    jne noTransfrom2
-                                    cmp toRow,7
-                                    jne noTransfrom2
-                                    drawEncodingOnBoard 15, toColumn, toRow
-                                    mov code,15
-                                    jmp Transform
-                                    noTransfrom2:
+                                        cmp                 code,11
+                                        jne                 noTransfrom2
+                                        cmp                 toRow,7
+                                        jne                 noTransfrom2
+                                        drawEncodingOnBoard 15, toColumn, toRow
+                                        mov                 code,15
+                                        jmp                 Transform
+        noTransfrom2:                   
 
-                                    drawEncodingOnBoard code, toColumn, toRow
-                                    Transform:
+                                        drawEncodingOnBoard code, toColumn, toRow
+        Transform:                      
         ; lea si, grid
                                         mov                 al, toRow
                                         mov                 bl, 8
@@ -5345,7 +5358,7 @@ movePiece proc
                                         pop                 ax
                                         mov                 ah,00h
                                         int                 1ah
-                                        sub                 dx, startTime 
+                                        sub                 dx, startTime
         ; lea di, cooldown
                                         mov                 al, toRow
                                         mov                 bl, 8
