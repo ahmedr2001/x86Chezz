@@ -1728,14 +1728,12 @@ linrec:
 ; mov                 dx , 03F8H
 ; in                  al , dx
 ; mov VALUE , al
-
 cmp                 al, 1bh
 jne                 linnort2
 jmp                 esc2
 
 linnort2:                          
 cmp                 al,1ch
-jz                  linnwline
 jnz                 linpchar
 linnwline:              
 push                dx
@@ -2160,8 +2158,9 @@ cmp                 ah,1ch
 jz                  linsentr
 jnz                 linschar
 
-linsentr:      
-out dx, al                    
+linsentr:
+mov al,ah      
+out dx, al                   
 ; inc                 bh
 ; mov                 bl,0
 ; mov                 al,ah
